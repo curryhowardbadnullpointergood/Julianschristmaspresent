@@ -4,43 +4,39 @@ module Lexer where
 
 %wrapper "posn" 
 $integer = [0-9]
--- digits
 $string = [a-zA-Z]
--- alphabetic characters
--- $alphaNumeric=($string$string*$integer | $integer$integer*$string)($integer | $string)*
+$alphaNumeric = [a-zA-Z0-9]
+
 
 tokens :-
-    $white+ ;
-    \, ; 
+    -- CONNECTING LEXEMES
+    \n              { \p s -> Tok p TokenNewLine }
+    \,              { \p s -> Tok p TokenComma }
+    \:              { \p s -> Tok p TokenColon } 
+    \;              { \p s -> Tok p TokenSemiColon }
+    $white          ;
 
     -- HEADER LEXEMES
-    :ID   { \p s -> Tok p TokenID }
-    :START_ID { \p s -> Tok p TokenStartID }
-    -- ($string$string*$integer | $integer$integer*$string)($integer | $string)*$white?: { \p s -> Tok p (TokenFieldName s) }
-    $string [$string $integer]*((\ )*)?: { \p s -> Tok p (TokenFieldName (init s))}
+    :ID             { \p s -> Tok p TokenID }
+    :START_ID       { \p s -> Tok p TokenStartID }
 
-    string { \p s -> Tok p (TokenFieldType TypeString) }
-    integer { \p s -> Tok p (TokenFieldType TypeInteger) }
-    bool { \p s -> Tok p (TokenFieldType TypeBoolean) } 
+    string          { \p s -> Tok p (TokenFieldType TypeString) }
+    integer         { \p s -> Tok p (TokenFieldType TypeInteger) }
+    bool            { \p s -> Tok p (TokenFieldType TypeBoolean) } 
 
-    :LABEL { \p s -> Tok p TokenLabel }
-    :END_ID { \p s -> Tok p TokenEndID }
-    :TYPE { \p s -> Tok p TokenType }
+    :LABEL          { \p s -> Tok p TokenLabel }
+    :END_ID         { \p s -> Tok p TokenEndID }
+    :TYPE           { \p s -> Tok p TokenType }
 
 
     -- VALUE LEXEMES
-    ($string$string*$integer | $integer$integer*$string)($integer | $string)* { \p s -> Tok p (TokenIDVal s) }
+    \"$string+\"    { \p s -> Tok p (TokenStrVal (tail $ init s)) }
+    $integer+       { \p s -> Tok p (TokenIntVal (read s :: Int)) }
+    true            { \p s -> Tok p (TokenBoolVal True) }
+    false           { \p s -> Tok p (TokenBoolVal False) }
+    null            { \p s -> Tok p TokenNullVal }
 
-    $string+ { \p s -> Tok p (TokenLabelVal s)}
-    \;$string+ { \p s -> Tok p (TokenLabelVal (tail s))}
-
-    \"$string+\" { \p s -> Tok p (TokenStr (tail $ init s)) }
-    $integer+ { \p s -> Tok p (TokenInt (read s :: Int)) }
-    true { \p s -> Tok p (TokenBool True) }
-    false { \p s -> Tok p (TokenBool False) }
-    null { \p s -> Tok p TokenNull }
-
-
+    $alphaNumeric+  { \p s -> Tok p (TokenString s) }
 
 {
 
@@ -57,22 +53,25 @@ data Token =
 
 
 data TokenClass =
-    -- The field value tokens
-    TokenStr       String    |
-    TokenInt       Int       |
-    TokenBool      Bool      |
-    TokenNull                |
+    -- Connection tokens
+    TokenComma               |
+    TokenColon               |
+    TokenSemiColon           |
+    TokenNewLine             |
 
-    -- The ID and Label value tokens
-    TokenIDVal     String    |
-    TokenLabelVal  String    |
-    
+    -- The field value tokens
+    TokenStrVal    String    |
+    TokenIntVal    Int       |
+    TokenBoolVal   Bool      |
+    TokenNullVal             |
+
+    -- Token for representing unquoted strings and alphanumeric values
+    TokenString    String    |
+
     -- The header tokens
     TokenID                  |
-    TokenFieldName String    |
     TokenFieldType FieldType |
     TokenLabel               |
-
     TokenStartID             |
     TokenEndID               |
     TokenType
