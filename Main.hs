@@ -1,12 +1,13 @@
 import Lexer
 import Parser
-import System.Environment
+import System.Environment ( getArgs )
 import Control.Exception
 import System.IO
 
 
 main :: IO ()
 main = catch main' noParse
+
 
 main' = do 
     (fileName : _ ) <- getArgs 

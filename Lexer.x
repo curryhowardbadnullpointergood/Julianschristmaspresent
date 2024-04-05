@@ -9,8 +9,6 @@ $alphaNumeric = [a-zA-Z0-9]
 
 
 tokens :-
-    -- CONNECTING LEXEMES
-    \n              { \p s -> Tok p TokenNewLine }
     \,              { \p s -> Tok p TokenComma }
     \:              { \p s -> Tok p TokenColon } 
     \;              { \p s -> Tok p TokenSemiColon }
@@ -22,7 +20,7 @@ tokens :-
 
     string          { \p s -> Tok p (TokenFieldType TypeString) }
     integer         { \p s -> Tok p (TokenFieldType TypeInteger) }
-    bool            { \p s -> Tok p (TokenFieldType TypeBoolean) } 
+    boolean            { \p s -> Tok p (TokenFieldType TypeBoolean) } 
 
     :LABEL          { \p s -> Tok p TokenLabel }
     :END_ID         { \p s -> Tok p TokenEndID }
@@ -37,6 +35,7 @@ tokens :-
     null            { \p s -> Tok p TokenNullVal }
 
     $alphaNumeric+  { \p s -> Tok p (TokenString s) }
+
 
 {
 
