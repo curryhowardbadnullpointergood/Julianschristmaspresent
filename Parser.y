@@ -154,56 +154,56 @@ parseError ts = error $ "Parse error at line " ++ (show ln) ++ " column " ++ (sh
 
 
 data File   = File NodeSets RelationshipSets
-            deriving Show
+            deriving (Show,Eq)
 
 data NodeSets   = NodeSets NodeSet NodeSets
                 | EmptyNodeSet
-                deriving Show
+                deriving (Show,Eq)
 data NodeSet    = NodeSet NodeHeader NodeEntries
-                deriving Show
+                deriving (Show,Eq)
 -- Bool in nodeheader describes whether there is a Label field
 data NodeHeader = NodeHeader Fields Bool
-                deriving Show
+                deriving (Show,Eq)
 data Fields     = Fields Field Fields
                 | EmptyField
-                deriving Show
+                deriving (Show,Eq)
 data Field      = Field String FieldType
-                deriving Show
+                deriving (Show,Eq)
 
 
 data NodeEntries    = NodeEntries NodeEntry NodeEntries 
                     | EmptyNodeEntry
-                    deriving Show
+                    deriving (Show,Eq)
 data NodeEntry      = NodeEntryLabel String Literals Labels
                     | NodeEntry String Literals
-                    deriving Show
+                    deriving (Show,Eq)
 data Literals       = Literals Literal Literals
                     | EmptyLiteral
-                    deriving Show
+                    deriving (Show,Eq)
 data Literal        = LiteralStr String
                     | LiteralInt Int
                     | LiteralBool Bool
                     | LiteralNull
-                    deriving Show
+                    deriving (Show,Eq)
 data Labels         = Labels Label Labels
                     | EmptyLabel
-                    deriving Show
+                    deriving (Show,Eq)
 data Label          = Label String
-                    deriving Show
+                    deriving (Show,Eq)
 
 data RelationshipSets       = RelationshipSets RelationshipSet RelationshipSets
                             | EmptyRelationshipSet
-                            deriving Show
+                            deriving (Show,Eq)
 data RelationshipSet        = RelationshipSet RelationshipHeader RelationshipEntries
-                            deriving Show
+                            deriving (Show,Eq)
 data RelationshipHeader     = RelationshipHeader Fields
-                            deriving Show
+                            deriving (Show,Eq)
 data RelationshipEntries    = RelationshipEntries RelationshipEntry RelationshipEntries
                             | EmptyRelationshipEntry
-                            deriving Show
+                            deriving (Show,Eq)
 -- Relationship entry is IDs, (fields)*, StartID, EndID
 data RelationshipEntry      = RelationshipEntry String Literals String String
-                            deriving Show
+                            deriving (Show,Eq)
 
 }
 
