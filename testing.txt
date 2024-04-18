@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 v1, "Ray","Wise",Visitor
 v2, "Barbara","King",Visitor
 v3, "Mei","Wu",Visitor
@@ -45,3 +46,19 @@ v1, "Ray","Wise",Visitor
 v2, "Barbara","King",Visitor
 v3, "Mei","Wu",Visitor
 v4, "Anika","Sharma",Visitor
+=======
+:ID, stringField:string, intField:integer, boolField:boolean
+id1, "abcdefg", 12345, true
+:ID, stringField:string, intField:integer, boolField:boolean, :LABEL
+id2, "abcdefg", 12345, true, label1
+id3, "abcdefg", 12345, false, label2;label3
+:ID
+id4
+:ID, :LABEL
+id5, label4
+id6, label5;label6
+:START_ID, stringField:string, intField:integer, boolField:boolean, :END_ID, :TYPE
+id1, "abcdefg", 12345, true, id2, type
+:START_ID, :END_ID, :TYPE
+id1, id2, type
+>>>>>>> main
