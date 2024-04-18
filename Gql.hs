@@ -43,7 +43,20 @@ main''' parsedProg = do
     let label1 = filterLabel labels (\s -> s == "label1")
     putStrLn ("Nodes with a label with value of 'label1': " ++ show label1)
 
+    putStrLn (show $ problem1 parsedProg)
 
+
+-- haskell version of what problem 1 would look like
+problem1 :: File -> [String]
+problem1 file = output
+    where
+        ageField = getField file "age"
+        labels = getLabels file
+
+        nodesLess30 = filterIntField ageField (\x -> x <= 30) False
+        nodesLabelVisitor = filterLabel labels (\s -> s == "Visitor")
+
+        output = unionLists nodesLess30 nodesLabelVisitor
 
 noParse :: ErrorCall -> IO ()
 noParse e = do let err =  show e

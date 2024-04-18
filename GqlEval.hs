@@ -250,7 +250,15 @@ returnNodeRecord'''' nodeEntry@(NodeEntry s' _ _ ) s
 
 
 
+removeDuplicates [] = []
+removeDuplicates (a:as) = a : removeDuplicates (filter (\x -> x /= a) as) 
 
+
+unionLists a b = removeDuplicates $ a ++ b
+
+interSectionLists [] _ = []
+interSectionLists _ [] = []
+interSectionLists a b = removeDuplicates $ filter (\x -> elem x a) b
 
 printFile :: File -> String
 printFile (File nodeSets relationshipSets) = printNodeSets nodeSets ++ "\n" ++ printRelationshipSets relationshipSets
