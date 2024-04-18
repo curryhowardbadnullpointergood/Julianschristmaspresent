@@ -1,3 +1,40 @@
 Can we assume that we will be given atleast one of both a node set table and relation set table?
 
 Can we assume that we wont be given a table with only a header and no entries
+
+
+intFieldmatch =
+== /= < <= > >= 
+
+stringFieldMatch = 
+== /= [x]== length==
+
+boolFieldMatch =
+== /=
+
+label =
+== /=
+
+file input = read 
+
+nodes ageLess25Nodes = match input [age:integer < 25, age:integer == null, Label = "Visitor"];
+
+nodeset outputSet = nodeSet [age:integer] [ageLess25Nodes] true
+
+file output = file [outputSet] [] 
+
+
+
+intFieldmatch =
+== /= < <= > >= || &&
+
+stringFieldMatch = 
+== /= [x]== length== || &&
+
+boolFieldMatch =
+== /= || &&
+
+label =
+== /= && ||
+
+ageLess25Nodes = match file (age:integer < 25, Label)

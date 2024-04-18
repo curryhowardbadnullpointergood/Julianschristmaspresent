@@ -1,51 +1,21 @@
 import Lexer
 import Parser
 import GqlEval
-
 import System.Environment ( getArgs )
 import Control.Exception
 import System.IO
 
-
--- main' = do
-    -- (fileName : _ ) <- getArgs
-    -- sourceText <- readFile fileName
-    -- putStrLn ("Parsing : \n" ++ sourceText ++ "\n\nEND OF PARSING \n\n\n")
-    -- let lexedProg = alexScanTokens sourceText
-    -- putStrLn ("lexed as " ++ show lexedProg)
-    -- let parsedProg = inputParser lexedProg
-    -- let printedProg = printFile parsedProg
-    -- putStr printedProg
-    -- putStrLn ("Parsed as " ++ show parsedProg)
-    -- let result1 = returnNodeRecord sample "com11"
-    -- let result2 = returnNodeRecord sample "com1"
-    -- let result3 = returnNodeRecord sample "as4"
-    -- let result4 = returnNodeRecord sample "jj23"
-    -- let result5 = returnNodeRecord sample "ab23"
-    -- let result6 = returnNodeRecord sample "com9"
-    -- let result7 = returnIDValues sample
-    -- print result1
-    -- print result2
-    -- print result3
-    -- print result4
-    -- print result5
-    -- print result6
-    -- print result7
-    -- print $ xy sample (head result7)
-    -- -- print result8
-    -- -- print result9
-
 main :: IO ()
-main = do 
+main = do
     (fileName : _ ) <- getArgs
     sourceText <- readFile fileName
-    putStrLn ("Input File: \n" ++ sourceText ++ "\n -----------------------------------------")
+    putStrLn ("Input File: \n" ++ replicate 50 '-'  ++ "\n" ++ sourceText ++ "\n" ++ replicate 50 '-')
     catch (main' sourceText) noLex
 
 
 main' :: String -> IO ()
-main' sourceText = do 
-    let lexedProg = alexScanTokens sourceText 
+main' sourceText = do
+    let lexedProg = alexScanTokens sourceText
     catch (main'' lexedProg) noParse
 
 
@@ -56,7 +26,24 @@ main'' lexedProg = do
 
 main''' :: File -> IO ()
 main''' parsedProg = do
-    putStr $ printFile parsedProg
+    putStrLn (printFile parsedProg)
+
+    print $ getField parsedProg "stringField"
+    print $ getField parsedProg "intField"
+    print $ getField parsedProg "boolField"
+    print $ getLabels parsedProg
+
+    let intField = getField parsedProg "intField"
+    let less30 = filterIntField intField (\z -> z < 30) False
+    let null = filterNullFieldValues intField
+    putStrLn ("Nodes with intField value of < 30: " ++ show less30)
+    putStrLn ("Nodes with value of 'null' in intField: " ++ show null)
+
+    let labels = getLabels parsedProg
+    let label1 = filterLabel labels (\s -> s == "label1")
+    putStrLn ("Nodes with a label with value of 'label1': " ++ show label1)
+
+
 
 noParse :: ErrorCall -> IO ()
 noParse e = do let err =  show e
