@@ -1,25 +1,13 @@
 module GqlEval where
 import Lexer ( FieldType(..) )
 import Parser
-    ( Field(..),
-      File(..),
-      Label(..),
-      Literal(..),
-      NodeEntries,
-      NodeEntry(..),
-      NodeHeader(..),
-      NodeSet(..),
-      NodeSets,
-      RelationshipEntry(..),
-      RelationshipHeader(..),
-      RelationshipSet(..) )
 import System.Environment ( getArgs )
 import Control.Exception
 import System.IO
 
-sample = File 
-            [NodeSet 
-                (NodeHeader [Field "bonus" TypeInteger,Field "business" TypeString] True) 
+sample = File
+            [NodeSet
+                (NodeHeader [Field "bonus" TypeInteger,Field "business" TypeString] True)
                     [NodeEntry "com9" [LiteralInt 25,LiteralStr "TheLaughingOnion"] [Label "Restaurant"]
                     ,NodeEntry "com8" [LiteralInt 30,LiteralStr "TheAngryOnion"] [Label "Restaurant"]
                     ,NodeEntry "com7" [LiteralInt 10,LiteralStr "BaaBaaBlackSheep"] [Label "Barber"]
@@ -30,8 +18,8 @@ sample = File
                     ,NodeEntry "com2" [LiteralInt 15,LiteralStr "NaffeCero"] [Label "Cafe"]
                     ,NodeEntry "com1" [LiteralInt 10,LiteralStr "BarStucks"] [Label "Cafe"]
                     ]
-            ,NodeSet 
-                (NodeHeader [Field "age" TypeInteger,Field "familyname" TypeString,Field "firstname" TypeString] False) 
+            ,NodeSet
+                (NodeHeader [Field "age" TypeInteger,Field "familyname" TypeString,Field "firstname" TypeString] False)
                     [NodeEntry "cr2" [LiteralInt 15,LiteralStr "Flaherty",LiteralStr "Connor"] []
                     ,NodeEntry "as4" [LiteralInt 40,LiteralStr "Sharma",LiteralStr "Anika"] []
                     ,NodeEntry "mw3" [LiteralInt 47,LiteralStr "Wu",LiteralStr "Mei"] []
@@ -47,9 +35,9 @@ sample = File
                     ,NodeEntry "uh12" [LiteralInt 55,LiteralStr "Habib",LiteralStr "Umar"] []
                     ,NodeEntry "jj23" [LiteralInt 43,LiteralStr "Jones",LiteralStr "John"] []
                     ]
-            ] 
-            [RelationshipSet 
-                (RelationshipHeader []) 
+            ]
+            [RelationshipSet
+                (RelationshipHeader [])
                     [RelationshipEntry "cr2" [] "pp8" "Recommended"
                     ,RelationshipEntry "cr2" [] "gt2" "Recommended"
                     ,RelationshipEntry "as4" [] "mw3" "Recommended"
@@ -64,8 +52,8 @@ sample = File
                     ,RelationshipEntry "jj23" [] "bk21" "Recommended"
                     ,RelationshipEntry "jj23" [] "rw5" "Recommended"
                     ]
-            ,RelationshipSet 
-                (RelationshipHeader [Field "reward" TypeInteger]) 
+            ,RelationshipSet
+                (RelationshipHeader [Field "reward" TypeInteger])
                     [RelationshipEntry "cr2" [LiteralInt 50] "com6" "CustomerOf"
                     ,RelationshipEntry "as4" [LiteralInt 63] "com1" "CustomerOf"
                     ,RelationshipEntry "mw3" [LiteralInt 3] "com2" "CustomerOf"
@@ -90,11 +78,127 @@ sample = File
             ]
 
 
+extractJust :: Maybe a -> a
+extractJust (Just i) = i
+
+extractLiteralStr :: Literal -> String
+extractLiteralStr (LiteralStr s) = s
+extractLiteralInt :: Literal -> Int
+extractLiteralInt (LiteralInt i) = i
+extractLiteralBool :: Literal -> Bool
+extractLiteralBool (LiteralBool b) = b
+extractLabel (Label s) = s
+isLiteralNull :: Literal -> Bool
+isLiteralNull (LiteralNull) = True
+isLiteralNull (LiteralStr s) = False
+isLiteralNull (LiteralInt i) = False
+isLiteralNull (LiteralBool b) = False
+
+
+-- Filter functions work by taking a list of ids and a literal value for a certain field, 
+-- a predicate to filter on aswell as a boolean to decide what to do with null literal values 
+-- (true for keep false for reject)
+filterIntField :: [(String, Literal)] -> (Int -> Bool) -> Bool -> [String]
+filterIntField input predicate keepNulls = map fst $ filterIntField' input predicate keepNulls
+filterIntField' :: [(String, Literal)] -> (Int -> Bool) -> Bool -> [(String, Literal)]
+filterIntField' [] _ _ = []
+filterIntField' (pair@(string, LiteralInt x):literalPairs) f keepNulls
+    | f x = pair : filterIntField' literalPairs f keepNulls
+    | otherwise = filterIntField' literalPairs f keepNulls
+filterIntField' (pair@(string, LiteralNull):literalPairs) f keepNulls
+    | keepNulls = pair : filterIntField' literalPairs f keepNulls
+    | otherwise = filterIntField' literalPairs f keepNulls
+
+
+filterBoolField :: [(String, Literal)] -> (Bool -> Bool) -> Bool -> [String]
+filterBoolField input predicate keepNulls = map fst $ filterBoolField' input predicate keepNulls
+filterBoolField' :: [(String, Literal)] -> (Bool -> Bool) -> Bool -> [(String, Literal)]
+filterBoolField' [] _ _ = []
+filterBoolField' (pair@(string, LiteralBool b):literalPairs) f keepNulls
+    | f b = pair : filterBoolField' literalPairs f keepNulls
+    | otherwise = filterBoolField' literalPairs f keepNulls
+filterBoolField' (pair@(string, LiteralNull):literalPairs) f keepNulls
+    | keepNulls = pair : filterBoolField' literalPairs f keepNulls
+    | otherwise = filterBoolField' literalPairs f keepNulls
+
+
+filterStringField :: [(String, Literal)] -> (String -> Bool) -> Bool -> [String]
+filterStringField input predicate keepNulls = map fst $ filterStringField' input predicate keepNulls
+filterStringField' :: [(String, Literal)] -> (String -> Bool) -> Bool -> [(String, Literal)]
+filterStringField' [] _ _ = []
+filterStringField' (pair@(string, LiteralStr s):literalPairs) f keepNulls
+    | f s = pair : filterStringField' literalPairs f keepNulls
+    | otherwise = filterStringField' literalPairs f keepNulls
+filterStringField' (pair@(string, LiteralNull):literalPairs) f keepNulls
+    | keepNulls = pair : filterStringField' literalPairs f keepNulls
+    | otherwise = filterStringField' literalPairs f keepNulls
+
+
+-- function for filtering all the nodes in a field out that arent null values 
+filterNullFieldValues :: [(String, Literal)] -> [String]
+filterNullFieldValues input = map fst $ filterNullFieldValues' input
+filterNullFieldValues' :: [(String, Literal)] -> [(String, Literal)]
+filterNullFieldValues' [] = []
+filterNullFieldValues' (pair@(string, literal):literalPairs)
+    | isLiteralNull literal = pair : filterNullFieldValues' literalPairs
+    | otherwise = filterNullFieldValues' literalPairs 
+
+
+-- Function for retrieving all the nodes with a certain label
+filterLabel :: [(String, Labels)] -> (String -> Bool) -> [String]
+filterLabel input predicate = map fst $ filterLabel' input predicate
+filterLabel' :: [(String, Labels)] -> (String -> Bool) -> [(String, Labels)]
+filterLabel' [] _  = []
+filterLabel' (pair@(string, labels):literalPairs) f
+    | contains labels f = pair : filterLabel' literalPairs f
+    | otherwise = filterLabel' literalPairs f
+    where 
+        contains :: Labels -> (String -> Bool) -> Bool
+        contains [] _ = False
+        contains (a : b) f 
+            | f (extractLabel a) = True
+            | otherwise = contains b f    
 
 
 
-xy :: File -> [String]  -> [Maybe NodeEntry]
-xy f ss = map (returnNodeRecord f) ss
+-- Returns a list of tuples containing the ID and the labels for each Node
+-- eg getLabels file = [("id1",[]),("id2",[Label "label1"]),("id3",[Label "label1",Label "label3"])]
+getLabels :: File -> [(String,Labels)]
+getLabels (File nodeSets _) = getLabelsNodeSets nodeSets
+getLabelsNodeSets :: [NodeSet] -> [(String, Labels)]
+getLabelsNodeSets [] = []
+getLabelsNodeSets (nodeSet:nodeSets) = getLabelsNodeSet nodeSet ++ getLabelsNodeSets nodeSets
+getLabelsNodeSet :: NodeSet -> [(String, Labels)]
+getLabelsNodeSet (NodeSet _ []) = [] 
+getLabelsNodeSet (NodeSet _ entries) = getLabelsEntries entries
+getLabelsEntries :: [NodeEntry] -> [(String, Labels)]
+getLabelsEntries [] = []
+getLabelsEntries ((NodeEntry nodeID _ labels):nodeEntries) = (nodeID, labels) : getLabelsEntries nodeEntries
+
+
+
+-- Returns a list of tuples containing the ID and the value of the literal for each Node of a certain field
+-- eg getField file "age" = [("user1",LiteralInt 23), ("user2",LiteralInt 35), ("user3",LiteralNull)]
+getField :: File -> String -> [(String, Literal)]
+getField (File nodeSets _) s = getFieldNodeSets nodeSets s
+getFieldNodeSets :: NodeSets -> String -> [(String, Literal)]
+getFieldNodeSets [] _ = []
+getFieldNodeSets (nodeSet:nodeSets) s = getFieldNodeSet nodeSet s ++ getFieldNodeSets nodeSets s
+getFieldNodeSet :: NodeSet -> String -> [(String, Literal)]
+getFieldNodeSet (NodeSet (NodeHeader fields _) nodeEntries) s
+    | col == Nothing = []
+    | otherwise = getFieldNodeEntries nodeEntries (extractJust col)
+    where
+        col = getFieldColumn fields s 0
+getFieldNodeEntries :: NodeEntries -> Int -> [(String, Literal)]
+getFieldNodeEntries [] _ = []
+getFieldNodeEntries ((NodeEntry nodeID literals _):entries) col = (nodeID, literals !! col) : getFieldNodeEntries entries col
+-- gets the index of a field name in the header
+getFieldColumn :: Fields -> String -> Int -> Maybe Int
+getFieldColumn [] _ _ = Nothing
+getFieldColumn (field@(Field string _):fields) s i
+    | string == s = Just i
+    | otherwise = getFieldColumn fields s (i+1)
 
 
 
@@ -115,6 +219,7 @@ returnIDValues''' (nodeEntry : nodeEntries) = returnIDValues'''' nodeEntry : ret
 
 returnIDValues'''' :: NodeEntry -> String
 returnIDValues'''' (NodeEntry s _ _) = s
+
 
 
 -- -- Allows searching for a single record in a node set table by using an ID
@@ -145,8 +250,15 @@ returnNodeRecord'''' nodeEntry@(NodeEntry s' _ _ ) s
 
 
 
+removeDuplicates [] = []
+removeDuplicates (a:as) = a : removeDuplicates (filter (\x -> x /= a) as) 
 
 
+unionLists a b = removeDuplicates $ a ++ b
+
+interSectionLists [] _ = []
+interSectionLists _ [] = []
+interSectionLists a b = removeDuplicates $ filter (\x -> elem x a) b
 
 printFile :: File -> String
 printFile (File nodeSets relationshipSets) = printNodeSets nodeSets ++ "\n" ++ printRelationshipSets relationshipSets
@@ -168,7 +280,7 @@ printNodeHeader (NodeHeader fields False) = ":ID" ++ ", " ++  printFields fields
 printNodeEntries :: [NodeEntry] -> String
 printNodeEntries [] = ""
 printNodeEntries (nodeEntry : []) = printNodeEntry nodeEntry  ++ "\n"
-printNodeEntries (nodeEntry : nodeEntries) = printNodeEntry nodeEntry ++ "\n" ++ printNodeEntries nodeEntries 
+printNodeEntries (nodeEntry : nodeEntries) = printNodeEntry nodeEntry ++ "\n" ++ printNodeEntries nodeEntries
 
 printNodeEntry :: NodeEntry -> String
 printNodeEntry (NodeEntry str [] []) = str
@@ -194,8 +306,8 @@ printRelationshipEntries (relationshipentry : []) = printRelationshipEntry relat
 printRelationshipEntries (relationshipentry : relationshipEntries) = printRelationshipEntry relationshipentry ++ "\n" ++ printRelationshipEntries relationshipEntries
 
 printRelationshipEntry :: RelationshipEntry -> String
-printRelationshipEntry (RelationshipEntry str1 [] str2 str3) = str1 ++ ", " ++ str2 ++ ", " ++ str3 
-printRelationshipEntry (RelationshipEntry str1 literals str2 str3) = str1 ++ ", " ++ printLiterals literals ++ ", " ++ str2 ++ ", " ++ str3 
+printRelationshipEntry (RelationshipEntry str1 [] str2 str3) = str1 ++ ", " ++ str2 ++ ", " ++ str3
+printRelationshipEntry (RelationshipEntry str1 literals str2 str3) = str1 ++ ", " ++ printLiterals literals ++ ", " ++ str2 ++ ", " ++ str3
 
 printType :: FieldType -> String
 printType TypeString = "string"
@@ -220,7 +332,7 @@ printLiteral (LiteralStr str) = "\"" ++ str ++ "\""
 printLiteral (LiteralInt int) = show int
 printLiteral (LiteralBool True) = "true"
 printLiteral (LiteralBool False) = "false"
-printLiteral (LiteralNull) = "null" 
+printLiteral (LiteralNull) = "null"
 
 printLabels :: [Label] -> String
 printLabels [] = ""

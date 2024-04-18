@@ -1,13 +1,18 @@
 :ID, stringField:string, intField:integer, boolField:boolean
-id1, "abcdefg", 12345, true
+id1, "abcdefg", 1, true
 :ID, stringField:string, intField:integer, boolField:boolean, :LABEL
-id2, "abcdefg", 12345, true, label1
-id3, "abcdefg", 12345, false, label2;label3
+id2, "abcdefg", 10, true, label1
+id3, "abcdefg", 45, false, label1;label3
+id4, "abcdefg", 10, true, label1
+id5, "abcdefg", 45, false, label2;label3
+id6, "abcdefg", 10, true, label1
+id7, "abcdefg", 45, false, label2;label1
+id8, null, null, null, label4
 :ID
-id4
+id5
 :ID, :LABEL
-id5, label4
-id6, label5;label6
+id6, label4
+id7, label5;label6
 :START_ID, stringField:string, intField:integer, boolField:boolean, :END_ID, :TYPE
 id1, "abcdefg", 12345, true, id2, type
 :START_ID, :END_ID, :TYPE
