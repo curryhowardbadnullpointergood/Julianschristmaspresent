@@ -20,6 +20,140 @@ import System.IO
 xy :: File -> [String]  -> [Maybe NodeEntry]
 xy f ss = map (returnNodeRecord f) ss
 
+extractJust :: Maybe a -> a
+extractJust (Just i) = i
+
+extractLiteralStr :: Literal -> String
+extractLiteralStr (LiteralStr s) = s
+
+extractLiteralInt :: Literal -> Int
+extractLiteralInt (LiteralInt i) = i
+
+extractLiteralBool :: Literal -> Bool
+extractLiteralBool (LiteralBool b) = b
+extractLabel (Label s) = s
+
+isLiteralNull :: Literal -> Bool
+isLiteralNull (LiteralNull) = True
+isLiteralNull (LiteralStr s) = False
+isLiteralNull (LiteralInt i) = False
+isLiteralNull (LiteralBool b) = False
+
+-- Filter functions work by taking a list of ids and a literal value for a certain field, 
+-- a predicate to filter on aswell as a boolean to decide what to do with null literal values 
+-- (true for keep false for reject)
+
+filterIntField :: [(String, Literal)] -> (Int -> Bool) -> Bool -> [String]
+filterIntField input predicate keepNulls = map fst $ filterIntField' input predicate keepNulls
+
+filterIntField' :: [(String, Literal)] -> (Int -> Bool) -> Bool -> [(String, Literal)]
+filterIntField' [] _ _ = []
+filterIntField' (pair@(string, LiteralInt x):literalPairs) f keepNulls
+    | f x = pair : filterIntField' literalPairs f keepNulls
+    | otherwise = filterIntField' literalPairs f keepNulls
+filterIntField' (pair@(string, LiteralNull):literalPairs) f keepNulls
+    | keepNulls = pair : filterIntField' literalPairs f keepNulls
+    | otherwise = filterIntField' literalPairs f keepNulls
+
+filterBoolField :: [(String, Literal)] -> (Bool -> Bool) -> Bool -> [String]
+filterBoolField input predicate keepNulls = map fst $ filterBoolField' input predicate keepNulls
+
+filterBoolField' :: [(String, Literal)] -> (Bool -> Bool) -> Bool -> [(String, Literal)]
+filterBoolField' [] _ _ = []
+filterBoolField' (pair@(string, LiteralBool b):literalPairs) f keepNulls
+    | f b = pair : filterBoolField' literalPairs f keepNulls
+    | otherwise = filterBoolField' literalPairs f keepNulls
+filterBoolField' (pair@(string, LiteralNull):literalPairs) f keepNulls
+    | keepNulls = pair : filterBoolField' literalPairs f keepNulls
+    | otherwise = filterBoolField' literalPairs f keepNulls
+
+filterStringField :: [(String, Literal)] -> (String -> Bool) -> Bool -> [String]
+filterStringField input predicate keepNulls = map fst $ filterStringField' input predicate keepNulls
+
+filterStringField' :: [(String, Literal)] -> (String -> Bool) -> Bool -> [(String, Literal)]
+filterStringField' [] _ _ = []
+filterStringField' (pair@(string, LiteralStr s):literalPairs) f keepNulls
+    | f s = pair : filterStringField' literalPairs f keepNulls
+    | otherwise = filterStringField' literalPairs f keepNulls
+filterStringField' (pair@(string, LiteralNull):literalPairs) f keepNulls
+    | keepNulls = pair : filterStringField' literalPairs f keepNulls
+    | otherwise = filterStringField' literalPairs f keepNulls
+
+-- function for filtering all the nodes in a field out that arent null values 
+
+filterNullFieldValues :: [(String, Literal)] -> [String]
+filterNullFieldValues input = map fst $ filterNullFieldValues' input
+
+filterNullFieldValues' :: [(String, Literal)] -> [(String, Literal)]
+filterNullFieldValues' [] = []
+filterNullFieldValues' (pair@(string, literal):literalPairs)
+    | isLiteralNull literal = pair : filterNullFieldValues' literalPairs
+    | otherwise = filterNullFieldValues' literalPairs 
+
+-- Function for retrieving all the nodes with a certain label
+
+filterLabel :: [(String, [Label])] -> (String -> Bool) -> [String]
+filterLabel input predicate = map fst $ filterLabel' input predicate
+
+filterLabel' :: [(String, [Label])] -> (String -> Bool) -> [(String, [Label])]
+filterLabel' [] _  = []
+filterLabel' (pair@(string, labels):literalPairs) f
+    | contains labels f = pair : filterLabel' literalPairs f
+    | otherwise = filterLabel' literalPairs f
+    where 
+        contains :: [Label] -> (String -> Bool) -> Bool
+        contains [] _ = False
+        contains (a : b) f 
+            | f (extractLabel a) = True
+            | otherwise = contains b f    
+
+-- Returns a list of tuples containing the ID and the labels for each Node
+-- eg getLabels file = [("id1",[]),("id2",[Label "label1"]),("id3",[Label "label1",Label "label3"])]
+
+getLabels :: File -> [(String,[Label])]
+getLabels (File nodeSets _) = getLabelsNodeSets nodeSets
+
+getLabelsNodeSets :: [NodeSet] -> [(String, [Label])]
+getLabelsNodeSets [] = []
+getLabelsNodeSets (nodeSet:nodeSets) = getLabelsNodeSet nodeSet ++ getLabelsNodeSets nodeSets
+
+getLabelsNodeSet :: NodeSet -> [(String, [Label])]
+getLabelsNodeSet (NodeSet _ []) = [] 
+getLabelsNodeSet (NodeSet _ entries) = getLabelsEntries entries
+
+getLabelsEntries :: [NodeEntry] -> [(String, [Label])]
+getLabelsEntries [] = []
+getLabelsEntries ((NodeEntry nodeID _ labels):nodeEntries) = (nodeID, labels) : getLabelsEntries nodeEntries
+
+-- Returns a list of tuples containing the ID and the value of the literal for each Node of a certain field
+-- eg getField file "age" = [("user1",LiteralInt 23), ("user2",LiteralInt 35), ("user3",LiteralNull)]
+
+getField :: File -> String -> [(String, Literal)]
+getField (File nodeSets _) s = getFieldNodeSets nodeSets s
+
+getFieldNodeSets :: NodeSets -> String -> [(String, Literal)]
+getFieldNodeSets [] _ = []
+getFieldNodeSets (nodeSet:nodeSets) s = getFieldNodeSet nodeSet s ++ getFieldNodeSets nodeSets s
+
+getFieldNodeSet :: NodeSet -> String -> [(String, Literal)]
+getFieldNodeSet (NodeSet (NodeHeader fields _) nodeEntries) s
+    | col == Nothing = []
+    | otherwise = getFieldNodeEntries nodeEntries (extractJust col)
+    where
+        col = getFieldColumn fields s 0
+
+getFieldNodeEntries :: NodeEntries -> Int -> [(String, Literal)]
+getFieldNodeEntries [] _ = []
+getFieldNodeEntries ((NodeEntry nodeID literals _):entries) col = (nodeID, literals !! col) : getFieldNodeEntries entries col
+
+-- gets the index of a field name in the header
+
+getFieldColumn :: [Field] -> String -> Int -> Maybe Int
+getFieldColumn [] _ _ = Nothing
+getFieldColumn (field@(Field string _):fields) s i
+    | string == s = Just i
+    | otherwise = getFieldColumn fields s (i+1)
+
 -- Return
 
 returnIDValues :: File -> [[String]]
