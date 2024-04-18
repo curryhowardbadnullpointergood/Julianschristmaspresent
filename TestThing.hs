@@ -8,6 +8,8 @@ import Data.List
 
 -- THIS WHOLE FUNCTION IS JSUT TO HELP ME UNDERSTAND HOW EVERYTHING THUS FAR WORKS.
 
+-- LIKE SERIOUSLY THIS IS PURELY JUST YAPPING FOR FERDI IGNORE IT
+
 handleIOException :: IOException -> IO ()
 handleIOException e = hPutStrLn stderr ("IO Error: " ++ show e)
 
@@ -30,38 +32,29 @@ processFile fileName = do
 
 evaluateAndPrintResults :: File -> IO ()
 evaluateAndPrintResults file = do
-    putStrLn "Printing all ID values from the file:"
-    print $ returnIDValues file
+    putStrLn ":ID, age:integer, :LABEL"
+    let ageData = getField file "age"
+    let labelData = getLabels file
+    let eligibleByAge = filterIntField ageData (<= 25) False
+    let eligibleByVisitorLabel = filterLabel labelData (== "Visitor")
+    let eligibleIDs = nub (eligibleByAge ++ eligibleByVisitorLabel)
+    mapM_ (printFormattedNodeRecord file) eligibleIDs
 
-    putStrLn "\nIDs eligible based on age <= 25 or label 'Visitor':"
-    let eligibleIDs = filterEligibleNodes file
-    print eligibleIDs
+printFormattedNodeRecord :: File -> String -> IO ()
+printFormattedNodeRecord file nodeId = do
+    let maybeNode = returnNodeRecord file nodeId
+    case maybeNode of
+        Just node -> putStrLn $ formatNode node
+        Nothing -> return ()
 
-    putStrLn "\nEvaluating and printing node records for specific IDs:"
-    mapM_ (printNodeRecord file) ["rw5", "jj23", "nonexistentID"]
+formatNode :: NodeEntry -> String
+formatNode (NodeEntry id literals labels) =
+    let age = case find isAgeLiteral literals of
+                Just (LiteralInt a) -> show a
+                _ -> "null"
+        labelStr = extractLabel (head labels)
+    in intercalate ", " [id, age, labelStr]
 
-printNodeRecord :: File -> String -> IO ()
-printNodeRecord file nodeId = do
-    let result = returnNodeRecord file nodeId
-    case result of
-        Just node -> putStrLn $ "Record for " ++ nodeId ++ ": " ++ printNodeEntry node
-        Nothing -> putStrLn $ "No record found for ID: " ++ nodeId
-
-filterEligibleNodes :: File -> [String]
-filterEligibleNodes (File nodeSets _) = concatMap filterNodeSet nodeSets
-
-filterNodeSet :: NodeSet -> [String]
-filterNodeSet (NodeSet _ nodeEntries) = map getNodeID $ filter isEligible nodeEntries
-
-isEligible :: NodeEntry -> Bool
-isEligible (NodeEntry _ literals labels) =
-    let hasEligibleAge = any (\lit -> case lit of
-                                LiteralInt age -> age <= 25
-                                _ -> False) literals
-        isVisitor = any (\label -> case label of
-                                Label "Visitor" -> True
-                                _ -> False) labels
-    in hasEligibleAge || isVisitor
-
-getNodeID :: NodeEntry -> String
-getNodeID (NodeEntry id _ _) = id
+isAgeLiteral :: Literal -> Bool
+isAgeLiteral (LiteralInt _) = True
+isAgeLiteral _ = False
