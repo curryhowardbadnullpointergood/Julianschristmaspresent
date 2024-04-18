@@ -1,6 +1,6 @@
 module GqlEval where
-import Lexer ( FieldType(..) )
-import Parser
+import DataLexer ( FieldType(..) )
+import DataParser
     ( Field(..),
       File(..),
       Label(..),
@@ -17,88 +17,11 @@ import System.Environment ( getArgs )
 import Control.Exception
 import System.IO
 
-sample = File 
-            [NodeSet 
-                (NodeHeader [Field "bonus" TypeInteger,Field "business" TypeString] True) 
-                    [NodeEntry "com9" [LiteralInt 25,LiteralStr "TheLaughingOnion"] [Label "Restaurant"]
-                    ,NodeEntry "com8" [LiteralInt 30,LiteralStr "TheAngryOnion"] [Label "Restaurant"]
-                    ,NodeEntry "com7" [LiteralInt 10,LiteralStr "BaaBaaBlackSheep"] [Label "Barber"]
-                    ,NodeEntry "com6" [LiteralInt 25,LiteralStr "DoughReMe"] [Label "Pizzeria"]
-                    ,NodeEntry "com5" [LiteralInt 15,LiteralStr "CrustInUs"] [Label "Pizzeria"]
-                    ,NodeEntry "com4" [LiteralInt 10,LiteralStr "TreatyEats"] [Label "Delicatessen"]
-                    ,NodeEntry "com3" [LiteralInt 20,LiteralStr "CoffeeNumberTwo"] [Label "Cafe"]
-                    ,NodeEntry "com2" [LiteralInt 15,LiteralStr "NaffeCero"] [Label "Cafe"]
-                    ,NodeEntry "com1" [LiteralInt 10,LiteralStr "BarStucks"] [Label "Cafe"]
-                    ]
-            ,NodeSet 
-                (NodeHeader [Field "age" TypeInteger,Field "familyname" TypeString,Field "firstname" TypeString] False) 
-                    [NodeEntry "cr2" [LiteralInt 15,LiteralStr "Flaherty",LiteralStr "Connor"] []
-                    ,NodeEntry "as4" [LiteralInt 40,LiteralStr "Sharma",LiteralStr "Anika"] []
-                    ,NodeEntry "mw3" [LiteralInt 47,LiteralStr "Wu",LiteralStr "Mei"] []
-                    ,NodeEntry "bk21" [LiteralInt 70,LiteralStr "King",LiteralStr "Barbara"] []
-                    ,NodeEntry "rw11" [LiteralInt 66,LiteralStr "Wise",LiteralStr "Ray"] []
-                    ,NodeEntry "jd6" [LiteralInt 16,LiteralStr "Ding",LiteralStr "Jing"] []
-                    ,NodeEntry "pp8" [LiteralInt 17,LiteralStr "Potter",LiteralStr "Peter"] []
-                    ,NodeEntry "rw5" [LiteralInt 15,LiteralStr "Watson",LiteralStr "Rebecca"] []
-                    ,NodeEntry "nj10" [LiteralInt 16,LiteralStr "Jackson",LiteralStr "Nigel"] []
-                    ,NodeEntry "ab23" [LiteralInt 22,LiteralStr "Baker",LiteralStr "Adam"] []
-                    ,NodeEntry "jv9" [LiteralInt 49,LiteralStr "Villeneuve",LiteralStr "Jennifer"] []
-                    ,NodeEntry "gt2" [LiteralInt 23,LiteralStr "Truffaut",LiteralStr "Guillaume"] []
-                    ,NodeEntry "uh12" [LiteralInt 55,LiteralStr "Habib",LiteralStr "Umar"] []
-                    ,NodeEntry "jj23" [LiteralInt 43,LiteralStr "Jones",LiteralStr "John"] []
-                    ]
-            ] 
-            [RelationshipSet 
-                (RelationshipHeader []) 
-                    [RelationshipEntry "cr2" [] "pp8" "Recommended"
-                    ,RelationshipEntry "cr2" [] "gt2" "Recommended"
-                    ,RelationshipEntry "as4" [] "mw3" "Recommended"
-                    ,RelationshipEntry "bk21" [] "rw11" "Recommended"
-                    ,RelationshipEntry "rw5" [] "mw3" "Recommended"
-                    ,RelationshipEntry "nj10" [] "jd6" "Recommended"
-                    ,RelationshipEntry "ab23" [] "cr2" "Recommended"
-                    ,RelationshipEntry "jv9" [] "as4" "Recommended"
-                    ,RelationshipEntry "gt2" [] "jd6" "Recommended"
-                    ,RelationshipEntry "uh12" [] "jv9" "Recommended"
-                    ,RelationshipEntry "uh12" [] "as4" "Recommended"
-                    ,RelationshipEntry "jj23" [] "bk21" "Recommended"
-                    ,RelationshipEntry "jj23" [] "rw5" "Recommended"
-                    ]
-            ,RelationshipSet 
-                (RelationshipHeader [Field "reward" TypeInteger]) 
-                    [RelationshipEntry "cr2" [LiteralInt 50] "com6" "CustomerOf"
-                    ,RelationshipEntry "as4" [LiteralInt 63] "com1" "CustomerOf"
-                    ,RelationshipEntry "mw3" [LiteralInt 3] "com2" "CustomerOf"
-                    ,RelationshipEntry "bk21" [LiteralInt 62] "com4" "CustomerOf"
-                    ,RelationshipEntry "rw11" [LiteralInt 43] "com7" "CustomerOf"
-                    ,RelationshipEntry "pp8" [LiteralInt 86] "com6" "CustomerOf"
-                    ,RelationshipEntry "rw5" [LiteralInt 22] "com3" "CustomerOf"
-                    ,RelationshipEntry "rw5" [LiteralInt 2] "com4" "CustomerOf"
-                    ,RelationshipEntry "nj10" [LiteralInt 26] "com3" "CustomerOf"
-                    ,RelationshipEntry "ab23" [LiteralInt 23] "com8" "CustomerOf"
-                    ,RelationshipEntry "jd6" [LiteralInt 11] "com1" "CustomerOf"
-                    ,RelationshipEntry "jv9" [LiteralInt 0] "com5" "CustomerOf"
-                    ,RelationshipEntry "jv9" [LiteralInt 22] "com9" "CustomerOf"
-                    ,RelationshipEntry "gt2" [LiteralInt 12] "com1" "CustomerOf"
-                    ,RelationshipEntry "uh12" [LiteralInt 24] "com5" "CustomerOf"
-                    ,RelationshipEntry "uh12" [LiteralInt 24] "com2" "CustomerOf"
-                    ,RelationshipEntry "uh12" [LiteralInt 24] "com8" "CustomerOf"
-                    ,RelationshipEntry "jj23" [LiteralInt 5] "com3" "CustomerOf"
-                    ,RelationshipEntry "jj23" [LiteralInt 12] "com2" "CustomerOf"
-                    ,RelationshipEntry "jj23" [LiteralInt 72] "com5" "CustomerOf"
-                    ]
-            ]
-
-
-
-
-
 xy :: File -> [String]  -> [Maybe NodeEntry]
 xy f ss = map (returnNodeRecord f) ss
 
+-- Return
 
-
--- returns a list containing all of the id values of each table, each table of ID is in its own list of values
 returnIDValues :: File -> [[String]]
 returnIDValues (File nodeSets _) = returnIDValues' nodeSets
 
@@ -116,8 +39,6 @@ returnIDValues''' (nodeEntry : nodeEntries) = returnIDValues'''' nodeEntry : ret
 returnIDValues'''' :: NodeEntry -> String
 returnIDValues'''' (NodeEntry s _ _) = s
 
-
--- -- Allows searching for a single record in a node set table by using an ID
 returnNodeRecord :: File -> String -> Maybe NodeEntry
 returnNodeRecord (File nodeSets _) s = returnNodeRecord' nodeSets s
 
@@ -143,10 +64,7 @@ returnNodeRecord'''' nodeEntry@(NodeEntry s' _ _ ) s
     | s' == s = Just nodeEntry
     | otherwise = Nothing
 
-
-
-
-
+-- Print
 
 printFile :: File -> String
 printFile (File nodeSets relationshipSets) = printNodeSets nodeSets ++ "\n" ++ printRelationshipSets relationshipSets
