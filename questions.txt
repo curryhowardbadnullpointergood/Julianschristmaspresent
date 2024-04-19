@@ -38,3 +38,12 @@ label =
 == /= && ||
 
 ageLess25Nodes = match file (age:integer < 25, Label)
+
+
+
+var tasks = getRelationShip END_ID where priority >= 8
+
+var labels = getLabels file 
+
+var staff = filterLabel labels (\s -> s == "Staff")
+

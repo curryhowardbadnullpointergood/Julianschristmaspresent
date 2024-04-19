@@ -1,6 +1,6 @@
 module GqlEval where
-import Lexer ( FieldType(..) )
-import Parser
+import InputLexer
+import InputParser
 import System.Environment ( getArgs )
 import Control.Exception
 import System.IO
@@ -87,13 +87,13 @@ extractLiteralInt :: Literal -> Int
 extractLiteralInt (LiteralInt i) = i
 extractLiteralBool :: Literal -> Bool
 extractLiteralBool (LiteralBool b) = b
+extractLabel :: Label -> String
 extractLabel (Label s) = s
 isLiteralNull :: Literal -> Bool
 isLiteralNull (LiteralNull) = True
 isLiteralNull (LiteralStr s) = False
 isLiteralNull (LiteralInt i) = False
 isLiteralNull (LiteralBool b) = False
-
 
 -- Filter functions work by taking a list of ids and a literal value for a certain field, 
 -- a predicate to filter on aswell as a boolean to decide what to do with null literal values 

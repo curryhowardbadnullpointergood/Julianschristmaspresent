@@ -1,5 +1,5 @@
-import Lexer
-import Parser
+import InputLexer
+import InputParser
 import GqlEval
 import System.Environment ( getArgs )
 import Control.Exception
@@ -12,22 +12,21 @@ main = do
     putStrLn ("Input File: \n" ++ replicate 50 '-'  ++ "\n" ++ sourceText ++ "\n" ++ replicate 50 '-')
     catch (main' sourceText) noLex
 
-
 main' :: String -> IO ()
 main' sourceText = do
     let lexedProg = alexScanTokens sourceText
+    -- putStrLn ("Lexed As: \n" ++ replicate 50 '-'  ++ "\n" ++ show lexedProg ++ "\n" ++ replicate 50 '-')
     catch (main'' lexedProg) noParse
 
 
-main'' :: [Token] -> IO ()
+main'' :: [InputToken] -> IO ()
 main'' lexedProg = do
     let parsedProg = inputParser lexedProg
+    putStrLn ("Parsed As: \n" ++ replicate 50 '-'  ++ "\n" ++ show parsedProg ++ "\n" ++ replicate 50 '-')
     main''' parsedProg
 
 main''' :: File -> IO ()
 main''' parsedProg = do
-    putStrLn (printFile parsedProg)
-
     print $ getField parsedProg "stringField"
     print $ getField parsedProg "intField"
     print $ getField parsedProg "boolField"
