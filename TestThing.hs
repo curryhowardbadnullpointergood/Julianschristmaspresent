@@ -8,8 +8,7 @@ import Data.List
 import Control.Monad
 
 -- THIS WHOLE FUNCTION IS JSUT TO HELP ME UNDERSTAND HOW EVERYTHING THUS FAR WORKS.
-
--- LIKE SERIOUSLY THIS IS PURELY JUST YAPPING FOR FERDI IGNORE IT
+-- LIKE SERIOUSLY THIS IS PURELY JUST YAPPING TO TRY AND TEST GQLEVAL.HS STUFF
 
 handleIOException :: IOException -> IO ()
 handleIOException e = hPutStrLn stderr ("IO Error: " ++ show e)
@@ -54,23 +53,22 @@ evaluateAndPrintResults file = do
 
 
 
-    -- Working Q1 (age:TEMPFIXLATER)
-
+-- Q1 "working", not really the header is all wrong as you can see if you test it
+-- ./TestThing problem1Input.txt
+{-
     let temp = getNodes file
     let part1 = filterIntNodes temp "age" (<= 25)
     let part2 = filterLabelNodes temp (== "Visitor")
     let combinedParts = unionNode part1 part2
     let output3 = formatNodeTable combinedParts ["age"]
     print output3
-
     putStrLn output3
+-}
 
 
-
+-- Me beginning to try to do Q1 the same way that i did it in the following bit for Q2
+-- ./TestThing problem1Input.txt
 {-
-
-    -- Weird
-
     let nodes = getNodes file
     let youngPeople = filterIntNodes nodes "age" (<= 25)
     print youngPeople
@@ -83,20 +81,11 @@ evaluateAndPrintResults file = do
 
     let idsAsString2 = extractNodeLabels youngPeople
     print idsAsString2
-
-    -- Extract ages as strings directly in the main, handling null values
-    let agesAsString = map (\node -> maybe "null" literalToString (extractFieldFromNodeEntry "age" node)) nodes
-    print agesAsString
-
-    --let output3 = formatNodeTable relevantNodes ["age"]
-    --putStrLn output3
 -}
-
     
+    
+-- Q2 "working", check column headers etc
 
-    -- Q2
-
-{-
     let wholeThing = getTables file
 
     -- Relationships filtering
@@ -121,7 +110,3 @@ evaluateAndPrintResults file = do
 
     let finale = generateCSVTables updatedData
     printCSVTables finale
-
-
-
--}
