@@ -13,6 +13,7 @@ bk21, "Barbara","King",70
 mw3, "Mei","Wu",47
 as4, "Anika","Sharma",40
 cr2, "Connor","Flaherty",15
+
 :ID, company:string, :LABEL
 com1, "BarStucks", Cafe
 com2, "NaffeCero", Delicatessen;Cafe
@@ -23,6 +24,7 @@ com6, "DoughReMe", Pizzeria
 com7, "BaaBaaBlackSheep", Barber
 com8, "TheAngryOnion", Pizzeria;Restaurant
 com9, "TheLaughingOnion", Restaurant
+
 :START_ID, :END_ID, :TYPE
 jj23,com5,WorksFor
 uh12,com2,WorksFor
@@ -37,6 +39,7 @@ bk21,com4,WorksFor
 mw3,com2,WorksFor
 as4,com1,WorksFor
 cr2,com6,WorksFor
+
 :START_ID, :END_ID, :TYPE
 jj23,rw5, IsFriend
 jj23,bk21, IsFriend
