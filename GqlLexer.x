@@ -9,6 +9,8 @@ $Uchar = [A-Z]
 $char = [a-zA-Z]
 $special = [\.]
 tokens :-
+    "output"                {\p s -> Tok p TokenOutputVar}
+
     $white+                 ;
     "//" .*                 ; -- single line comment
     "/*" [a[^a]\n]* "*/"    ; -- multi line comment
@@ -59,7 +61,7 @@ tokens :-
     "GetLabels"             {\p s -> Tok p TokenGetLabels}         
     "GetRelations"          {\p s -> Tok p TokenGetRelations}
 
-    "FilterLabel"           {\p s -> Tok p TokenFilterRelation}
+    "FilterLabel"           {\p s -> Tok p TokenFilterLabel}
     "FilterField"           {\p s -> Tok p TokenFilterField} 
 
     "FilterRelations"       {\p s -> Tok p TokenFilterRelations}
@@ -81,11 +83,14 @@ tokens :-
 {
 
 
+
 data LangToken = 
     Tok AlexPosn LangTokenClass
     deriving (Eq, Show)
 
 data LangTokenClass =
+    TokenOutputVar          |
+
     TokenSemiColon          |
     TokenAssignment         |
 
@@ -104,8 +109,8 @@ data LangTokenClass =
     TokenTrue               |       
     TokenFalse              |      
 
-    TokenLambdaArrow        |
-    TokenLamdaBackSlash     |
+    -- TokenLambdaArrow        |
+    -- TokenLamdaBackSlash     |
 
     TokenLParen             |
     TokenRParen             |
@@ -121,7 +126,7 @@ data LangTokenClass =
     -- TokenGetBoolField       |
     TokenGetLabels          |
     TokenGetRelations       |
-    TokenFilterRelation     |
+    TokenFilterLabel        |
     TokenFilterField        |
     TokenFilterRelations    |
 
