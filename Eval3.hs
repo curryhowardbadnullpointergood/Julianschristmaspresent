@@ -1,4 +1,4 @@
-module GqlEval where
+module Eval3 where
 import InputLexer ( FieldType(..) )
 import InputParser
 import Data.Maybe
@@ -7,6 +7,178 @@ import Data.List
 import System.Environment ( getArgs )
 import Control.Exception
 import System.IO
+import Text.Read (Lexeme(String))
+import Data.Map.Internal.Debug (node)
+
+
+
+
+
+
+
+-- Filters the type of the relation table 
+filterTypeRelations ::[(RelationshipHeader, RelationshipEntry)] -> (String -> Bool) -> [(RelationshipHeader,RelationshipEntry)]
+filterTypeRelations relationshipEnteries predicate = filter matchesConditiont relationshipEnteries
+    where 
+        matchesConditiont :: (RelationshipHeader, RelationshipEntry) -> Bool 
+        matchesConditiont l = matchesCondition l predicate
+
+
+getRE :: (a, RelationshipEntry) -> String
+getRE (rH, rE) = getLastString rE 
+
+getLastString :: RelationshipEntry -> String
+getLastString (RelationshipEntry _ _ _ lastStr) = lastStr
+
+
+-- matchesCondition :: (RelationshipHeader, RelationshipEntries) -> (String -> Bool) -> Bool 
+matchesCondition :: (a, RelationshipEntry) -> (String -> Bool) -> Bool
+matchesCondition rE predicate = predicate (getRE rE)
+
+
+
+-- getStartEndId :: [(relationshipHeader, relationshipEntery)] -> String 
+getStartId :: [(RelationshipHeader,RelationshipEntry)] -> [String]
+getStartId list = [ getStartEndId' rE | (_,rE) <- list]           
+
+
+
+-- getStartEndId :: [(relationshipHeader, relationshipEntery)] -> String 
+getEndId :: [(RelationshipHeader,RelationshipEntry)] -> [String]
+getEndId list = [ getStartEndId'' rE | (_,rE) <- list]          
+
+getStartEndId' (RelationshipEntry s _ e _) = s
+
+getStartEndId'' (RelationshipEntry s _ e _) = e
+
+
+getPairStartEnd :: [(RelationshipHeader,RelationshipEntry)] -> [(String,String)]
+getPairStartEnd list = [ getPairStartEnd' rE | (_,rE) <- list]          
+
+getPairStartEnd' (RelationshipEntry s _ e _) = (s,e)
+
+matchdrewwith:: [String] -> [(String,String)] -> [String]
+matchdrewwith list pairlist = [  i1 | (i1,i2) <- pairlist, i2 `elem` list]
+
+matchdrewwith1:: [String] -> [(String,String)] -> [String]
+matchdrewwith1 list pairlist = [  i2 | (i1,i2) <- pairlist, i1 `elem` list]
+
+matchdrewwith2:: [String] -> [(String,String)] -> [String]
+matchdrewwith2 list pairlist = [  i2 | (i1,i2) <- pairlist, i2 `elem` list]
+
+matchdrewwith3:: [String] -> [(String,String)] -> [String]
+matchdrewwith3 list pairlist = [  i1 | (i1,i2) <- pairlist, i1 `elem` list]
+
+--triple :: [String] -> [(String,String)] -> [String] -> [(String,String,String)]
+
+
+triple list1 tuple1 list2 = [(matchdrewwith list1 tuple1), (matchdrewwith1 (matchdrewwith2 list1 tuple1) list2)]
+
+triple2 list1 tuple1 list2 = [(matchdrewwith1 list1 tuple1), (matchdrewwith1 (matchdrewwith3 list1 tuple1) list2)]
+
+reversel [] acc = acc
+reversel (x:xs) acc = reversel (xs) ([x]:acc) 
+
+ghty lh tuple1 list2 = [ [triple2 g tuple1 list2]| g <- lh]
+
+filterNodeId :: [(NodeHeader,NodeEntry)] -> (String -> Bool) -> [(NodeHeader,NodeEntry)]
+filterNodeId nodeEnteries predicate = undefined 
+
+
+getNodeString:: NodeEntry -> String 
+getNodeString (NodeEntry s l _ ) = s
+
+
+getNE :: (a, NodeEntry) -> String
+getNE (nH, nE) = getNodeString nE 
+
+
+matchesConditionN :: (a, NodeEntry) -> (String -> Bool) -> Bool
+matchesConditionN rE predicate = predicate (getNE rE)
+
+
+filterTypeRelationsN ::[(NodeHeader, NodeEntry)] -> (String -> Bool) -> [(NodeHeader,NodeEntry)]
+filterTypeRelationsN nodeEnteries predicate = filter matchesConditiont nodeEnteries
+    where 
+        matchesConditiont :: (NodeHeader, NodeEntry) -> Bool 
+        matchesConditiont l = matchesConditionN l predicate
+
+nihow :: String -> [(NodeHeader, NodeEntry)] -> [(NodeHeader,NodeEntry)]
+nihow stringe nodeE  = filterTypeRelationsN nodeE (\s -> s == stringe)
+    
+passitin stri nodeE = [(nihow t nodeE) | gh <- stri, t <- gh]
+
+
+lnj j nodeg = [ [passitin i nodeg] | i <- j]
+
+
+listpp list nump = [ (passitinnagain g nump) | g <- list]
+passitinnagain hg nump = [ arepointsequal g nump  | h <- hg , g <- h]
+arepointsequal (nH, nE) nump = [getpointsss nE nump]
+
+getpointsss (NodeEntry s list _) nump = specifyindeee s list nump 
+
+specifyindeee s list nuu = (s,list !! nuu) 
+
+comparepoints (x,xs) _ | xs == LiteralNull = []
+comparepoints (x,xs) listtt = [ (r,t) | (r,t) <- listtt, t == xs  ]
+
+
+
+concattt input = concat input 
+
+turntotuple [(a,b)] = (a,b)
+
+parsedFile :: File
+parsedFile = File [NodeSet (NodeHeader [Field "points" TypeInteger,Field "team" TypeString] False) [NodeEntry "t1" [LiteralInt 9,LiteralStr "Winchester"] [],NodeEntry "t2" [LiteralNull,LiteralStr "Romsey"] [],NodeEntry "t3" [LiteralInt 7,LiteralStr "Eastleigh"] [],NodeEntry "t4" [LiteralInt 4,LiteralStr "FairOak"] [],NodeEntry "t5" [LiteralNull,LiteralStr "Totton"] [],NodeEntry "t6" [LiteralInt 6,LiteralStr "Weston"] [],NodeEntry "t7" [LiteralInt 7,LiteralStr "Hamble"] [],NodeEntry "t8" [LiteralNull,LiteralStr "Fareham"] [],NodeEntry "t9" [LiteralNull,LiteralStr "Ringwood"] [],NodeEntry "t10" [LiteralInt 3,LiteralStr "Hythe"] [],NodeEntry "t11" [LiteralInt 3,LiteralStr "Shirley"] [],NodeEntry "t12" [LiteralInt 3,LiteralStr "Southampton"] [],NodeEntry "t13" [LiteralInt 4,LiteralStr "Ashurst"] [],NodeEntry "t14" [LiteralInt 6,LiteralStr "Lyndhurst"] []]] [RelationshipSet (RelationshipHeader [Field "week" TypeInteger,Field "ga" TypeInteger,Field "gf" TypeInteger]) [RelationshipEntry "t1" [LiteralInt 3,LiteralInt 2,LiteralInt 3] "t10" "Beat",RelationshipEntry "t11" [LiteralInt 3,LiteralInt 0,LiteralInt 1] "t2" "Beat",RelationshipEntry "t3" [LiteralInt 3,LiteralInt 1,LiteralInt 1] "t12" "DrewWith",RelationshipEntry "t13" [LiteralInt 3,LiteralInt 1,LiteralInt 2] "t4" "Beat",RelationshipEntry "t14" [LiteralInt 3,LiteralInt 2,LiteralInt 3] "t5" "Beat",RelationshipEntry "t6" [LiteralInt 3,LiteralInt 0,LiteralInt 1] "t8" "Beat",RelationshipEntry "t7" [LiteralInt 3,LiteralInt 0,LiteralInt 1] "t9" "Beat",RelationshipEntry "t1" [LiteralInt 2,LiteralInt 0,LiteralInt 1] "t9" "Beat",RelationshipEntry "t10" [LiteralInt 2,LiteralInt 0,LiteralInt 1] "t2" "Beat",RelationshipEntry "t3" [LiteralInt 2,LiteralInt 0,LiteralInt 4] "t11" "Beat",RelationshipEntry "t4" [LiteralInt 2,LiteralInt 3,LiteralInt 3] "t12" "DrewWith",RelationshipEntry "t5" [LiteralInt 2,LiteralInt 0,LiteralInt 0] "t13" "DrewWith",RelationshipEntry "t14" [LiteralInt 2,LiteralInt 0,LiteralInt 1] "t6" "Beat",RelationshipEntry "t7" [LiteralInt 2,LiteralInt 1,LiteralInt 1] "t8" "DrewWith",RelationshipEntry "t1" [LiteralInt 1,LiteralInt 2,LiteralInt 4] "t8" "Beat",RelationshipEntry "t2" [LiteralInt 1,LiteralInt 1,LiteralInt 1] "t9" "DrewWith",RelationshipEntry "t3" [LiteralInt 1,LiteralInt 0,LiteralInt 1] "t10" "Beat",RelationshipEntry "t4" [LiteralInt 1,LiteralInt 1,LiteralInt 3] "t11" "Beat",RelationshipEntry "t5" [LiteralInt 1,LiteralInt 2,LiteralInt 2] "t12" "DrewWith",RelationshipEntry "t6" [LiteralInt 1,LiteralInt 0,LiteralInt 1] "t13" "Beat",RelationshipEntry "t7" [LiteralInt 1,LiteralInt 0,LiteralInt 2] "t14" "Beat"]]
+
+main :: IO ()
+main = do
+    let relationships = getRelationships parsedFile
+    putStrLn "Relationships:"
+    mapM_ print relationships
+
+
+
+
+
+
+-- Relationships:
+-- (RelationshipHeader [Field "week" TypeInteger,Field "ga" TypeInteger,Field "gf" TypeInteger],RelationshipEntry "t1" [LiteralInt 3,LiteralInt 2,LiteralInt 3] "t10" "Beat")
+-- (RelationshipHeader [Field "week" TypeInteger,Field "ga" TypeInteger,Field "gf" TypeInteger],RelationshipEntry "t11" [LiteralInt 3,LiteralInt 0,LiteralInt 1] "t2" "Beat")
+-- (RelationshipHeader [Field "week" TypeInteger,Field "ga" TypeInteger,Field "gf" TypeInteger],RelationshipEntry "t3" [LiteralInt 3,LiteralInt 1,LiteralInt 1] "t12" "DrewWith")
+-- (RelationshipHeader [Field "week" TypeInteger,Field "ga" TypeInteger,Field "gf" TypeInteger],RelationshipEntry "t13" [LiteralInt 3,LiteralInt 1,LiteralInt 2] "t4" "Beat")
+-- (RelationshipHeader [Field "week" TypeInteger,Field "ga" TypeInteger,Field "gf" TypeInteger],RelationshipEntry "t14" [LiteralInt 3,LiteralInt 2,LiteralInt 3] "t5" "Beat")
+-- (RelationshipHeader [Field "week" TypeInteger,Field "ga" TypeInteger,Field "gf" TypeInteger],RelationshipEntry "t6" [LiteralInt 3,LiteralInt 0,LiteralInt 1] "t8" "Beat")
+-- (RelationshipHeader [Field "week" TypeInteger,Field "ga" TypeInteger,Field "gf" TypeInteger],RelationshipEntry "t7" [LiteralInt 3,LiteralInt 0,LiteralInt 1] "t9" "Beat")
+-- (RelationshipHeader [Field "week" TypeInteger,Field "ga" TypeInteger,Field "gf" TypeInteger],RelationshipEntry "t1" [LiteralInt 2,LiteralInt 0,LiteralInt 1] "t9" "Beat")
+-- (RelationshipHeader [Field "week" TypeInteger,Field "ga" TypeInteger,Field "gf" TypeInteger],RelationshipEntry "t10" [LiteralInt 2,LiteralInt 0,LiteralInt 1] "t2" "Beat")
+-- (RelationshipHeader [Field "week" TypeInteger,Field "ga" TypeInteger,Field "gf" TypeInteger],RelationshipEntry "t3" [LiteralInt 2,LiteralInt 0,LiteralInt 4] "t11" "Beat")
+-- (RelationshipHeader [Field "week" TypeInteger,Field "ga" TypeInteger,Field "gf" TypeInteger],RelationshipEntry "t4" [LiteralInt 2,LiteralInt 3,LiteralInt 3] "t12" "DrewWith")
+-- (RelationshipHeader [Field "week" TypeInteger,Field "ga" TypeInteger,Field "gf" TypeInteger],RelationshipEntry "t5" [LiteralInt 2,LiteralInt 0,LiteralInt 0] "t13" "DrewWith")
+-- (RelationshipHeader [Field "week" TypeInteger,Field "ga" TypeInteger,Field "gf" TypeInteger],RelationshipEntry "t14" [LiteralInt 2,LiteralInt 0,LiteralInt 1] "t6" "Beat")
+-- (RelationshipHeader [Field "week" TypeInteger,Field "ga" TypeInteger,Field "gf" TypeInteger],RelationshipEntry "t7" [LiteralInt 2,LiteralInt 1,LiteralInt 1] "t8" "DrewWith")
+-- (RelationshipHeader [Field "week" TypeInteger,Field "ga" TypeInteger,Field "gf" TypeInteger],RelationshipEntry "t1" [LiteralInt 1,LiteralInt 2,LiteralInt 4] "t8" "Beat")
+-- (RelationshipHeader [Field "week" TypeInteger,Field "ga" TypeInteger,Field "gf" TypeInteger],RelationshipEntry "t2" [LiteralInt 1,LiteralInt 1,LiteralInt 1] "t9" "DrewWith")
+-- (RelationshipHeader [Field "week" TypeInteger,Field "ga" TypeInteger,Field "gf" TypeInteger],RelationshipEntry "t3" [LiteralInt 1,LiteralInt 0,LiteralInt 1] "t10" "Beat")
+-- (RelationshipHeader [Field "week" TypeInteger,Field "ga" TypeInteger,Field "gf" TypeInteger],RelationshipEntry "t4" [LiteralInt 1,LiteralInt 1,LiteralInt 3] "t11" "Beat")
+-- (RelationshipHeader [Field "week" TypeInteger,Field "ga" TypeInteger,Field "gf" TypeInteger],RelationshipEntry "t5" [LiteralInt 1,LiteralInt 2,LiteralInt 2] "t12" "DrewWith")
+-- (RelationshipHeader [Field "week" TypeInteger,Field "ga" TypeInteger,Field "gf" TypeInteger],RelationshipEntry "t6" [LiteralInt 1,LiteralInt 0,LiteralInt 1] "t13" "Beat")
+-- (RelationshipHeader [Field "week" TypeInteger,Field "ga" TypeInteger,Field "gf" TypeInteger],RelationshipEntry "t7" [LiteralInt 1,LiteralInt 0,LiteralInt 2] "t14" "Beat")
+
+--[(RelationshipHeader [Field "week" TypeInteger,Field "ga" TypeInteger,Field "gf" TypeInteger],RelationshipEntry "t1" [LiteralInt 3,LiteralInt 2,LiteralInt 3] "t10" "Beat"),(RelationshipHeader [Field "week" TypeInteger,Field "ga" TypeInteger,Field "gf" TypeInteger],RelationshipEntry "t11" [LiteralInt 3,LiteralInt 0,LiteralInt 1] "t2" "Beat")]
+
+
+
+--[(RelationshipHeader [Field "week" TypeInteger,Field "ga" TypeInteger,Field "gf" TypeInteger],RelationshipEntry "t1" [LiteralInt 3,LiteralInt 2,LiteralInt 3] "t10" "Beat"),(RelationshipHeader [Field "week" TypeInteger,Field "ga" TypeInteger,Field "gf" TypeInteger],RelationshipEntry "t11" [LiteralInt 3,LiteralInt 0,LiteralInt 1] "t2" "Beat"),(RelationshipHeader [Field "week" TypeInteger,Field "ga" TypeInteger,Field "gf" TypeInteger],RelationshipEntry "t3" [LiteralInt 3,LiteralInt 1,LiteralInt 1] "t12" "DrewWith"),(RelationshipHeader [Field "week" TypeInteger,Field "ga" TypeInteger,Field "gf" TypeInteger],RelationshipEntry "t13" [LiteralInt 3,LiteralInt 1,LiteralInt 2] "t4" "Beat"),(RelationshipHeader [Field "week" TypeInteger,Field "ga" TypeInteger,Field "gf" TypeInteger],RelationshipEntry "t14" [LiteralInt 3,LiteralInt 2,LiteralInt 3] "t5" "Beat"),(RelationshipHeader [Field "week" TypeInteger,Field "ga" TypeInteger,Field "gf" TypeInteger],RelationshipEntry "t6" [LiteralInt 3,LiteralInt 0,LiteralInt 1] "t8" "Beat"),(RelationshipHeader [Field "week" TypeInteger,Field "ga" TypeInteger,Field "gf" TypeInteger],RelationshipEntry "t7" [LiteralInt 3,LiteralInt 0,LiteralInt 1] "t9" "Beat"),(RelationshipHeader [Field "week" TypeInteger,Field "ga" TypeInteger,Field "gf" TypeInteger],RelationshipEntry "t1" [LiteralInt 2,LiteralInt 0,LiteralInt 1] "t9" "Beat"),(RelationshipHeader [Field "week" TypeInteger,Field "ga" TypeInteger,Field "gf" TypeInteger],RelationshipEntry "t10" [LiteralInt 2,LiteralInt 0,LiteralInt 1] "t2" "Beat"),(RelationshipHeader [Field "week" TypeInteger,Field "ga" TypeInteger,Field "gf" TypeInteger],RelationshipEntry "t3" [LiteralInt 2,LiteralInt 0,LiteralInt 4] "t11" "Beat"),(RelationshipHeader [Field "week" TypeInteger,Field "ga" TypeInteger,Field "gf" TypeInteger],RelationshipEntry "t4" [LiteralInt 2,LiteralInt 3,LiteralInt 3] "t12" "DrewWith"),(RelationshipHeader [Field "week" TypeInteger,Field "ga" TypeInteger,Field "gf" TypeInteger],RelationshipEntry "t5" [LiteralInt 2,LiteralInt 0,LiteralInt 0] "t13" "DrewWith"),(RelationshipHeader [Field "week" TypeInteger,Field "ga" TypeInteger,Field "gf" TypeInteger],RelationshipEntry "t14" [LiteralInt 2,LiteralInt 0,LiteralInt 1] "t6" "Beat"),(RelationshipHeader [Field "week" TypeInteger,Field "ga" TypeInteger,Field "gf" TypeInteger],RelationshipEntry "t7" [LiteralInt 2,LiteralInt 1,LiteralInt 1] "t8" "DrewWith"),(RelationshipHeader [Field "week" TypeInteger,Field "ga" TypeInteger,Field "gf" TypeInteger],RelationshipEntry "t1" [LiteralInt 1,LiteralInt 2,LiteralInt 4] "t8" "Beat"),(RelationshipHeader [Field "week" TypeInteger,Field "ga" TypeInteger,Field "gf" TypeInteger],RelationshipEntry "t2" [LiteralInt 1,LiteralInt 1,LiteralInt 1] "t9" "DrewWith"),(RelationshipHeader [Field "week" TypeInteger,Field "ga" TypeInteger,Field "gf" TypeInteger],RelationshipEntry "t3" [LiteralInt 1,LiteralInt 0,LiteralInt 1] "t10" "Beat"),(RelationshipHeader [Field "week" TypeInteger,Field "ga" TypeInteger,Field "gf" TypeInteger],RelationshipEntry "t4" [LiteralInt 1,LiteralInt 1,LiteralInt 3] "t11" "Beat"),(RelationshipHeader [Field "week" TypeInteger,Field "ga" TypeInteger,Field "gf" TypeInteger],RelationshipEntry "t5" [LiteralInt 1,LiteralInt 2,LiteralInt 2] "t12" "DrewWith"),(RelationshipHeader [Field "week" TypeInteger,Field "ga" TypeInteger,Field "gf" TypeInteger],RelationshipEntry "t6" [LiteralInt 1,LiteralInt 0,LiteralInt 1] "t13" "Beat"),(RelationshipHeader [Field "week" TypeInteger,Field "ga" TypeInteger,Field "gf" TypeInteger],RelationshipEntry "t7" [LiteralInt 1,LiteralInt 0,LiteralInt 2] "t14" "Beat")]
+
+
+-- [(NodeHeader [Field "points" TypeInteger,Field "team" TypeString] False,NodeEntry "t1" [LiteralInt 9,LiteralStr "Winchester"] []),(NodeHeader [Field "points" TypeInteger,Field "team" TypeString] False,NodeEntry "t2" [LiteralNull,LiteralStr "Romsey"] []),(NodeHeader [Field "points" TypeInteger,Field "team" TypeString] False,NodeEntry "t3" [LiteralInt 7,LiteralStr "Eastleigh"] []),(NodeHeader [Field "points" TypeInteger,Field "team" TypeString] False,NodeEntry "t4" [LiteralInt 4,LiteralStr "FairOak"] []),(NodeHeader [Field "points" TypeInteger,Field "team" TypeString] False,NodeEntry "t5" [LiteralNull,LiteralStr "Totton"] []),(NodeHeader [Field "points" TypeInteger,Field "team" TypeString] False,NodeEntry "t6" [LiteralInt 6,LiteralStr "Weston"] []),(NodeHeader [Field "points" TypeInteger,Field "team" TypeString] False,NodeEntry "t7" [LiteralInt 7,LiteralStr "Hamble"] []),(NodeHeader [Field "points" TypeInteger,Field "team" TypeString] False,NodeEntry "t8" [LiteralNull,LiteralStr "Fareham"] []),(NodeHeader [Field "points" TypeInteger,Field "team" TypeString] False,NodeEntry "t9" [LiteralNull,LiteralStr "Ringwood"] []),(NodeHeader [Field "points" TypeInteger,Field "team" TypeString] False,NodeEntry "t10" [LiteralInt 3,LiteralStr "Hythe"] []),(NodeHeader [Field "points" TypeInteger,Field "team" TypeString] False,NodeEntry "t11" [LiteralInt 3,LiteralStr "Shirley"] []),(NodeHeader [Field "points" TypeInteger,Field "team" TypeString] False,NodeEntry "t12" [LiteralInt 3,LiteralStr "Southampton"] []),(NodeHeader [Field "points" TypeInteger,Field "team" TypeString] False,NodeEntry "t13" [LiteralInt 4,LiteralStr "Ashurst"] []),(NodeHeader [Field "points" TypeInteger,Field "team" TypeString] False,NodeEntry "t14" [LiteralInt 6,LiteralStr "Lyndhurst"] [])]
+-- ghci> let node = [(NodeHeader [Field "points" TypeInteger,Field "team" TypeString] False,NodeEntry "t1" [LiteralInt 9,LiteralStr "Winchester"] []),(NodeHeader [Field "points" TypeInteger,Field "team" TypeString] False,NodeEntry "t2" [LiteralNull,LiteralStr "Romsey"] []),(NodeHeader [Field "points" TypeInteger,Field "team" TypeString] False,NodeEntry "t3" [LiteralInt 7,LiteralStr "Eastleigh"] []),(NodeHeader [Field "points" TypeInteger,Field "team" TypeString] False,NodeEntry "t4" [LiteralInt 4,LiteralStr "FairOak"] []),(NodeHeader [Field "points" TypeInteger,Field "team" TypeString] False,NodeEntry "t5" [LiteralNull,LiteralStr "Totton"] []),(NodeHeader [Field "points" TypeInteger,Field "team" TypeString] False,NodeEntry "t6" [LiteralInt 6,LiteralStr "Weston"] []),(NodeHeader [Field "points" TypeInteger,Field "team" TypeString] False,NodeEntry "t7" [LiteralInt 7,LiteralStr "Hamble"] []),(NodeHeader [Field "points" TypeInteger,Field "team" TypeString] False,NodeEntry "t8" [LiteralNull,LiteralStr "Fareham"] []),(NodeHeader [Field "points" TypeInteger,Field "team" TypeString] False,NodeEntry "t9" [LiteralNull,LiteralStr "Ringwood"] []),(NodeHeader [Field "points" TypeInteger,Field "team" TypeString] False,NodeEntry "t10" [LiteralInt 3,LiteralStr "Hythe"] []),(NodeHeader [Field "points" TypeInteger,Field "team" TypeString] False,NodeEntry "t11" [LiteralInt 3,LiteralStr "Shirley"] []),(NodeHeader [Field "points" TypeInteger,Field "team" TypeString] False,NodeEntry "t12" [LiteralInt 3,LiteralStr "Southampton"] []),(NodeHeader [Field "points" TypeInteger,Field "team" TypeString] False,NodeEntry "t13" [LiteralInt 4,LiteralStr "Ashurst"] []),(NodeHeader [Field "points" TypeInteger,Field "team" TypeString] False,NodeEntry "t14" [LiteralInt 6,LiteralStr "Lyndhurst"] [])]
+-- ghci> node
+--[(NodeHeader [Field "points" TypeInteger,Field "team" TypeString] False,NodeEntry "t1" [LiteralInt 9,LiteralStr "Winchester"] []),(NodeHeader [Field "points" TypeInteger,Field "team" TypeString] False,NodeEntry "t2" [LiteralNull,LiteralStr "Romsey"] []),(NodeHeader [Field "points" TypeInteger,Field "team" TypeString] False,NodeEntry "t3" [LiteralInt 7,LiteralStr "Eastleigh"] []),(NodeHeader [Field "points" TypeInteger,Field "team" TypeString] False,NodeEntry "t4" [LiteralInt 4,LiteralStr "FairOak"] []),(NodeHeader [Field "points" TypeInteger,Field "team" TypeString] False,NodeEntry "t5" [LiteralNull,LiteralStr "Totton"] []),(NodeHeader [Field "points" TypeInteger,Field "team" TypeString] False,NodeEntry "t6" [LiteralInt 6,LiteralStr "Weston"] []),(NodeHeader [Field "points" TypeInteger,Field "team" TypeString] False,NodeEntry "t7" [LiteralInt 7,LiteralStr "Hamble"] []),(NodeHeader [Field "points" TypeInteger,Field "team" TypeString] False,NodeEntry "t8" [LiteralNull,LiteralStr "Fareham"] []),(NodeHeader [Field "points" TypeInteger,Field "team" TypeString] False,NodeEntry "t9" [LiteralNull,LiteralStr "Ringwood"] []),(NodeHeader [Field "points" TypeInteger,Field "team" TypeString] False,NodeEntry "t10" [LiteralInt 3,LiteralStr "Hythe"] []),(NodeHeader [Field "points" TypeInteger,Field "team" TypeString] False,NodeEntry "t11" [LiteralInt 3,LiteralStr "Shirley"] []),(NodeHeader [Field "points" TypeInteger,Field "team" TypeString] False,NodeEntry "t12" [LiteralInt 3,LiteralStr "Southampton"] []),(NodeHeader [Field "points" TypeInteger,Field "team" TypeString] False,NodeEntry "t13" [LiteralInt 4,LiteralStr "Ashurst"] []),(NodeHeader [Field "points" TypeInteger,Field "team" TypeString] False,NodeEntry "t14" [LiteralInt 6,LiteralStr "Lyndhurst"] [])]
+
+
 
 extractJust :: Maybe a -> a
 extractJust (Just i) = i

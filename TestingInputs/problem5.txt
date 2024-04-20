@@ -13,6 +13,7 @@ bk21, "Barbara","King",70
 mw3, "Mei","Wu",47
 as4, "Anika","Sharma",40
 cr2, "Connor","Flaherty",15
+
 :ID, business:string, bonus:integer, :LABEL
 com1, "BarStucks", 10, Cafe
 com2, "NaffeCero", 15, Cafe
@@ -23,6 +24,7 @@ com6, "DoughReMe", 25, Pizzeria
 com7, "BaaBaaBlackSheep", 10, Barber
 com8, "TheAngryOnion", 30, Restaurant
 com9, "TheLaughingOnion", 25, Restaurant
+
 :START_ID, reward:integer, :END_ID, :TYPE
 jj23,72,com5,CustomerOf
 jj23,12,com2,CustomerOf
@@ -44,6 +46,7 @@ bk21,62,com4,CustomerOf
 mw3,3,com2,CustomerOf
 as4,63,com1,CustomerOf
 cr2,50,com6,CustomerOf
+
 :START_ID, :END_ID, :TYPE
 jj23,rw5, Recommended
 jj23,bk21, Recommended
