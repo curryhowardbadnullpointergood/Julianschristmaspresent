@@ -90,6 +90,47 @@ filterStringNodes nodeEntries fieldName predicate =
       case findLiteralByFieldNameNodes fields literals fieldName of
         Just (LiteralStr value) -> predicate value
         _ -> False
+
+---------------------------------------------------------------------------------------------------
+-- Filtering Relations
+---------------------------------------------------------------------------------------------------
+
+findLiteralByFieldNameRelations :: Fields -> Literals -> String -> Maybe Literal
+findLiteralByFieldNameRelations fields literals fieldName = do
+    fieldIndex <- findIndex (\(Field fName _) -> fName == fieldName) fields
+    guard (fieldIndex < length literals)
+    return (literals !! fieldIndex)
+
+filterIntRelations :: [(RelationshipHeader, RelationshipEntry)] -> String -> (Int -> Bool) -> [(RelationshipHeader, RelationshipEntry)]
+filterIntRelations relationships fieldName predicate =
+    filter matchesIntCondition relationships
+  where
+    matchesIntCondition :: (RelationshipHeader, RelationshipEntry) -> Bool
+    matchesIntCondition (RelationshipHeader fields, RelationshipEntry _ literals _ _) =
+      case findLiteralByFieldNameRelations fields literals fieldName of
+        Just (LiteralInt value) -> predicate value
+        _ -> False
+
+filterBoolRelations :: [(RelationshipHeader, RelationshipEntry)] -> String -> (Bool -> Bool) -> [(RelationshipHeader, RelationshipEntry)]
+filterBoolRelations relationships fieldName predicate =
+    filter matchesBoolCondition relationships
+  where
+    matchesBoolCondition :: (RelationshipHeader, RelationshipEntry) -> Bool
+    matchesBoolCondition (RelationshipHeader fields, RelationshipEntry _ literals _ _) =
+      case findLiteralByFieldNameRelations fields literals fieldName of
+        Just (LiteralBool value) -> predicate value
+        _ -> False
+
+filterStringRelations :: [(RelationshipHeader, RelationshipEntry)] -> String -> (String -> Bool) -> [(RelationshipHeader, RelationshipEntry)]
+filterStringRelations relationships fieldName predicate =
+    filter matchesStringCondition relationships
+  where
+    matchesStringCondition :: (RelationshipHeader, RelationshipEntry) -> Bool
+    matchesStringCondition (RelationshipHeader fields, RelationshipEntry _ literals _ _) =
+      case findLiteralByFieldNameRelations fields literals fieldName of
+        Just (LiteralStr value) -> predicate value
+        _ -> False
+
 ---------------------------------------------------------------------------------------------------
 -- Printing
 ---------------------------------------------------------------------------------------------------
