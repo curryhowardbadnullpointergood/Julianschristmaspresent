@@ -13,27 +13,22 @@ import System.IO
 -- Being Currently Tested
 ---------------------------------------------------------------------------------------------------
 
--- Function to extract Node IDs from a list of nodes
 extractNodeIDs :: Nodes -> [String]
 extractNodeIDs nodes = map (\(_, NodeEntry id _ _) -> id) nodes
 
--- Function to extract Labels from a list of nodes
 extractNodeLabels :: Nodes -> [String]
 extractNodeLabels nodes = concatMap extractLabelsAsString nodes
   where
     extractLabelsAsString (_, NodeEntry _ _ labels) = map (\(Label s) -> s) labels
 
--- Function to extract start IDs from a list of relationships
 extractRelationStartIDs :: Relations -> [String]
-extractRelationStartIDs relationships = nub $ map (\(_, RelationshipEntry startId _ _ _) -> startId) relationships
+extractRelationStartIDs relationships = map (\(_, RelationshipEntry startId _ _ _) -> startId) relationships
 
--- Function to extract end IDs from a list of relationships
 extractRelationEndIDs :: Relations -> [String]
-extractRelationEndIDs relationships = nub $ map (\(_, RelationshipEntry _ _ endId _) -> endId) relationships
+extractRelationEndIDs relationships = map (\(_, RelationshipEntry _ _ endId _) -> endId) relationships
 
--- Function to extract types from a list of relationships
 extractRelationTypes :: Relations -> [String]
-extractRelationTypes relationships = nub $ map (\(_, RelationshipEntry _ _ _ typeLabel) -> typeLabel) relationships
+extractRelationTypes relationships = map (\(_, RelationshipEntry _ _ _ typeLabel) -> typeLabel) relationships
 
 ---------------------------------------------------------------------------------------------------
 -- Alias Definitions
