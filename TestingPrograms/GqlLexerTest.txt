@@ -1,9 +1,6 @@
--- This file is atest program
+// This file is atest program
 
 File file = Read "problem1.txt";
 
-Nodes nodes = GetField file "age":int;
-Nodes labels = GetLabels file
-
-Nodes nodesLess30 = FilterField nodes (\x -> x <= 30)
-Nodes labelVisitor = FilterLabel labels (\x -> x == "Visitor")
+Nodes nodes = GetNodes file; 
+File output = file;

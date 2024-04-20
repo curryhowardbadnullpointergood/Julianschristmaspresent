@@ -25,43 +25,37 @@ import InputLexer
 
 
 %%
+File                    : NodeSets RelationshipSets                         {File (reverse $1) (reverse $2)}
 
-File                    : NodeSets RelationshipSets                         {File $1 $2}
 
-NodeSets                : NodeSets1                                         {reverse $1}
-NodeSets1               : NodeSets1 NodeSet                                 {$2 : $1}             
+NodeSets                : NodeSets NodeSet                                  {$2 : $1}             
                         | NodeSet                                           {[$1]}
 
-NodeSet                 : NodeHeader NodeEntries                            {NodeSet $1 $2}
+NodeSet                 : NodeHeader NodeEntries                            {NodeSet $1 (reverse $2)}
 
 
-NodeHeader              : ":ID" "," Fields                                  {NodeHeader $3 False}
-                        | ":ID" "," Fields "," ":LABEL"                     {NodeHeader $3 True}
+NodeHeader              : ":ID" "," Fields                                  {NodeHeader (reverse $3) False}
+                        | ":ID" "," Fields "," ":LABEL"                     {NodeHeader (reverse $3) True}
                         | ":ID"                                             {NodeHeader [] False}
                         | ":ID" "," ":LABEL"                                {NodeHeader [] True}
 
--- Fields                  : Fields1 "," Field                                 {reverse $1 }
--- Fields1                 : Fields1 "," Field                                 {$3 : $1}
---                         | Field                                             {[$1]}
 
 Fields                  : Fields "," Field                                  {$3 : $1}            
                         | Field                                             {[$1]}
 
 Field                   : string ":" type                                   {Field $1 $3}
 
-NodeEntries             : NodeEntries1                                      {reverse $1}
-NodeEntries1            : NodeEntries1 NodeEntry                            {$2 : $1}                
+
+NodeEntries             : NodeEntries NodeEntry                             {$2 : $1}                
                         | NodeEntry                                         {[$1]}
 
 
-NodeEntry               : string "," Literals "," Labels                    {NodeEntry $1 $3 $5}
-                        | string "," Literals                               {NodeEntry $1 $3 []}
-                        | string "," Labels                                 {NodeEntry $1 [] $3}
+
+NodeEntry               : string "," Literals "," Labels                    {NodeEntry $1 (reverse $3) (reverse $5)}
+                        | string "," Literals                               {NodeEntry $1 (reverse $3) []}
+                        | string "," Labels                                 {NodeEntry $1 [] (reverse $3)}
                         | string                                            {NodeEntry $1 [] []}
 
--- Literals                : Literals1                                      {reverse $1}
--- Literals1                : Literals1 "," Literal                         {$3 : $1}
---                         | Literal                                           {[$1]}
 
 Literals                : Literals "," Literal                              {$3 : $1}
                         | Literal                                           {[$1]}
@@ -71,22 +65,19 @@ Literal                 : strVal                                            {Lit
                         | boolVal                                           {LiteralBool $1}
                         | nullVal                                           {LiteralNull}
 
-Labels                  : Labels1                                           {reverse $1}
-Labels1                 : Labels1 ";" Label                                 {$3 : $1}           
+Labels                  : Labels ";" Label                                  {$3 : $1}           
                         | Label                                             {[$1]}
 Label                   : string                                            {Label $1}
 
-RelationshipSets        : RelationshipSets1                                 {reverse $1}
-RelationshipSets1       : RelationshipSets1 RelationshipSet                 {$2 : $1}  
+RelationshipSets        : RelationshipSets RelationshipSet                  {$2 : $1}  
                         | RelationshipSet                                   {[$1]}
 
-RelationshipSet         : RelationshipHeader RelationshipEntries            {RelationshipSet $1 $2}
+RelationshipSet         : RelationshipHeader RelationshipEntries            {RelationshipSet $1 (reverse $2)}
 
-RelationshipHeader      : ":START_ID" "," Fields "," ":END_ID" "," ":TYPE"  {RelationshipHeader $3}
+RelationshipHeader      : ":START_ID" "," Fields "," ":END_ID" "," ":TYPE"  {RelationshipHeader (reverse $3)}
                         | ":START_ID" "," ":END_ID" "," ":TYPE"             {RelationshipHeader []}
 
-RelationshipEntries     : RelationshipEntries1                              {reverse $1}
-RelationshipEntries1    : RelationshipEntries1 RelationshipEntry            {$2 : $1}
+RelationshipEntries     : RelationshipEntries RelationshipEntry             {$2 : $1}
                         | RelationshipEntry                                 {[$1]}
 
 

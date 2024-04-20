@@ -9,73 +9,68 @@ $Uchar = [A-Z]
 $char = [a-zA-Z]
 $special = [\.]
 tokens :-
-    "output"                {\p s -> Tok p TokenOutputVar}
+    "output"                {\p s -> LTok p TokenOutputVar}
 
     $white+                 ;
     "//" .*                 ; -- single line comment
     "/*" [a[^a]\n]* "*/"    ; -- multi line comment
 
-    ";"                     {\p s -> Tok p TokenSemiColon}
-    "="                     {\p s -> Tok p TokenAssignment}
+    ";"                     {\p s -> LTok p TokenSemiColon}
+    "="                     {\p s -> LTok p TokenAssignment}
 
     -- Comparisons
-    "<="                    {\p s -> Tok p TokenLessThanEqual}
-    ">="                    {\p s -> Tok p TokenGreaterThanEqual}
-    "<"                     {\p s -> Tok p TokenLessThan}
-    ">"                     {\p s -> Tok p TokenGreaterThan}
-    "=="                    {\p s -> Tok p TokenEquals}
-    "!="                    {\p s -> Tok p TokenNotEquals}
+    "<="                    {\p s -> LTok p TokenLessThanEqual}
+    ">="                    {\p s -> LTok p TokenGreaterThanEqual}
+    "<"                     {\p s -> LTok p TokenLessThan}
+    ">"                     {\p s -> LTok p TokenGreaterThan}
+    "=="                    {\p s -> LTok p TokenEquals}
+    "!="                    {\p s -> LTok p TokenNotEquals}
     
     -- String predicates
-    "["integer+"]"          {\p s -> Tok p (TokenIndex (read (tail $ init s) :: Int))} 
-    "Length"                {\p s -> Tok p TokenLength}
+    "["integer+"]"          {\p s -> LTok p (TokenIndex (read (tail $ init s) :: Int))} 
+    "Length"                {\p s -> LTok p TokenLength}
 
-    -- Boolean conditions
-    "&&"                    {\p s -> Tok p TokenAnd}
-    "||"                    {\p s -> Tok p TokenOr}
-    "True"                  {\p s -> Tok p TokenTrue}
-    "False"                 {\p s -> Tok p TokenFalse}
-
-    -- Lambda
-    "->"                    {\p s -> Tok p TokenLambdaArrow}
-    \\                      {\p s -> Tok p TokenLamdaBackSlash}
-
+    -- Union Intersection
+    "&&"                    {\p s -> LTok p TokenAnd}
+    "||"                    {\p s -> LTok p TokenOr}
 
     -- Brackets   
-    "("                     {\p s -> Tok p TokenLParen}
-    ")"                     {\p s -> Tok p TokenRParen}
+    "("                     {\p s -> LTok p TokenLParen}
+    ")"                     {\p s -> LTok p TokenRParen}
 
 
     -- Functions
-    ":" $white* "int"       {\p s -> Tok p TokenIntFieldType}
-    ":" $white* "string"    {\p s -> Tok p TokenStrFieldType}
-    ":" $white* "boolean"   {\p s -> Tok p TokenBoolFieldType}
+    ":" $white* "int"       {\p s -> LTok p TokenIntFieldType}
+    ":" $white* "string"    {\p s -> LTok p TokenStrFieldType}
+    ":" $white* "boolean"   {\p s -> LTok p TokenBoolFieldType}
+    ":Label"                {\p s -> LTok p TokenLabelField}
 
-    "Read"                  {\p s -> Tok p TokenRead}
+    "Read"                  {\p s -> LTok p TokenRead}
 
-    -- "GetIntField"           {\p s -> Tok p TokenGetIntField}
-    -- "GetStrField"           {\p s -> Tok p TokenGetStrField}
-    -- "GetBoolField"          {\p s -> Tok p TokenGetBoolField}
-    "GetField"              {\p s -> Tok p TokenGetField}
+    -- "GetIntField"           {\p s -> LTok p TokenGetIntField}
+    -- "GetStrField"           {\p s -> LTok p TokenGetStrField}
+    -- "GetBoolField"          {\p s -> LTok p TokenGetBoolField}
+    -- "GetField"              {\p s -> LTok p TokenGetField}
 
-    "GetLabels"             {\p s -> Tok p TokenGetLabels}         
-    "GetRelations"          {\p s -> Tok p TokenGetRelations}
+    -- "GetLabels"             {\p s -> LTok p TokenGetLabels}     
+    "GetNodes"              {\p s -> LTok p TokenGetNodes}    
+    "GetRelations"          {\p s -> LTok p TokenGetRelations}
 
-    "FilterLabel"           {\p s -> Tok p TokenFilterLabel}
-    "FilterField"           {\p s -> Tok p TokenFilterField} 
-
-    "FilterRelations"       {\p s -> Tok p TokenFilterRelations}
+    "FilterField"           {\p s -> LTok p TokenFilterField} 
+    "FilterRelations"       {\p s -> LTok p TokenFilterRelations}
 
     -- Types
-    "File"                  {\p s -> Tok p TokenTypeFile}
-    "Nodes"                 {\p s -> Tok p TokenTypeNodes}
-    "Relations"             {\p s -> Tok p TokenTypeRelations}
+    "File"                  {\p s -> LTok p TokenTypeFile}
+    "Nodes"                 {\p s -> LTok p TokenTypeNodes}
+    "Relations"             {\p s -> LTok p TokenTypeRelations}
 
 
 
-    \"[$char$integer$special]*\"        {\p s -> Tok p (TokenString (tail $ init s))}
-    $integer+                   {\p s -> Tok p (TokenInt (read s :: Int))}
-    $Lchar [$char $integer \']* {\p s -> Tok p (TokenVar s)}
+    "True"                          {\p s -> LTok p TokenTrue}
+    "False"                         {\p s -> LTok p TokenFalse}
+    \"[$char$integer$special]*\"    {\p s -> LTok p (TokenString (tail $ init s))}
+    $integer+                       {\p s -> LTok p (TokenInt (read s :: Int))}
+    $Lchar [$char $integer \']*     {\p s -> LTok p (TokenVar s)}
 
 
 
@@ -84,59 +79,58 @@ tokens :-
 
 
 
-data LangToken = 
-    Tok AlexPosn LangTokenClass
+data LangToken 
+    = LTok AlexPosn LangTokenClass
     deriving (Eq, Show)
 
-data LangTokenClass =
-    TokenOutputVar          |
+data LangTokenClass 
+    = TokenOutputVar          
+    | TokenSemiColon          
+    | TokenAssignment         
+         
+    | TokenAnd                     
+    | TokenOr      
 
-    TokenSemiColon          |
-    TokenAssignment         |
+    | TokenEquals             
+    | TokenNotEquals 
 
-    TokenLessThanEqual      |
-    TokenGreaterThanEqual   |
-    TokenLessThan           |
-    TokenGreaterThan        |
-    TokenEquals             |
-    TokenNotEquals          |
+    | TokenLessThanEqual      
+    | TokenGreaterThanEqual   
+    | TokenLessThan           
+    | TokenGreaterThan        
 
-    TokenIndex Int          |
-    TokenLength             |
+    | TokenIndex Int          
+    | TokenLength   
+    | TokenTrue                    
+    | TokenFalse                   
 
-    TokenAnd                |       
-    TokenOr                 |       
-    TokenTrue               |       
-    TokenFalse              |      
+    | TokenLParen             
+    | TokenRParen
 
-    -- TokenLambdaArrow        |
-    -- TokenLamdaBackSlash     |
+    | TokenIntFieldType        
+    | TokenStrFieldType        
+    | TokenBoolFieldType       
+    | TokenLabelField
+    | TokenRead               
+    -- | TokenGetField           
+    -- | TokenGetIntField        
+    -- | TokenGetStrField        
+    -- | TokenGetBoolField
+    -- | TokenGetLabels
 
-    TokenLParen             |
-    TokenRParen             |
+    | TokenGetNodes
+    | TokenGetRelations
 
-    TokenIntFieldType        |
-    TokenStrFieldType        |
-    TokenBoolFieldType       |
+    | TokenFilterLabel        
+    | TokenFilterField        
+    | TokenFilterRelations    
 
-    TokenRead               |
-    TokenGetField           |
-    -- TokenGetIntField        |
-    -- TokenGetStrField        |
-    -- TokenGetBoolField       |
-    TokenGetLabels          |
-    TokenGetRelations       |
-    TokenFilterLabel        |
-    TokenFilterField        |
-    TokenFilterRelations    |
-
-    TokenTypeFile           |
-    TokenTypeNodes          |
-    TokenTypeRelations      |
-                    
-    TokenString String      |
-    TokenInt Int            |
-    TokenVar String
+    | TokenTypeFile           
+    | TokenTypeNodes          
+    | TokenTypeRelations
+    | TokenString String      
+    | TokenInt Int            
+    | TokenVar String
     deriving (Eq, Show)
 
 
