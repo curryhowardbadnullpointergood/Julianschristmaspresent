@@ -66,4 +66,3 @@ noLex :: ErrorCall -> IO ()
 noLex e = do let err =  show e
              hPutStr stderr ("Problem with lexing: " ++ err)
              return ()
-

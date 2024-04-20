@@ -40,10 +40,10 @@ tokens :-
 
 
     -- Functions
-    ":" $white* "int"       {\p s -> LTok p TokenIntFieldType}
+    ":" $white* "integer"   {\p s -> LTok p TokenIntFieldType}
     ":" $white* "string"    {\p s -> LTok p TokenStrFieldType}
     ":" $white* "boolean"   {\p s -> LTok p TokenBoolFieldType}
-    ":Label"                {\p s -> LTok p TokenLabelField}
+    ":LABEL"                {\p s -> LTok p TokenLabelField}
 
     "Read"                  {\p s -> LTok p TokenRead}
 
