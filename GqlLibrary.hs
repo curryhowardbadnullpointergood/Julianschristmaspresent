@@ -1,4 +1,5 @@
 module GqlLibrary where
+  
 import InputLexer
 import InputParser
 
@@ -14,10 +15,11 @@ import Control.Exception
 import System.IO
 
 ---------------------------------------------------------------------------------------------------
--- Being Currently Tested
+-- Being Currently Tested:
+-- Currently being created for question 1ish, not particularly sure if useful i believe Ash is 
+-- having a look to update this
 ---------------------------------------------------------------------------------------------------
 
--- Function to combine any number of lists of strings into a list of lists of strings
 combineListsDynamically :: [[String]] -> [[String]]
 combineListsDynamically lists = transpose lists
 
@@ -44,15 +46,11 @@ parseHeader header hasLabel =
             [] -> []
             (_:b') -> mySplit delim b'
 
-
-
--- Improved function to parse header and convert lists of strings into Nodes
 convertToNodes :: String -> Bool -> [[String]] -> Nodes
 convertToNodes header hasLabel dataList =
     let NodeHeader fields _ = parseHeader header hasLabel
     in map (createNode (NodeHeader fields hasLabel)) dataList
 
--- Function to create a Node from a list of strings, now handling labels
 createNode :: NodeHeader -> [String] -> Node
 createNode header@(NodeHeader fields hasLabel) values =
     let (literalsData, labelsData) = if hasLabel then (init values, last values) else (values, "")
@@ -60,19 +58,14 @@ createNode header@(NodeHeader fields hasLabel) values =
         labels = if hasLabel then [Label labelsData] else []
     in (header, NodeEntry (head literalsData) literals labels)
 
--- Convert string value to Literal based on field type
 toLiteral :: Field -> String -> Literal
 toLiteral (Field _ TypeInteger) value = LiteralInt (fromMaybe 0 (readMaybe value))
 toLiteral (Field _ TypeString) value = LiteralStr value
 toLiteral (Field _ TypeBoolean) value = LiteralBool (fromMaybe False (readMaybe value))
 
-
-
-
-
-
-
-
+---------------------------------------------------------------------------------------------------
+-- Extract [String]'s, not sure if useful
+---------------------------------------------------------------------------------------------------
 extractNodeIDs :: Nodes -> [String]
 extractNodeIDs nodes = map (\(_, NodeEntry id _ _) -> id) nodes
 
@@ -123,7 +116,6 @@ extractRelationFields fieldName relations = concatMap extractField relations
     literalToString (LiteralStr s) = s
     literalToString (LiteralInt i) = show i
     literalToString (LiteralBool b) = show b
-
 ---------------------------------------------------------------------------------------------------
 -- Alias Definitions
 ---------------------------------------------------------------------------------------------------
