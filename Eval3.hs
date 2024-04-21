@@ -9,7 +9,7 @@ import Control.Exception
 import System.IO
 import Text.Read (Lexeme(String))
 import Data.Map.Internal.Debug (node)
-
+import Data.List (elemIndex)
 
 
 
@@ -55,34 +55,24 @@ getStartEndId'' (RelationshipEntry s _ e _) = e
 getPairStartEnd :: [(RelationshipHeader,RelationshipEntry)] -> [(String,String)]
 getPairStartEnd list = [ getPairStartEnd' rE | (_,rE) <- list]          
 
+getPairStartEnd' :: RelationshipEntry -> (String, String)
 getPairStartEnd' (RelationshipEntry s _ e _) = (s,e)
 
-matchdrewwith:: [String] -> [(String,String)] -> [String]
-matchdrewwith list pairlist = [  i1 | (i1,i2) <- pairlist, i2 `elem` list]
 
-matchdrewwith1:: [String] -> [(String,String)] -> [String]
-matchdrewwith1 list pairlist = [  i2 | (i1,i2) <- pairlist, i1 `elem` list]
+helperfindn''2 :: String -> [(String,String)] -> [(String,String)] -> [(String,String,String,String,String,String)]
+helperfindn''2 str pairlist pairb = [ ("n", b2,"n'", i1, "n''" ,i2) | (i1,i2) <- pairlist, i1 == str, (b1,b2) <- pairb , i1 == b1]
 
-matchdrewwith2:: [String] -> [(String,String)] -> [String]
-matchdrewwith2 list pairlist = [  i2 | (i1,i2) <- pairlist, i2 `elem` list]
+helperfindn'' :: String -> [(String,String)] -> [(String,String)] -> [(String,String,String,String,String,String)] 
+helperfindn'' str pairlist pairb = [ ("n", b2, "n'",i2,"n''",i1) | (i1, i2) <- pairlist , i2 == str, (b1,b2) <- pairb , i2 == b1 ] 
 
-matchdrewwith3:: [String] -> [(String,String)] -> [String]
-matchdrewwith3 list pairlist = [  i1 | (i1,i2) <- pairlist, i1 `elem` list]
-
---triple :: [String] -> [(String,String)] -> [String] -> [(String,String,String)]
+findn'' :: [String] -> [(String,String)] -> [(String,String)] -> [[(String,String,String,String,String,String)]]
+findn'' strlist pairlist pairb = (filter (not.null)[ helperfindn'' str pairlist pairb | str <- strlist]) 
+                        ++ (filter (not.null)[ helperfindn''2 str pairlist pairb | str <- strlist])
 
 
-triple list1 tuple1 list2 = [(matchdrewwith list1 tuple1), (matchdrewwith1 (matchdrewwith2 list1 tuple1) list2)]
 
-triple2 list1 tuple1 list2 = [(matchdrewwith1 list1 tuple1), (matchdrewwith1 (matchdrewwith3 list1 tuple1) list2)]
 
-reversel [] acc = acc
-reversel (x:xs) acc = reversel (xs) ([x]:acc) 
 
-ghty lh tuple1 list2 = [ [triple2 g tuple1 list2]| g <- lh]
-
-filterNodeId :: [(NodeHeader,NodeEntry)] -> (String -> Bool) -> [(NodeHeader,NodeEntry)]
-filterNodeId nodeEnteries predicate = undefined 
 
 
 getNodeString:: NodeEntry -> String 
@@ -100,17 +90,38 @@ matchesConditionN rE predicate = predicate (getNE rE)
 filterTypeRelationsN ::[(NodeHeader, NodeEntry)] -> (String -> Bool) -> [(NodeHeader,NodeEntry)]
 filterTypeRelationsN nodeEnteries predicate = filter matchesConditiont nodeEnteries
     where 
-        matchesConditiont :: (NodeHeader, NodeEntry) -> Bool 
+        matchesConditiont :: (NodeHeader, NodeEntry) -> Bool
         matchesConditiont l = matchesConditionN l predicate
 
-nihow :: String -> [(NodeHeader, NodeEntry)] -> [(NodeHeader,NodeEntry)]
-nihow stringe nodeE  = filterTypeRelationsN nodeE (\s -> s == stringe)
+nihow :: (String,String,String,String,String,String) -> [(NodeHeader, NodeEntry)] -> [(NodeHeader,NodeEntry)]
+nihow (s1,s2,s3,s4,s5,s6) nodeE  = filterTypeRelationsN nodeE (\s -> s == s2) ++ filterTypeRelationsN nodeE (\s -> s == s6)
     
+passitin :: [[(String, String, String, String, String, String)]] -> [(NodeHeader, NodeEntry)] -> [[(NodeHeader, NodeEntry)]]
 passitin stri nodeE = [(nihow t nodeE) | gh <- stri, t <- gh]
 
+passincompare :: [[(NodeHeader,NodeEntry)]] -> String -> [(NodeHeader,NodeEntry)]
+passincompare list str = nub (concat (filter (not.null)[ (comparepoint1 f str)| f <- list]))
 
-lnj j nodeg = [ [passitin i nodeg] | i <- j]
+comparepoint1 :: [(NodeHeader,NodeEntry)] -> String -> [(NodeHeader,NodeEntry)] 
+comparepoint1 [(nH,nE),(nH1, nH2)] str 
+                | (getLiteralsInt (nH, nE) str) == LiteralNull = []
+                | (getLiteralsInt (nH, nE) str) == ((getLiteralsInt (nH1, nH2) str)) = [(nH, nE)]
+                | otherwise = [] 
 
+getLiteralsInt :: (NodeHeader, NodeEntry) -> String -> Literal 
+getLiteralsInt ((NodeHeader list _ ), (NodeEntry _ list1 _)) str = list1 !! (findIndexc (Field str TypeInteger) list )
+
+
+findIndexc :: Eq a => a -> [a] -> Int
+findIndexc _ [] = -1
+findIndexc item (x:xs)
+    | item == x = 0
+    | otherwise = 1 + findIndexc item xs
+
+
+reverseList :: [a] -> [a]
+reverseList [] = []
+reverseList (x:xs) = reverseList xs ++ [x]
 
 listpp list nump = [ (passitinnagain g nump) | g <- list]
 passitinnagain hg nump = [ arepointsequal g nump  | h <- hg , g <- h]
@@ -125,8 +136,10 @@ comparepoints (x,xs) listtt = [ (r,t) | (r,t) <- listtt, t == xs  ]
 
 
 
+concattt :: Foldable t => t [a] -> [a]
 concattt input = concat input 
 
+turntotuple :: [(a, b)] -> (a, b)
 turntotuple [(a,b)] = (a,b)
 
 parsedFile :: File
