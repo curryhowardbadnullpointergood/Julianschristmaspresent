@@ -27,10 +27,10 @@ import GqlLexer
     "("             {LTok _ (TokenLParen)}
     ")"             {LTok _ (TokenRParen)}
 
-    ":int"          {LTok _ (TokenIntFieldType)}
+    ":integer"      {LTok _ (TokenIntFieldType)}
     ":string"       {LTok _ (TokenStrFieldType)}
     ":bool"         {LTok _ (TokenBoolFieldType)}
-    ":Label"        {LTok _ (TokenLabelField)}
+    ":LABEL"        {LTok _ (TokenLabelField)}
 
     read            {LTok _ (TokenRead)}
     output          {LTok _ (TokenOutputVar)}
@@ -67,11 +67,11 @@ FinalAssignment : Type output "=" Operation ";" {FinalAssignment $1 $4}
 
 
 Operation 		: read str {OpRead $2}
-                | filterField var str ":int"    "(" IntCondition int")"     {OpFilterIntField $2 $3 ($6, $7)}
+                | filterField var str ":integer"    "(" IntCondition int")"     {OpFilterIntField $2 $3 ($6, $7)}
                 | filterField var str ":string" "(" StrCondition str")"     {OpFilterStringField $2 $3 ($6, $7)}
                 | filterField var str ":bool"   "(" BoolCondition true")"   {OpFilterBoolField $2 $3 ($6, True)}
                 | filterField var str ":bool"   "(" BoolCondition false")"  {OpFilterBoolField $2 $3 ($6, False)}
-				| filterField var     ":Label"  "(" StrCondition str")"     {OpFilterLabel $2 ($5, $6)}
+				| filterField var     ":LABEL"  "(" StrCondition str")"     {OpFilterLabel $2 ($5, $6)}
                 | getNodes var {OpGetNodes $2}
                 | getRelations var {OpGetRelations $2}
                 -- | filterRelations {} 

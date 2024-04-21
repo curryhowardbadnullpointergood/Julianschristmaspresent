@@ -1,0 +1,9 @@
+File file = Read "access.n4j";
+
+Nodes nodes = GetNodes file;
+
+Nodes less25 = FilterField nodes "age":integer (<= 25);
+Nodes visitors = FilterField less25 :LABEL (== "Visitor");
+
+
+Nodes output = visitors;
