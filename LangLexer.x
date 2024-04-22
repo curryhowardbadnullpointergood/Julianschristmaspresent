@@ -25,8 +25,9 @@ tokens :-
     ":string"               {\p s -> LTok p LTokenStrField}
     ":boolean"              {\p s -> LTok p LTokenBoolField}
     "LABEL"                 {\p s -> LTok p LTokenLabelField}
-    "STARTID"               {\p s -> LTok p LTokenStartIDField}
-    "ENDID"                 {\p s -> LTok p LTokenEndIDField}
+    "ID"                    {\p s -> LTok p LTokenIdField}
+    "STARTID"               {\p s -> LTok p LTokenStartField}
+    "ENDID"                 {\p s -> LTok p LTokenEndField}
     "TYPE"                  {\p s -> LTok p LTokenTypeField}
 
     "OR"                    {\p s -> LTok p LTokenOr}                 
@@ -85,8 +86,9 @@ data LangTokenClass
     | LTokenStrField
     | LTokenBoolField
     | LTokenLabelField
-    | LTokenStartIDField
-    | LTokenEndIDField
+    | LTokenIdField
+    | LTokenStartField
+    | LTokenEndField
     | LTokenTypeField
 
     | LTokenOr
@@ -118,7 +120,7 @@ data LangTokenClass
     | LTokenFalse
     | LTokenString String      
     | LTokenInt Int            
-    | LTokenVar String
+    | LTokenName String
     deriving (Eq, Show)
 
 

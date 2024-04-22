@@ -1,7 +1,6 @@
 module GqlEvaluator where
-import GqlParser
-import GqlLexer
-import GqlLibrary
+import LangParser
+import LangLexer
 import InputLexer
 import InputParser
 
@@ -22,16 +21,13 @@ getVarFromName name ((varName, varValue) : vars)
 
 
 addVariable :: String -> VariableValue -> Variables -> Variables
+addVariable name val variables = variables : (name, val)
 
+-- evalProgram :: Variables -> Query -> Variables
+-- evalProgram (Program [] finalAssignment) = 
 
-evalProgram :: Variables -> Program -> Variables
-evalProgram (Program [] finalAssignment) = 
-
-
-
-
-
-
+-- evalQuery :: Query -> Variables -> 
+evalQuery (Query read matches )
 
 
 
@@ -39,10 +35,15 @@ evalProgram (Program [] finalAssignment) =
 
 
 
-printResult :: Variables -> String
-printResult ((bindingName, value): vars)
-    | bindingName == "output" = printOutput value
-    | otherwise = printResult env
+
+
+-- printResult :: Variables -> String
+-- printResult ((bindingName, value): vars)
+--     | bindingName == "output" = printOutput value
+--     | otherwise = printResult env
+
+evalRead :: Read -> File
+evalRead (Read filename) = readInputFile filename 
 
 
 printOutput :: VariableValue -> String
