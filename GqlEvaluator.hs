@@ -129,4 +129,3 @@ evalOutput  vars (LabelOutput varName) = []
 
 -- tempfile' :: File -> File 
 -- tempfile' file = file  
-
