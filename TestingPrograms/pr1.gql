@@ -1,9 +1,7 @@
-File file = Read "access.n4j";
+READ "access.n4j";
 
-Nodes nodes = GetNodes file;
+MATCH (people:Visitor);
 
-Nodes less25 = FilterField nodes "age":integer (<= 25);
-Nodes visitors = FilterField less25 :LABEL (== "Visitor");
+WHERE people.age <= 25;
 
-
-Nodes output = visitors;
+RETURN people.id AS :ID, people.age AS "age", people.label AS ":LABEL" ;

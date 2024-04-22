@@ -9,48 +9,48 @@ import GqlLexer
 
 
 %token
-    ";"             {LTok _ (TokenSemiColon)}
-    "="             {LTok _ (TokenAssignment)}
-    "&&"            {LTok _ (TokenAnd)}       
-    "||"            {LTok _ (TokenOr)}   
+    ";"             {LTok _ (LTokenSemiColon)}
+    "="             {LTok _ (LTokenAssignment)}
+    "&&"            {LTok _ (LTokenAnd)}       
+    "||"            {LTok _ (LTokenOr)}   
 
-    "=="            {LTok _ (TokenEquals)}
-    "/="            {LTok _ (TokenNotEquals)}
+    "=="            {LTok _ (LTokenEquals)}
+    "/="            {LTok _ (LTokenNotEquals)}
 
-    "<="            {LTok _ (TokenLessThanEqual)}
-    ">="            {LTok _ (TokenGreaterThanEqual)}
-    "<"             {LTok _ (TokenLessThan)}
-    ">"             {LTok _ (TokenGreaterThan)}
+    "<="            {LTok _ (LTokenLessThanEqual)}
+    ">="            {LTok _ (LTokenGreaterThanEqual)}
+    "<"             {LTok _ (LTokenLessThan)}
+    ">"             {LTok _ (LTokenGreaterThan)}
 
-    index           {LTok _ (TokenIndex $$)}  
+    index           {LTok _ (LTokenIndex $$)}  
 
-    "("             {LTok _ (TokenLParen)}
-    ")"             {LTok _ (TokenRParen)}
+    "("             {LTok _ (LTokenLParen)}
+    ")"             {LTok _ (LTokenRParen)}
 
-    ":integer"      {LTok _ (TokenIntFieldType)}
-    ":string"       {LTok _ (TokenStrFieldType)}
-    ":bool"         {LTok _ (TokenBoolFieldType)}
-    ":LABEL"        {LTok _ (TokenLabelField)}
+    ":integer"      {LTok _ (LTokenIntFieldType)}
+    ":string"       {LTok _ (LTokenStrFieldType)}
+    ":bool"         {LTok _ (LTokenBoolFieldType)}
+    ":LABEL"        {LTok _ (LTokenLabelField)}
 
-    read            {LTok _ (TokenRead)}
-    output          {LTok _ (TokenOutputVar)}
+    read            {LTok _ (LTokenRead)}
+    output          {LTok _ (LTokenOutputVar)}
 
-    getNodes        {LTok _ (TokenGetNodes)}
-    getRelations    {LTok _ (TokenGetRelations)}
+    getNodes        {LTok _ (LTokenGetNodes)}
+    getRelations    {LTok _ (LTokenGetRelations)}
 
-    filterField     {LTok _ (TokenFilterField)}
-    filterRelations {LTok _ (TokenFilterRelations)}
+    filterField     {LTok _ (LTokenFilterField)}
+    filterRelations {LTok _ (LTokenFilterRelations)}
 
-    file            {LTok _ (TokenTypeFile)}
-    nodes           {LTok _ (TokenTypeNodes)}
-    relations       {LTok _ (TokenTypeRelations)}
+    file            {LTok _ (LTokenTypeFile)}
+    nodes           {LTok _ (LTokenTypeNodes)}
+    relations       {LTok _ (LTokenTypeRelations)}
                     
-    str             {LTok _ (TokenString $$)}
-    int             {LTok _ (TokenInt $$)}
-    true            {LTok _ (TokenTrue)}       
-    false           {LTok _ (TokenFalse)}
+    str             {LTok _ (LTokenString $$)}
+    int             {LTok _ (LTokenInt $$)}
+    true            {LTok _ (LTokenTrue)}       
+    false           {LTok _ (LTokenFalse)}
 
-    var             {LTok _ (TokenVar $$)}
+    var             {LTok _ (LTokenVar $$)}
 
 
                         

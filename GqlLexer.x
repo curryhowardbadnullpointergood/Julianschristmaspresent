@@ -47,6 +47,7 @@ tokens :-
 
     "Read"                  {\p s -> LTok p TokenRead}
 
+
     -- "GetIntField"           {\p s -> LTok p TokenGetIntField}
     -- "GetStrField"           {\p s -> LTok p TokenGetStrField}
     -- "GetBoolField"          {\p s -> LTok p TokenGetBoolField}
@@ -84,53 +85,53 @@ data LangToken
     deriving (Eq, Show)
 
 data LangTokenClass 
-    = TokenOutputVar          
-    | TokenSemiColon          
-    | TokenAssignment         
+    = LTokenOutputVar          
+    | LTokenSemiColon          
+    | LTokenAssignment         
          
-    | TokenAnd                     
-    | TokenOr      
+    | LTokenAnd                     
+    | LTokenOr      
 
-    | TokenEquals             
-    | TokenNotEquals 
+    | LTokenEquals             
+    | LTokenNotEquals 
 
-    | TokenLessThanEqual      
-    | TokenGreaterThanEqual   
-    | TokenLessThan           
-    | TokenGreaterThan        
+    | LTokenLessThanEqual      
+    | LTokenGreaterThanEqual   
+    | LTokenLessThan           
+    | LTokenGreaterThan        
 
-    | TokenIndex Int          
-    | TokenLength   
-    | TokenTrue                    
-    | TokenFalse                   
+    | LTokenIndex Int          
+    | LTokenLength   
+    | LTokenTrue                    
+    | LTokenFalse                   
 
-    | TokenLParen             
-    | TokenRParen
+    | LTokenLParen             
+    | LTokenRParen
 
-    | TokenIntFieldType        
-    | TokenStrFieldType        
-    | TokenBoolFieldType       
-    | TokenLabelField
-    | TokenRead               
+    | LTokenIntFieldType        
+    | LTokenStrFieldType        
+    | LTokenBoolFieldType       
+    | LTokenLabelField
+
+    | LTokenRead               
     -- | TokenGetField           
     -- | TokenGetIntField        
     -- | TokenGetStrField        
     -- | TokenGetBoolField
     -- | TokenGetLabels
 
-    | TokenGetNodes
-    | TokenGetRelations
+    | LTokenGetNodes
+    | LTokenGetRelations
 
-    | TokenFilterLabel        
-    | TokenFilterField        
-    | TokenFilterRelations    
+    | LTokenFilterField        
+    | LTokenFilterRelations    
 
-    | TokenTypeFile           
-    | TokenTypeNodes          
-    | TokenTypeRelations
-    | TokenString String      
-    | TokenInt Int            
-    | TokenVar String
+    | LTokenTypeFile           
+    | LTokenTypeNodes          
+    | LTokenTypeRelations
+    | LTokenString String      
+    | LTokenInt Int            
+    | LTokenVar String
     deriving (Eq, Show)
 
 
