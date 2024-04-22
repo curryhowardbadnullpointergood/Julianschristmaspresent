@@ -21,13 +21,15 @@ getVarFromName name ((varName, varValue) : vars)
 
 
 addVariable :: String -> VariableValue -> Variables -> Variables
-addVariable name val variables = variables : (name, val)
+addVariable name val variables = (name, val) : variables 
 
 -- evalProgram :: Variables -> Query -> Variables
 -- evalProgram (Program [] finalAssignment) = 
 
 -- evalQuery :: Query -> Variables -> 
-evalQuery (Query read matches )
+-- evalQuery (Query read matches )
+
+
 
 
 
@@ -42,25 +44,25 @@ evalQuery (Query read matches )
 --     | bindingName == "output" = printOutput value
 --     | otherwise = printResult env
 
-evalRead :: Read -> File
-evalRead (Read filename) = readInputFile filename 
+-- evalRead :: Read -> File
+-- evalRead (Read filename) = readInputFile filename 
 
 
-printOutput :: VariableValue -> String
-printOutput (FileType file) = printFile file
+-- printOutput :: VariableValue -> String
+-- printOutput (FileType file) = printFile file
 
-readInputFile :: String -> File
-readInputFile fileName = parse
-    where
-        input = getInputFile fileName
-        lexed = lexInputFile input
-        parse = parseInputFile lexed
+-- readInputFile :: String -> File
+-- readInputFile fileName = parse
+--     where
+--         input = getInputFile fileName
+--         lexed = lexInputFile input
+--         parse = parseInputFile lexed
 
-getInputFile :: String -> String
-getInputFile fileName = readFile fileName
+-- getInputFile :: String -> String
+-- getInputFile fileName = readFile fileName
 
-lexIndexFile :: String -> [InputToken]
-lexIndexFile fileName = alexScanTokens
+-- lexIndexFile :: String -> [InputToken]
+-- lexIndexFile fileName = alexScanTokens
 
-parseInputFile :: [InputToken] -> File
-parseInputFile tokens = inputParser tokens
+-- parseInputFile :: [InputToken] -> File
+-- parseInputFile tokens = inputParser tokens
