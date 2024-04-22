@@ -1,7 +1,7 @@
-READ "access.n4j";
+READ "access.n4j"
 
-MATCH (people:Visitor);
+MATCH people
 
-WHERE people.age <= 25;
+WHERE people."age":string == "hello"
 
-RETURN people.id AS :ID, people.age AS "age", people.label AS ":LABEL" ;
+RETURN people."age":string AS "age:String"
