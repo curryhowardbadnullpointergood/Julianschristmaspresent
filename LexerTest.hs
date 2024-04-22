@@ -1,5 +1,5 @@
-import GqlLexer
-import GqlParser
+import LangParser
+import LangLexer
 import Control.Exception
 import System.IO
 import System.Environment ( getArgs )
@@ -21,7 +21,7 @@ main' sourceText = do
 
 main'' :: [LangToken] -> IO ()
 main'' lexedProg = do
-    let parsedProg = gqlParser lexedProg
+    let parsedProg = langParser lexedProg
     putStrLn ("Parsed As: \n" ++ replicate 50 '-'  ++ "\n" ++ show parsedProg ++ "\n" ++ replicate 50 '-')
 
 

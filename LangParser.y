@@ -59,7 +59,7 @@ name        {LTok _ (LTokenName $$)}
                         
 %%
 Query
-    : Read string Matches {Query $2 (reverse $3)}
+    : Read Matches {Query $1 (reverse $2)}
 
 Matches
     : Match Matches {$1 : $2}
@@ -70,20 +70,20 @@ Read
     : read string {ReadFile $2}
 
 Match
-    : match Patterns Where Return   {MatchWhere $2 $3 $4}
-    | match Patterns Return         {Match $2 $3}
+    : match Patterns where Conditions Return    {MatchWhere $2 $4 $5}
+    | match Patterns Return                     {Match $2 $3}
 
 Patterns
-    : "(" name ")" "-" "->" Patterns                {PatternRelatedTo $1 $4}
-    | "(" name ")" "-" "[" name "]" "->" Patterns   {PatternRelatedToVar $1 $3 $5}
-    | "(" name ")" "<-" "-"              Patterns   {PatternRelatedBy $1 $4}
-    | "(" name ")" "<-" "[" name "]" "-" Patterns   {PatternRelatedByVar $1 $3 $5}
-    | "(" name ")" "-" "-"               Patterns   {PatternRelated $1 $4}
-    | "(" name ")" "-" "(" name ")" "-"  Patterns   {PatternRelatedVar $1 $3 $5}
-    | "(" name ")"                                  {PatternFinal $1} 
+    : name "-" "->" Patterns        {PatternRelatedTo $1 $4}
+    | name "-" name "->" Patterns   {PatternRelatedToVar $1 $3 $5}
+    | name "<-" "-" Patterns        {PatternRelatedBy $1 $4}
+    | name "<-" name "-" Patterns   {PatternRelatedByVar $1 $3 $5}
+    | name "-" "-" Patterns         {PatternRelated $1 $4}
+    | name "-" name "-" Patterns    {PatternRelatedVar $1 $3 $5}
+    | name                          {PatternFinal $1} 
 
-Where
-    : where Conditions {}
+-- Where
+--     : where Conditions {}
 
 Conditions
     : Condition or Conditions   {WhereConditionOr $1 $3}
@@ -93,10 +93,10 @@ Conditions
 
 
 Condition
-    : name "." name intField IntCondition int       {IntWhereCondition $1 $3 $4 $5 $6} 
-    | name "." name strField StrCondition string    {StrWhereCondition $1 $3 $4 $5 $6} 
-    | name "." name boolField BoolCondition true    {BoolWhereCondition $1 $3 $4 $5 $6} 
-    | name "." name boolField BoolCondition false   {BoolWhereCondition $1 $3 $4 $5 $6} 
+    : name "." string intField IntCondition int     {IntWhereCondition $1 $3 $5 $6} 
+    | name "." string strField StrCondition string  {StrWhereCondition $1 $3 $5 $6} 
+    | name "." string boolField BoolCondition true  {BoolWhereCondition $1 $3 $5 True} 
+    | name "." string boolField BoolCondition false {BoolWhereCondition $1 $3 $5 False} 
     | name labelField StrCondition string           {LabelWhereCondition $1 $3 $4} 
     | name typeField StrCondition string            {TypeWhereCondition $1 $3 $4} 
 
@@ -131,13 +131,13 @@ Outputs
     | Output                {[$1]}
 
 Output
-    : name "." string intField as string    {StrOutput $1 $3 $5}  
-    | name "." string strField as string    {IntOutput $1 $3 $5}  
-    | name "." string boolField as string   {BoolOutput $1 $3 $5}
-    | name idField                          {IdOutput $1 $2}
-    | name startField                       {StartOutput $1 $2}
-    | name endField                         {EndOutput $1 $2}
-    | name labelField                       {LabelOutput $1 $2} 
+    : name "." string intField as string    {StrOutput $1 $3 $6}  
+    | name "." string strField as string    {IntOutput $1 $3 $6}  
+    | name "." string boolField as string   {BoolOutput $1 $3 $6}
+    | name idField                          {IdOutput $1}
+    | name startField                       {StartOutput $1}
+    | name endField                         {EndOutput $1}
+    | name labelField                       {LabelOutput $1} 
 
 
 
@@ -161,8 +161,8 @@ type Matches
     = [Match]
 
 data Match
-    = MatchWhere Patterns Where Return
-    | Match Patterns Return
+    = MatchWhere Patterns WhereConditions Return
+    | Match Patterns Return     
     deriving (Eq, Show)
 
 data Patterns 
@@ -175,20 +175,18 @@ data Patterns
     | PatternRelatedByVar String String Patterns
     deriving (Eq, Show)
 
-data Where
-    = Where WhereConditions
 
 data WhereConditions
     = WhereConditionOr WhereCondition WhereConditions
     | WhereConditionAnd WhereCondition WhereConditions 
-    | WhereConditionNot WhereCondition WhereConditions      
+    | WhereConditionNot WhereConditions      
     | WhereCondition WhereCondition 
     deriving (Eq, Show)
 
 data WhereCondition
     = IntWhereCondition String String IntCondition Int
     | StrWhereCondition String String StrCondition String
-    | BoolWhereConditon String String BoolCondition Bool
+    | BoolWhereCondition String String BoolCondition Bool
     | LabelWhereCondition String StrCondition String
     | TypeWhereCondition String StrCondition String
     deriving (Eq, Show)
@@ -230,10 +228,10 @@ data Output
     = StrOutput String String String 
     | IntOutput String String String 
     | BoolOutput String String String 
-    | IdOutput String String 
-    | StartOutput String String
-    | EndOutput String String
-    | LabelOutput String String
+    | IdOutput String
+    | StartOutput String
+    | EndOutput String
+    | LabelOutput String
     deriving (Eq, Show)
 
 }

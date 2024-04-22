@@ -7,7 +7,7 @@ $integer = [0-9]
 $Lchar = [a-z]
 $Uchar = [A-Z]
 $char = [a-zA-Z]
-$special = [\.]
+$special = [\.\:]
 tokens :-
     $white+                 ;
     "//" .*                 ; -- single line comment
