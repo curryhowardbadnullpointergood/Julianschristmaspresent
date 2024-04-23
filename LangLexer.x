@@ -24,11 +24,11 @@ tokens :-
     ":integer"              {\p s -> LTok p LTokenIntField}
     ":string"               {\p s -> LTok p LTokenStrField}
     ":boolean"              {\p s -> LTok p LTokenBoolField}
-    "LABEL"                 {\p s -> LTok p LTokenLabelField}
-    "ID"                    {\p s -> LTok p LTokenIdField}
-    "STARTID"               {\p s -> LTok p LTokenStartField}
-    "ENDID"                 {\p s -> LTok p LTokenEndField}
-    "TYPE"                  {\p s -> LTok p LTokenTypeField}
+    ":LABEL"                 {\p s -> LTok p LTokenLabelField}
+    ":ID"                    {\p s -> LTok p LTokenIdField}
+    ":STARTID"               {\p s -> LTok p LTokenStartField}
+    ":ENDID"                 {\p s -> LTok p LTokenEndField}
+    ":TYPE"                  {\p s -> LTok p LTokenTypeField}
 
     "OR"                    {\p s -> LTok p LTokenOr}                 
     "AND"                   {\p s -> LTok p LTokenAnd}

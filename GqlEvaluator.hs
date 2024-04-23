@@ -8,32 +8,78 @@ data VariableValue
     = TypeFile File
     | TypeNodes Nodes
     | TypeRelations Relations 
-
-type Nodes = [(NodeHeader, NodeEntry)]
-type Relations = [(RelationshipHeader, RelationshipEntry)]
+    deriving (Show, Eq)
 
 type Variables = [(String, VariableValue)]
 type Variable = (String, VariableValue)
 
-getVarFromName :: String -> Variables -> VariableValue 
-getVarFromName name [] = error ("No variable found for " ++ name) 
-getVarFromName name ((varName, varValue) : vars) 
-    | name == varName = varValue
-    | otherwise = getVarFromName name vars
+type Nodes = [(NodeHeader, NodeEntry)]
+type Relations = [(RelationshipHeader, RelationshipEntry)]
+---------------------------------------------------------------------------------------------------
+-- Helper Functions
+---------------------------------------------------------------------------------------------------
+removeDuplicates :: Eq a => [a] -> [a]
+removeDuplicates [] = []
+removeDuplicates (a:as) = a : removeDuplicates (filter (\x -> x /= a) as) 
+
+unionLists :: Eq a => [a] -> [a] -> [a]
+unionLists a b = removeDuplicates $ a ++ b
+
+interSectionLists :: Eq a => [a] -> [a] -> [a]
+interSectionLists [] _ = []
+interSectionLists _ [] = []
+interSectionLists a b = removeDuplicates $ filter (\x -> elem x a) b
+
+complementLists :: (Eq a) => [a] -> [a] -> [a]
+complementLists a b = filter (\x -> notElem x b) a
+
+---------------------------------------------------------------------------------------------------
+-- Variable Management Functions
+---------------------------------------------------------------------------------------------------
+varPresent :: Variables -> String -> Bool
+varPresent [] _ = False
+varPresent ((varName, varValue):vars) name
+    | varName == name   = True
+    | otherwise         = varPresent vars name
+
+getVarValueFromName :: Variables -> String -> VariableValue 
+getVarValueFromName [] name = error ("No binding found for: " ++ name) 
+getVarValueFromName ((varName, varValue) : vars) name
+    | name == varName   = varValue
+    | otherwise         = getVarValueFromName vars name 
 
 
-addVariable :: String -> VariableValue -> Variables -> Variables
-addVariable name val variables = (name, val) : variables 
+addVariable :: Variables -> String -> VariableValue -> Variables
+addVariable vars name value
+    | varPresent vars name = error ("Binding already made for: " ++ name)
+    | otherwise            = (name, value) : vars 
 
+updateVariable :: Variables -> String -> VariableValue -> Variables
+updateVariable [] name _    = error ("No binding found for: " ++ name)
+updateVariable (var@(varName, varValue) : vars) name value  
+    | name == varName       = (name, value) : vars
+    | otherwise             = var : updateVariable vars name value
 
+extractVariableNodes :: VariableValue -> Nodes
+extractVariableNodes (TypeNodes nodes) = nodes
+extractVariableRelations :: VariableValue -> Relations
+extractVariableRelations (TypeRelations relations) = relations 
+---------------------------------------------------------------------------------------------------
+-- Evaluating Query
+---------------------------------------------------------------------------------------------------
 evalQuery :: Variables -> Query -> Variables
 evalQuery vars (Query readFile matches) = []
      
 evalReadFile :: Variables -> ReadFile -> Variables
 evalReadFile  vars (ReadFile fileName) = []
-     
-evalMatches :: Variables -> Matches -> Variables
-evalMatches  vars (match:matches) = []
+---------------------------------------------------------------------------------------------------
+-- Evaluating Matches 
+---------------------------------------------------------------------------------------------------
+-- evalMatches :: Variables -> Matches -> Variables
+-- evalMatches vars [] = []
+-- evalMatches vars (match:matches) = evalMatch vars
+
+-- evalMatch 
      
 evalPatterns :: Variables -> Patterns -> Variables
 evalPatterns vars (PatternFinal nodesVarName) = []
@@ -42,51 +88,94 @@ evalPatterns vars (PatternRelatedVar nodesVarName relationVarName patterns) = []
 evalPatterns vars (PatternRelatedTo nodesVarName patterns) = []
 evalPatterns vars (PatternRelatedToVar nodesVarName relationVarName patterns) = []
 evalPatterns vars (PatternRelatedBy nodesVarName patterns) = []
-evalPatterns vars (PatternRelatedByVar nodesVarName relationVarName patterns) = []   
-
-
+evalPatterns vars (PatternRelatedByVar nodesVarName relationVarName patterns) = []
+---------------------------------------------------------------------------------------------------
+-- Evaluating Where 
+---------------------------------------------------------------------------------------------------
 evalWhereConditions :: Variables -> WhereConditions -> Variables
-evalWhereConditions vars (WhereConditionOr whereCondition whereConditions) = []
-evalWhereConditions vars (WhereConditionAnd whereCondition whereConditions) = []
-evalWhereConditions vars (WhereConditionNot whereConditions) = []
-evalWhereConditions vars (WhereCondition whereCondition) = []
+evalWhereConditions vars (WhereConditionOr whereCondition whereConditions) = unionVars (evalWhereCondition vars whereCondition) (evalWhereConditions vars whereConditions) 
+evalWhereConditions vars (WhereConditionAnd whereCondition whereConditions) = evalWhereConditions (evalWhereCondition vars whereCondition) whereConditions
+evalWhereConditions vars (WhereConditionNot whereConditions) = complementVars (evalWhereConditions vars whereConditions) vars
+evalWhereConditions vars (WhereCondition whereCondition) = evalWhereCondition vars whereCondition
 
+unionVars :: Variables -> Variables -> Variables
+unionVars [] _ = []
+unionVars ((var1Name, (TypeNodes var1Nodes)):vars1) vars2 = outputVar : unionVars vars1 vars2 
+    where 
+        var2Value = getVarValueFromName vars2 var1Name
+        outputVar = (var1Name, TypeNodes $ unionLists var1Nodes (extractVariableNodes var2Value))
+
+unionVars ((var1Name, (TypeRelations var1Relations)):vars1) vars2 = outputVar : unionVars vars1 vars2 
+    where 
+        var2Value = getVarValueFromName vars2 var1Name
+        outputVar = (var1Name, TypeRelations $ unionLists var1Relations (extractVariableRelations var2Value))   
+
+complementVars :: Variables -> Variables -> Variables
+complementVars [] _ = []
+complementVars ((var1Name, (TypeNodes var1Nodes)):vars1) vars2 = outputVar : complementVars vars1 vars2 
+    where 
+        var2Value = getVarValueFromName vars2 var1Name
+        outputVar = (var1Name, TypeNodes $ complementLists var1Nodes (extractVariableNodes var2Value))   
+complementVars ((var1Name, (TypeRelations var1Relations)):vars1) vars2 = outputVar : complementVars vars1 vars2 
+    where 
+        var2Value = getVarValueFromName vars2 var1Name
+        outputVar = (var1Name, TypeRelations $ complementLists var1Relations (extractVariableRelations var2Value))   
 
 evalWhereCondition :: Variables -> WhereCondition -> Variables
-evalWhereCondition vars (IntWhereCondition varName field intCondition int) = []
-evalWhereCondition vars (StrWhereCondition varName field strCondition string) = []
-evalWhereCondition vars (BoolWhereCondition varName field boolCondition bool) = []
-evalWhereCondition vars (LabelWhereCondition varName trCondition tring) = []
-evalWhereCondition vars (TypeWhereCondition varName trCondition tring) = []
+evalWhereCondition vars (IntWhereCondition varName field intCondition) = filterIntCondition (getVarValueFromName varName) field
 
-evalIntCondition :: Variables -> IntCondition -> Variables
-evalIntCondition vars (Greater) = []
-evalIntCondition vars (Less) = []
-evalIntCondition vars (GreaterOrEqual) = []
-evalIntCondition vars (LessOrEqual) = []
-evalIntCondition vars (IntEqual) = []
-evalIntCondition vars (IntNotEqual) = []
-evalIntCondition vars (IntIsNull) = []
-evalIntCondition vars (IntNotNull) = []
+filterIntCondition :: VariableValue -> String -> Bool 
+filterIntCondition (TypeNodes nodes)           
+filterIntCondition (TypeRelations relations)
 
-evalStrCondition :: Variables -> StrCondition -> Variables
-evalStrCondition vars (StringStarts) = []
-evalStrCondition vars (StrEqual) = []
-evalStrCondition vars (StrNotEqual) = []
-evalStrCondition vars (StrIsNull) = []
-evalStrCondition vars (StrNotNull) = []
+evalWhereCondition vars (StrWhereCondition varName field strCondition) = []
+evalWhereCondition vars (BoolWhereCondition varName field boolCondition) = []
+evalWhereCondition vars (LabelWhereCondition varName strCondition) = []
+evalWhereCondition vars (TypeWhereCondition varName strCondition) = []
+---------------------------------------------------------------------------------------------------
+-- Where Conditions
+---------------------------------------------------------------------------------------------------
+evalIntCondition :: Variables -> IntCondition -> Literal -> Bool
+evalIntCondition vars (Greater int2)        (LiteralInt int1)   = int1 > int2
+evalIntCondition vars (Less int2)           (LiteralInt int1)   = int1 < int2
+evalIntCondition vars (GreaterOrEqual int2) (LiteralInt int1)   = int1 >= int2
+evalIntCondition vars (LessOrEqual int2)    (LiteralInt int1)   = int1 <= int2
+evalIntCondition vars (IntEqual int2)       (LiteralInt int1)   = int1 == int2
+evalIntCondition vars (IntNotEqual int2)    (LiteralInt int1)   = int1 /= int2
+evalIntCondition vars IntIsNull             LiteralNull         = True
+evalIntCondition vars IntNotNull            LiteralNull         = False
+evalIntCondition vars _                     LiteralNull         = False
 
-evalBoolCondition :: Variables -> BoolCondition -> Variables
-evalBoolCondition vars (BoolEqual) = []
-evalBoolCondition vars (BoolNotEqual) = []
-evalBoolCondition vars (BoolIsNull) = []
-evalBoolCondition vars (BoolNotNull) = []
+evalStrCondition :: Variables -> StrCondition -> Literal -> Bool
+evalStrCondition vars (StringStarts string2)    (LiteralStr string1)    = startsWith string1 string2
+evalStrCondition vars (StrEqual string2)        (LiteralStr string1)    = string1 == string2
+evalStrCondition vars (StrNotEqual string2)     (LiteralStr string1)    = string1 == string2 
+evalStrCondition vars StrIsNull                 LiteralNull             = True
+evalStrCondition vars StrNotNull                LiteralNull             = False
+evalStrCondition vars _                         LiteralNull             = False
 
+evalBoolCondition :: Variables -> BoolCondition -> Literal -> Bool
+evalBoolCondition vars (BoolEqual bool2)    (LiteralBool bool1) = bool1 == bool2
+evalBoolCondition vars (BoolNotEqual bool2) (LiteralBool bool1) = bool1 /= bool2
+evalBoolCondition vars BoolIsNull           LiteralNull         = True
+evalBoolCondition vars BoolNotNull          LiteralNull         = False
+evalBoolCondition vars _ LiteralNull                            = False
+
+startsWith :: Eq a => [a] -> [a] -> Bool
+startsWith [] _ = True
+startsWith _  [] = False
+startsWith (x:xs) (y:ys) = x == y && startsWith xs ys
+
+endsWith :: Eq a => [a] -> [a] -> Bool
+endsWith xs ys = startsWith (reverse xs) (reverse ys)
+---------------------------------------------------------------------------------------------------
+-- Evaluating Return
+---------------------------------------------------------------------------------------------------
 evalReturn :: Variables -> Return -> Variables
 evalReturn vars (Return outputs) = []
      
 evalOutputs :: Variables -> Outputs -> Variables
-evalOutputs vars (output:outputs) = []
+evalOutputs vars (output:outputs) = evalOutput output : evalOutputs 
      
 evalOutput :: Variables ->  Output -> Variables
 evalOutput  vars (StrOutput varName fieldName asName) = []
@@ -96,9 +185,9 @@ evalOutput  vars (IdOutput varName) = []
 evalOutput  vars (StartOutput varName) = []
 evalOutput  vars (EndOutput varName) = []
 evalOutput  vars (LabelOutput varName) = []
+---------------------------------------------------------------------------------------------------
 
-
-
+---------------------------------------------------------------------------------------------------
 
 
 
