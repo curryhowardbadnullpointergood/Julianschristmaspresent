@@ -325,7 +325,7 @@ generateRelationshipsEntry startid lits endid types = RelationshipEntry startid 
 -- Evaluating Output
 ---------------------------------------------------------------------------------------------------
 evalOutputN :: Variables ->  Output -> [NodeEntry]
-evalOutputN  vars (StrOutput varName fieldName asName) = generateNodeEntries (getNodeId nodes []) (getNodeLiteralsStr (getValN val) fieldName) 
+evalOutputN  vars (StrOutput varName fieldName asName) = generateNodeEntries (getNodeId nodes []) (getNodeLiteralsStr (getValN val) fieldName) (getNodeLabel nodes []) []
     -- | otherwise = getRelationLiteralsString (getValR val) fieldName 
     -- | otherwise = [] 
         where
@@ -333,13 +333,14 @@ evalOutputN  vars (StrOutput varName fieldName asName) = generateNodeEntries (ge
             nodes = (getValN val)
             
 
-evalOutputN  vars (IntOutput varName fieldName asName) = getNodeLiteralsInt (getValN val) fieldName
+evalOutputN  vars (IntOutput varName fieldName asName) = generateNodeEntries (getNodeId nodes []) (getNodeLiteralsInt (getValN val) fieldName) (getNodeLabel nodes []) [] 
     -- | otherwise = []
     -- | otherwise = getRelationLiteralsInt (getValR val) fieldName 
         where
             val = (getVarValueFromName vars varName)
         
-evalOutputN vars (BoolOutput varName fieldName asName) = getNodeLiteralsBool (getValN val) fieldName
+evalOutputN vars (BoolOutput varName fieldName asName) = generateNodeEntries (getNodeId nodes []) (getNodeLiteralsBool (getValN val) fieldName) (getNodeLabel nodes []) [] 
+    --getNodeLiteralsBool (getValN val) fieldName
     -- | otherwise = []
     -- | otherwise = getRelationLiteralsBool  (getValR val) fieldName 
         where
@@ -403,7 +404,7 @@ getNodeId ((nH,NodeEntry str _ _): rest) acc = getNodeId rest (str:acc)
 
 getNodeLabel :: Nodes -> [String] -> [String] 
 getNodeLabel [] acc = reverseList acc
-getNodeLabel ((nH,NodeEntry str _ _): rest) acc = getNodeId rest (str:acc)
+getNodeLabel ((nH,NodeEntry _ _ label): rest) acc = getNodeId rest (label:acc)
 
 getRelationshipStartId :: Relations -> [String] -> [String]
 getRelationshipStartId [] acc = reverseList acc 
