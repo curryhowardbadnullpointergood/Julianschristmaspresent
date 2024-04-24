@@ -235,55 +235,68 @@ complementVars ((var1Name, (TypeRelations var1Relations)):vars1) vars2 = outputV
 --     TypeRelations $ 
 
 
-evalWhereCondition :: Variables -> WhereCondition -> Variables
-evalWhereCondition vars (IntWhereCondition varName field intCondition) = []
+-- evalWhereCondition :: Variables -> WhereCondition -> Variables
+-- evalWhereCondition vars (IntWhereCondition varName field intCondition) = []
 
-evalWhereCondition vars (StrWhereCondition varName field strCondition) = []
-evalWhereCondition vars (BoolWhereCondition varName field boolCondition) = []
-evalWhereCondition vars (LabelWhereCondition varName strCondition) = []
-evalWhereCondition vars (TypeWhereCondition varName strCondition) = []
+-- evalWhereCondition vars (StrWhereCondition varName field strCondition) = []
+-- evalWhereCondition vars (BoolWhereCondition varName field boolCondition) = []
+-- evalWhereCondition vars (LabelWhereCondition varName strCondition) = []
+-- evalWhereCondition vars (TypeWhereCondition varName strCondition) = []
 ---------------------------------------------------------------------------------------------------
 -- Evaluating Conditions
 ---------------------------------------------------------------------------------------------------
-evalIntCondition :: IntCondition -> Literal -> Bool
-evalIntCondition (Greater int2)        (LiteralInt int1)   = int1 > int2
-evalIntCondition (Less int2)           (LiteralInt int1)   = int1 < int2
-evalIntCondition (GreaterOrEqual int2) (LiteralInt int1)   = int1 >= int2
-evalIntCondition (LessOrEqual int2)    (LiteralInt int1)   = int1 <= int2
-evalIntCondition (IntEqual int2)       (LiteralInt int1)   = int1 == int2
-evalIntCondition (IntNotEqual int2)    (LiteralInt int1)   = int1 /= int2
-evalIntCondition IntIsNull             LiteralNull         = True
-evalIntCondition IntNotNull            LiteralNull         = False
-evalIntCondition _                     LiteralNull         = False
+-- evalIntCondition :: IntCondition -> Literal -> Bool
+-- evalIntCondition (Greater int2)        (LiteralInt int1)   = int1 > int2
+-- evalIntCondition (Less int2)           (LiteralInt int1)   = int1 < int2
+-- evalIntCondition (GreaterOrEqual int2) (LiteralInt int1)   = int1 >= int2
+-- evalIntCondition (LessOrEqual int2)    (LiteralInt int1)   = int1 <= int2
+-- evalIntCondition (IntEqual int2)       (LiteralInt int1)   = int1 == int2
+-- evalIntCondition (IntNotEqual int2)    (LiteralInt int1)   = int1 /= int2
+-- evalIntCondition IntIsNull             LiteralNull         = True
+-- evalIntCondition IntNotNull            LiteralNull         = False
+-- evalIntCondition _                     LiteralNull         = False
 
-evalStrCondition :: StrCondition -> Literal -> Bool
-evalStrCondition (StringStarts string2)    (LiteralStr string1)    = startsWith string1 string2
-evalStrCondition (StrEqual string2)        (LiteralStr string1)    = string1 == string2
-evalStrCondition (StrNotEqual string2)     (LiteralStr string1)    = string1 == string2 
-evalStrCondition StrIsNull                 LiteralNull             = True
-evalStrCondition StrNotNull                LiteralNull             = False
-evalStrCondition _                         LiteralNull             = False
+-- evalStrCondition :: StrCondition -> Literal -> Bool
+-- evalStrCondition (StringStarts string2)    (LiteralStr string1)    = startsWith string1 string2
+-- evalStrCondition (StrEqual string2)        (LiteralStr string1)    = string1 == string2
+-- evalStrCondition (StrNotEqual string2)     (LiteralStr string1)    = string1 == string2 
+-- evalStrCondition StrIsNull                 LiteralNull             = True
+-- evalStrCondition StrNotNull                LiteralNull             = False
+-- evalStrCondition _                         LiteralNull             = False
 
-evalBoolCondition :: BoolCondition -> Literal -> Bool
-evalBoolCondition (BoolEqual bool2)    (LiteralBool bool1) = bool1 == bool2
-evalBoolCondition (BoolNotEqual bool2) (LiteralBool bool1) = bool1 /= bool2
-evalBoolCondition BoolIsNull           LiteralNull         = True
-evalBoolCondition BoolNotNull          LiteralNull         = False
-evalBoolCondition _ LiteralNull                            = False
+-- evalBoolCondition :: BoolCondition -> Literal -> Bool
+-- evalBoolCondition (BoolEqual bool2)    (LiteralBool bool1) = bool1 == bool2
+-- evalBoolCondition (BoolNotEqual bool2) (LiteralBool bool1) = bool1 /= bool2
+-- evalBoolCondition BoolIsNull           LiteralNull         = True
+-- evalBoolCondition BoolNotNull          LiteralNull         = False
+-- evalBoolCondition _ LiteralNull                            = False
 
-startsWith :: Eq a => [a] -> [a] -> Bool
-startsWith [] _ = True
-startsWith _  [] = False
-startsWith (x:xs) (y:ys) = x == y && startsWith xs ys
+-- startsWith :: Eq a => [a] -> [a] -> Bool
+-- startsWith [] _ = True
+-- startsWith _  [] = False
+-- startsWith (x:xs) (y:ys) = x == y && startsWith xs ys
 
-endsWith :: Eq a => [a] -> [a] -> Bool
-endsWith xs ys = startsWith (reverse xs) (reverse ys)
+-- endsWith :: Eq a => [a] -> [a] -> Bool
+-- endsWith xs ys = startsWith (reverse xs) (reverse ys)
 ---------------------------------------------------------------------------------------------------
 -- Evaluating Return
 ---------------------------------------------------------------------------------------------------
-evalReturn :: Variables -> Return -> File
-evalReturn vars (ReturnNodeRelation (outputs1:outputss1) (outputs2:outputss2)) = File [] []
-evalReturn vars (ReturnNode         (outputs1:outputss1)) = File [] []
+-- evalReturn :: Variables -> Return -> File
+-- evalReturn vars (ReturnNodeRelation outputss1 outputss2 bool) = File (evalNodeReturns vars outputss1 bool) (evalRelationReturn vars outputss2)
+-- evalReturn vars (ReturnNode         outputss1 bool)           = File (evalNodeReturns vars outputss1 bool) []
+
+-- evalNodeReturns :: Variables -> [Outputs] -> NodeSets
+-- evalNodeReturns vars (outputs : outputss) = undefined
+-- -- evalRelationReturn :: Variables -> [Outputs] -> RelationshipSets
+-- -- evalRelationReturn vars (outputs : outputss) = undefined
+
+-- evalNodeReturn :: Variables -> [Outputs] -> NodeSet
+-- evalNodeReturn vars outputs True    = NodeSet nodeHeader nodeEntries
+--     where
+--         nodeHeader = NodeHeader field True
+--         nodeEntries =  
+
+
 ---------------------------------------------------------------------------------------------------
 -- Evaluating Outputs
 ---------------------------------------------------------------------------------------------------
@@ -296,9 +309,6 @@ evalOutput :: Variables ->  Output -> [Literal]
 evalOutput  vars (StrOutput varName fieldName asName) = []
 evalOutput  vars (IntOutput varName fieldName asName) = []
 evalOutput  vars (BoolOutput varName fieldName asName) = []
-evalOutput  vars (IdOutput varName) = []
-evalOutput  vars (StartOutput varName) = []
-evalOutput  vars (EndOutput varName) = []
 evalOutput  vars (LabelOutput varName) = []
 ---------------------------------------------------------------------------------------------------
 -- Getting fileName
@@ -329,3 +339,49 @@ evalOutput  vars (LabelOutput varName) = []
 
 -- tempfile' :: File -> File 
 -- tempfile' file = file  
+
+-- evalWhereConditions :: Variables -> WhereConditions -> Variables
+-- evalWhereConditions vars (WhereConditionOr whereCondition whereConditions) = unionVars (evalWhereCondition vars whereCondition) (evalWhereConditions vars whereConditions) 
+-- evalWhereConditions vars (WhereConditionAnd whereCondition whereConditions) = evalWhereConditions (evalWhereCondition vars whereCondition) whereConditions
+-- evalWhereConditions vars (WhereConditionNot whereConditions) = complementVars (evalWhereConditions vars whereConditions) vars
+-- evalWhereConditions vars (WhereCondition whereCondition) = evalWhereCondition vars whereCondition
+
+ 
+
+evalWhere :: Variables -> Where -> Variables
+evalWhere vars (Where whereExp) = evalWhereExp vars  whereExp 
+
+evalWhereExp :: Variables -> WhereExp -> Variables
+evalWhereExp vars (WAnd whereExp1 whereExp2) = evalWhereExp (evalWhereExp vars whereExp1) whereExp2 
+evalWhereExp vars (WOr whereExp1 whereExp2) = unionVars (evalWhereExp vars whereExp1) (evalWhereExp vars whereExp2) 
+evalWhereExp vars (WNot whereExp1) = complementVars (evalWhereExp vars whereExp1) vars
+evalWhereExp vars (WEqual (WDot ) whereExp2) =
+evalWhereExp vars (WNotEqual whereExp1 whereExp2) =
+evalWhereExp vars (WLessThan whereExp1 whereExp2) =
+evalWhereExp vars (WGreaterThan whereExp1 whereExp2) =
+evalWhereExp vars (WLessOrEqualThan whereExp1 whereExp2) =
+evalWhereExp vars (WGreaterOrEqualThan whereExp1 whereExp2) =
+evalWhereExp vars (WStartsWith whereExp1 whereExp2) =
+evalWhereExp _ _ = error ("invalid where expression")
+
+unionVars :: Variables -> Variables -> Variables
+unionVars [] _ = []
+unionVars ((var1Name, (TypeNodes var1Nodes)):vars1) vars2 = outputVar : unionVars vars1 vars2 
+    where 
+        var2Value = getVarValueFromName vars2 var1Name
+        outputVar = (var1Name, TypeNodes $ unionLists var1Nodes (extractVariableNodes var2Value))
+unionVars ((var1Name, (TypeRelations var1Relations)):vars1) vars2 = outputVar : unionVars vars1 vars2 
+    where 
+        var2Value = getVarValueFromName vars2 var1Name
+        outputVar = (var1Name, TypeRelations $ unionLists var1Relations (extractVariableRelations var2Value))   
+
+complementVars :: Variables -> Variables -> Variables
+complementVars [] _ = []
+complementVars ((var1Name, (TypeNodes var1Nodes)):vars1) vars2 = outputVar : complementVars vars1 vars2 
+    where 
+        var2Value = getVarValueFromName vars2 var1Name
+        outputVar = (var1Name, TypeNodes $ complementLists var1Nodes (extractVariableNodes var2Value))   
+complementVars ((var1Name, (TypeRelations var1Relations)):vars1) vars2 = outputVar : complementVars vars1 vars2 
+    where 
+        var2Value = getVarValueFromName vars2 var1Name
+        outputVar = (var1Name, TypeRelations $ complementLists var1Relations (extractVariableRelations var2Value))  

@@ -7,8 +7,6 @@ import LangLexer
 %tokentype {LangToken}
 %error {parseError}
 
-%left or and
-%nonassoc not 
 
 %token
 "."         {LTok _ LTokenFullStop}
@@ -36,14 +34,15 @@ match       {LTok _ LTokenMatch}
 where       {LTok _ LTokenWhere}
 getNode     {LTok _ LTokenGetNode}
 getRelation {LTok _ LTokenGetRelation}
+
 -- return      {LTok _ LTokenReturn}
 as          {LTok _ LTokenAs}
 starts      {LTok _ LTokenStartWith}
 
--- "("         {LTok _ LTokenLParen}
--- ")"         {LTok _ LTokenRParen}
--- "["         {LTok _ LTokenLBrack}
--- "]"         {LTok _ LTokenRBrack}
+"("         {LTok _ LTokenLParen}
+")"         {LTok _ LTokenRParen}
+"["         {LTok _ LTokenLBrack}
+"]"         {LTok _ LTokenRBrack}
 
 "<="        {LTok _ LTokenLessThanEqual}
 ">="        {LTok _ LTokenGreaterThanEqual}
@@ -60,6 +59,12 @@ int         {LTok _ (LTokenInt $$)}
 name        {LTok _ (LTokenName $$)}
 
 
+%left "."
+%left "starts" "<" ">" "<=" ">=" "==" "/=" 
+%left and or 
+%nonassoc "(" ")"
+%nonassoc not 
+
                         
 %%
 Query
@@ -75,8 +80,8 @@ Read
 
 
 Match
-    : match Patterns where Conditions Return    {MatchWhere $2 $4 $5}
-    | match Patterns Return                     {Match $2 $3}
+    : match Patterns Where Return   {MatchWhere $2 $3 $4}
+    | match Patterns Return         {Match $2 $3}
 
 Patterns
     : Pattern Patterns  {$1 : $2}
@@ -91,53 +96,11 @@ Pattern
     | name "-" name "-" name    {PatternRelatedVar $1 $3 $5}
     | name                      {PatternFinal $1} 
 
-
--- Where
---     : where Conditions {}
-
-Conditions
-    : Condition or Conditions   {WhereConditionOr $1 $3}
-    | Condition and Conditions  {WhereConditionAnd $1 $3}
-    | not Conditions            {WhereConditionNot $2}
-    | Condition                 {WhereCondition $1}
-
-
-Condition
-    : name "." string intField IntCondition     {IntWhereCondition $1 $3 $5} 
-    | name "." string strField StrCondition     {StrWhereCondition $1 $3 $5} 
-    | name "." string boolField BoolCondition   {BoolWhereCondition $1 $3 $5} 
-    | name labelField StrCondition              {LabelWhereCondition $1 $3} 
-    | name typeField StrCondition               {TypeWhereCondition $1 $3} 
-
-IntCondition
-    : "<" int   {Greater ( $2)} 
-    | ">" int   {Less ( $2)} 
-    | "<=" int  {LessOrEqual ( $2)} 
-    | ">=" int  {GreaterOrEqual ( $2)} 
-    | "==" int  {IntEqual ( $2)} 
-    | "/=" int  {IntNotEqual ($2)} 
-    | "==" null {IntIsNull} 
-    | "/=" null {IntNotNull} 
-
-
-StrCondition
-    : starts string {StringStarts ( $2)} 
-    | "==" string   {StrEqual ( $2)} 
-    | "/=" string   {StrNotEqual ( $2)} 
-    | "==" null     {StrIsNull} 
-    | "/=" null     {StrNotNull} 
-
-BoolCondition
-    : "==" true     {BoolEqual ( True)} 
-    | "==" false    {BoolEqual ( False)} 
-    | "/=" true     {BoolNotEqual ( True)}
-    | "/=" false    {BoolNotEqual ( False)}
-    | "==" null     {BoolIsNull} 
-    | "/=" null     {BoolNotNull} 
-
 Return
-    : getNode Return1 getRelation Return1   {ReturnNodeRelation $2 $4}
-    | getNode Return1                       {ReturnNode $2}
+    : getNode Return1 labelField getRelation Return1    {ReturnNodeRelation $2 $5 True}
+    | getNode Return1 labelField                        {ReturnNode $2 True}
+    | getNode Return1 getRelation Return1               {ReturnNodeRelation $2 $4 False}
+    | getNode Return1                                   {ReturnNode $2 False}
 
 
 Return1
@@ -152,12 +115,51 @@ Output
     : name "." string intField as string    {IntOutput $1 $3 $6}  
     | name "." string strField as string    {StrOutput $1 $3 $6}  
     | name "." string boolField as string   {BoolOutput $1 $3 $6}
-    | name idField                          {IdOutput $1}
-    | name startField                       {StartOutput $1}
-    | name endField                         {EndOutput $1}
+    -- | name idField                          {IdOutput $1}
+    -- | name startField                       {StartOutput $1}
+    -- | name endField                         {EndOutput $1}
     | name labelField                       {LabelOutput $1} 
 
 
+
+Where
+    : where WhereExp0    {Where $2}
+
+WhereExp0
+    : "(" WhereExp1 ")"         {$2}
+    | WhereExp1                 {$1}
+
+WhereExp1
+    : WhereExp1 and WhereFunc   {WAnd $1 $3}
+    | WhereExp1 or WhereFunc    {WOr $1 $3}
+    | not WhereExp1             {WNot $2}
+    | WhereFunc                 {$1}
+
+WhereFunc
+    : WhereDot "==" WhereLit      {WEqual $1 $3}
+    | WhereDot "/=" WhereLit      {WNotEqual $1 $3}
+    | WhereDot "<"  WhereLit      {WLessThan $1 $3}
+    | WhereDot ">"  WhereLit      {WGreaterThan $1 $3}
+    | WhereDot "<=" WhereLit      {WLessOrEqualThan $1 $3}
+    | WhereDot ">=" WhereLit      {WGreaterOrEqualThan $1 $3}
+    | WhereDot starts WhereLit    {WStartsWith $1 $3}
+    | WhereDot                     {$1}
+
+WhereDot 
+    : name "." idField          {WDot $1 WId}
+    | name "." typeField        {WDot $1 WType}
+    | name "." startField       {WDot $1 WStartField}
+    | name "." endField         {WDot $1 WEndField}
+    | name "." labelField       {WDot $1 WLabelField}
+    | name "." name             {WDot $1 (WFieldName $3)}
+    | WhereLit                  {$1}
+
+WhereLit
+    : string                    {WStr $1}
+    | null                      {WNull}
+    | int                       {WInt $1}
+    | true                      {WBool True}
+    | false                     {WBool False}
 
 {
 
@@ -179,7 +181,7 @@ data ReadFile
 --     = [Match]
 
 data Match
-    = MatchWhere Patterns WhereConditions Return
+    = MatchWhere Patterns Where Return
     | Match Patterns Return     
     deriving (Eq, Show)
 
@@ -197,51 +199,53 @@ data Pattern
     deriving (Eq, Show)
 
 
-data WhereConditions
-    = WhereConditionOr WhereCondition WhereConditions
-    | WhereConditionAnd WhereCondition WhereConditions 
-    | WhereConditionNot WhereConditions      
-    | WhereCondition WhereCondition 
-    deriving (Eq, Show)
+data Where
+    = Where WhereExp
+    deriving (Show, Eq)
 
-data WhereCondition
-    = IntWhereCondition String String IntCondition
-    | StrWhereCondition String String StrCondition
-    | BoolWhereCondition String String BoolCondition
-    | LabelWhereCondition String StrCondition
-    | TypeWhereCondition String StrCondition
-    deriving (Eq, Show)
+data WhereExp
+    = WAnd WhereExp WhereExp
+    | WOr WhereExp WhereExp
+    | WNot WhereExp
 
-data IntCondition
-    = Greater ( Int)
-    | Less ( Int)
-    | GreaterOrEqual ( Int)
-    | LessOrEqual ( Int)
-    | IntEqual ( Int)
-    | IntNotEqual ( Int)
-    | IntIsNull
-    | IntNotNull
-    deriving (Eq, Show)
+data WhereFunc
+    = WEqual WhereDot WhereVal
+    | WNotEqual WhereDot WhereVal
+    | WLessThan WhereDot WhereVal
+    | WGreaterThan WhereDot WhereVal
+    | WLessOrEqualThan WhereDot WhereVal
+    | WGreaterOrEqualThan WhereDot WhereVal
+    | WStartsWith WhereDot WhereVal
+    
+    | WEqualDot WhereDot WhereDot
+    | WNotEqualDot WhereDot WhereDot
+    | WLessThanDot WhereDot WhereDot
+    | WGreaterThanDot WhereDot WhereDot
+    | WLessOrEqualThanDot WhereDot WhereDot
+    | WGreaterOrEqualThanDot WhereDot WhereDot
+    | WStartsWithDot WhereDot WhereDot
 
-data StrCondition
-    = StringStarts ( String)
-    | StrEqual ( String)
-    | StrNotEqual ( String)
-    | StrIsNull
-    | StrNotNull
-    deriving (Eq, Show)
+data WhereDot
+    = WDot String WhereDotOptions
 
-data BoolCondition
-    = BoolEqual ( Bool)
-    | BoolNotEqual ( Bool)
-    | BoolIsNull
-    | BoolNotNull
-    deriving (Eq, Show)
+data WhereDotOptions
+    = WFieldName String
+    | WId
+    | WLabelField
+    | WStartField
+    | WEndField
+    | WType
 
+data WhereVal
+    | WStr String
+    | WInt Int
+    | WBool Bool
+    | WNull
+    deriving (Show, Eq)
 
 data Return
-    = ReturnNode [Outputs]
-    | ReturnNodeRelation [Outputs] [Outputs]
+    = ReturnNode [Outputs] Bool
+    | ReturnNodeRelation [Outputs] [Outputs] Bool
     deriving (Eq, Show)
 
 type Outputs
@@ -251,9 +255,9 @@ data Output
     = StrOutput String String String 
     | IntOutput String String String 
     | BoolOutput String String String 
-    | IdOutput String
-    | StartOutput String
-    | EndOutput String
+    -- | IdOutput String
+    -- | StartOutput String
+    -- | EndOutput String
     | LabelOutput String
     deriving (Eq, Show)
 
