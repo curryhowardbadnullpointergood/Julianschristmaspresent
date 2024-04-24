@@ -122,11 +122,20 @@ complementVars ((var1Name, (TypeRelations var1Relations)):vars1) vars2 = outputV
         outputVar = (var1Name, TypeRelations $ complementLists var1Relations (extractVariableRelations var2Value))   
 
 evalWhereCondition :: Variables -> WhereCondition -> Variables
-evalWhereCondition vars (IntWhereCondition varName field intCondition) = filterIntCondition (getVarValueFromName varName) field
+evalWhereCondition vars cond@(IntWhereCondition varName field intCondition) = vars'
+    where
+        varValue = getVarValueFromName vars varName
+        updatedVarValue = coordinator varValue cond
+        vars' = updateVariable vars varName updatedVarValue
 
-filterIntCondition :: VariableValue -> String -> Bool 
-filterIntCondition (TypeNodes nodes)           
-filterIntCondition (TypeRelations relations)
+filterIntField :: VariableValue -> WhereCondition -> Variables
+filterIntField (TypeNodes nodes) (IntWhereCondition varName field intCondition) = 
+    TypeNodes $ filterIntNodes nodes field intCondition
+filterIntField (TypeRelations relations) (IntWhereCondition varName field intCondition) = 
+    TypeRelations $ filter 
+
+
+
 
 evalWhereCondition vars (StrWhereCondition varName field strCondition) = []
 evalWhereCondition vars (BoolWhereCondition varName field boolCondition) = []
@@ -135,31 +144,31 @@ evalWhereCondition vars (TypeWhereCondition varName strCondition) = []
 ---------------------------------------------------------------------------------------------------
 -- Where Conditions
 ---------------------------------------------------------------------------------------------------
-evalIntCondition :: Variables -> IntCondition -> Literal -> Bool
-evalIntCondition vars (Greater int2)        (LiteralInt int1)   = int1 > int2
-evalIntCondition vars (Less int2)           (LiteralInt int1)   = int1 < int2
-evalIntCondition vars (GreaterOrEqual int2) (LiteralInt int1)   = int1 >= int2
-evalIntCondition vars (LessOrEqual int2)    (LiteralInt int1)   = int1 <= int2
-evalIntCondition vars (IntEqual int2)       (LiteralInt int1)   = int1 == int2
-evalIntCondition vars (IntNotEqual int2)    (LiteralInt int1)   = int1 /= int2
-evalIntCondition vars IntIsNull             LiteralNull         = True
-evalIntCondition vars IntNotNull            LiteralNull         = False
-evalIntCondition vars _                     LiteralNull         = False
+evalIntCondition :: IntCondition -> Literal -> Bool
+evalIntCondition (Greater int2)        (LiteralInt int1)   = int1 > int2
+evalIntCondition (Less int2)           (LiteralInt int1)   = int1 < int2
+evalIntCondition (GreaterOrEqual int2) (LiteralInt int1)   = int1 >= int2
+evalIntCondition (LessOrEqual int2)    (LiteralInt int1)   = int1 <= int2
+evalIntCondition (IntEqual int2)       (LiteralInt int1)   = int1 == int2
+evalIntCondition (IntNotEqual int2)    (LiteralInt int1)   = int1 /= int2
+evalIntCondition IntIsNull             LiteralNull         = True
+evalIntCondition IntNotNull            LiteralNull         = False
+evalIntCondition _                     LiteralNull         = False
 
-evalStrCondition :: Variables -> StrCondition -> Literal -> Bool
-evalStrCondition vars (StringStarts string2)    (LiteralStr string1)    = startsWith string1 string2
-evalStrCondition vars (StrEqual string2)        (LiteralStr string1)    = string1 == string2
-evalStrCondition vars (StrNotEqual string2)     (LiteralStr string1)    = string1 == string2 
-evalStrCondition vars StrIsNull                 LiteralNull             = True
-evalStrCondition vars StrNotNull                LiteralNull             = False
-evalStrCondition vars _                         LiteralNull             = False
+evalStrCondition :: StrCondition -> Literal -> Bool
+evalStrCondition (StringStarts string2)    (LiteralStr string1)    = startsWith string1 string2
+evalStrCondition (StrEqual string2)        (LiteralStr string1)    = string1 == string2
+evalStrCondition (StrNotEqual string2)     (LiteralStr string1)    = string1 == string2 
+evalStrCondition StrIsNull                 LiteralNull             = True
+evalStrCondition StrNotNull                LiteralNull             = False
+evalStrCondition _                         LiteralNull             = False
 
-evalBoolCondition :: Variables -> BoolCondition -> Literal -> Bool
-evalBoolCondition vars (BoolEqual bool2)    (LiteralBool bool1) = bool1 == bool2
-evalBoolCondition vars (BoolNotEqual bool2) (LiteralBool bool1) = bool1 /= bool2
-evalBoolCondition vars BoolIsNull           LiteralNull         = True
-evalBoolCondition vars BoolNotNull          LiteralNull         = False
-evalBoolCondition vars _ LiteralNull                            = False
+evalBoolCondition :: BoolCondition -> Literal -> Bool
+evalBoolCondition (BoolEqual bool2)    (LiteralBool bool1) = bool1 == bool2
+evalBoolCondition (BoolNotEqual bool2) (LiteralBool bool1) = bool1 /= bool2
+evalBoolCondition BoolIsNull           LiteralNull         = True
+evalBoolCondition BoolNotNull          LiteralNull         = False
+evalBoolCondition _ LiteralNull                            = False
 
 startsWith :: Eq a => [a] -> [a] -> Bool
 startsWith [] _ = True

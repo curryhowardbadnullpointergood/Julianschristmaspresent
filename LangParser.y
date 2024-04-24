@@ -14,6 +14,8 @@ import LangLexer
 "."         {LTok _ LTokenFullStop}
 ","         {LTok _ LTokenComma}
 -- ":"         {LTok _ LTokenColon}
+"|"         {LTok _ LTokenBar}
+
 "-"         {LTok _ LTokenRelated}
 "->"        {LTok _ LTokenRelatedRight}
 "<-"        {LTok _ LTokenRelatedLeft}
@@ -61,26 +63,32 @@ name        {LTok _ (LTokenName $$)}
 Query
     : Read Matches {Query $1 (reverse $2)}
 
+Read
+    : read string {ReadFile $2}
+    
+
 Matches
     : Match Matches {$1 : $2}
     | Match         {[$1]}
 
-
-Read
-    : read string {ReadFile $2}
 
 Match
     : match Patterns where Conditions Return    {MatchWhere $2 $4 $5}
     | match Patterns Return                     {Match $2 $3}
 
 Patterns
-    : name "-" "->" Patterns        {PatternRelatedTo $1 $4}
-    | name "-" name "->" Patterns   {PatternRelatedToVar $1 $3 $5}
-    | name "<-" "-" Patterns        {PatternRelatedBy $1 $4}
-    | name "<-" name "-" Patterns   {PatternRelatedByVar $1 $3 $5}
-    | name "-" "-" Patterns         {PatternRelated $1 $4}
-    | name "-" name "-" Patterns    {PatternRelatedVar $1 $3 $5}
-    | name                          {PatternFinal $1} 
+    : Pattern Patterns  {$1 : $2}
+    | Pattern           {[$1]}
+
+Pattern
+    : name "-" "->" name        {PatternRelatedTo $1 $4}
+    | name "-" name "->" name   {PatternRelatedToVar $1 $3 $5}
+    | name "<-" "-" name        {PatternRelatedBy $1 $4}
+    | name "<-" name "-" name   {PatternRelatedByVar $1 $3 $5}
+    | name "-" "-" name         {PatternRelated $1 $4}
+    | name "-" name "-" name    {PatternRelatedVar $1 $3 $5}
+    | name                      {PatternFinal $1} 
+
 
 -- Where
 --     : where Conditions {}
@@ -126,7 +134,11 @@ BoolCondition
     | "/=" null     {BoolNotNull} 
 
 Return
-    : return Outputs {Return $2}
+    : return Return1 {Return $2}
+
+Return1
+    : Outputs "|" Return1   {$1 : $3}
+    | Outputs               {[$1]}
 
 Outputs
     : Output "," Outputs    {$1 : $3}
@@ -167,14 +179,17 @@ data Match
     | Match Patterns Return     
     deriving (Eq, Show)
 
-data Patterns 
+type Patterns
+    = [Pattern]
+
+data Pattern 
     = PatternFinal String
-    | PatternRelated String Patterns
-    | PatternRelatedVar String String Patterns
-    | PatternRelatedTo String Patterns
-    | PatternRelatedToVar String String Patterns
-    | PatternRelatedBy String Patterns
-    | PatternRelatedByVar String String Patterns
+    | PatternRelated String String
+    | PatternRelatedVar String String String
+    | PatternRelatedTo String String
+    | PatternRelatedToVar String String String
+    | PatternRelatedBy String String
+    | PatternRelatedByVar String String String
     deriving (Eq, Show)
 
 
@@ -220,7 +235,7 @@ data BoolCondition
     deriving (Eq, Show)
 
 data Return
-    = Return Outputs
+    = Return [Outputs]
     deriving (Eq, Show)
 
 type Outputs

@@ -16,6 +16,7 @@ tokens :-
     "."                     {\p s -> LTok p LTokenFullStop}
     ","                     {\p s -> LTok p LTokenComma}
     ":"                     {\p s -> LTok p LTokenColon}
+    "|"                     {\p s -> LTok p LTokenBar}
 
     "-"                     {\p s -> LTok p LTokenRelated}
     "->"                    {\p s -> LTok p LTokenRelatedRight}
@@ -77,6 +78,7 @@ data LangTokenClass
     | LTokenComma
     | LTokenColon
     | LTokenSemiColon
+    | LTokenBar
 
     | LTokenRelated
     | LTokenRelatedRight
