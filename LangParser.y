@@ -97,10 +97,9 @@ Pattern
     | name                      {PatternFinal $1} 
 
 Return
-    : getNode Return1 labelField getRelation Return1    {ReturnNodeRelation $2 $5 True}
-    | getNode Return1 labelField                        {ReturnNode $2 True}
-    | getNode Return1 getRelation Return1               {ReturnNodeRelation $2 $4 False}
-    | getNode Return1                                   {ReturnNode $2 False}
+    : getNode Return1 getRelation Return1    {ReturnNodeRelation $2 $4}
+    | getNode Return1                        {ReturnNode $2}
+    | getRelation Return1                        {ReturnRelation $2}
 
 
 Return1
@@ -123,17 +122,14 @@ Output
 
 
 Where
-    : where WhereExp0    {Where $2}
+    : where WhereExp1    {Where $2}
 
-WhereExp0
-    : "(" WhereExp1 ")"         {$2}
-    | WhereExp1                 {$1}
 
 WhereExp1
-    : WhereExp1 and WhereFunc   {WAnd $1 $3}
-    | WhereExp1 or WhereFunc    {WOr $1 $3}
+    : WhereFunc and WhereExp1   {WAnd $1 $3}
+    | WhereFunc or WhereExp1    {WOr $1 $3}
     | not WhereExp1             {WNot $2}
-    | WhereFunc                 {$1}
+    | WhereFunc                 {WFinal $1}
 
 WhereFunc
     : WhereDot "==" WhereLit      {WEqual $1 $3}
@@ -152,8 +148,6 @@ WhereFunc
     | WhereDot ">=" WhereDot      {WGreaterOrEqualThanDot $1 $3}
     | WhereDot starts WhereDot    {WStartsWithDot $1 $3}
 
-    | WhereDot                    {$1}
-
 WhereDot 
     : name "." idField          {WDot $1 WId}
     | name "." typeField        {WDot $1 WType}
@@ -161,7 +155,6 @@ WhereDot
     | name "." endField         {WDot $1 WEndField}
     | name "." labelField       {WDot $1 WLabelField}
     | name "." name             {WDot $1 (WFieldName $3)}
-    | WhereLit                  {$1}
 
 WhereLit
     : string                    {WStr $1}
@@ -213,18 +206,20 @@ data Where
     deriving (Show, Eq)
 
 data WhereExp
-    = WAnd WhereExp WhereExp
-    | WOr WhereExp WhereExp
+    = WAnd WhereFunc WhereExp 
+    | WOr WhereFunc WhereExp 
     | WNot WhereExp
+    | WFinal WhereFunc
+    deriving (Show, Eq)
 
 data WhereFunc
-    = WEqual WhereDot WhereVal
-    | WNotEqual WhereDot WhereVal
-    | WLessThan WhereDot WhereVal
-    | WGreaterThan WhereDot WhereVal
-    | WLessOrEqualThan WhereDot WhereVal
-    | WGreaterOrEqualThan WhereDot WhereVal
-    | WStartsWith WhereDot WhereVal
+    = WEqual WhereDot WhereLit
+    | WNotEqual WhereDot WhereLit
+    | WLessThan WhereDot WhereLit
+    | WGreaterThan WhereDot WhereLit
+    | WLessOrEqualThan WhereDot WhereLit
+    | WGreaterOrEqualThan WhereDot WhereLit
+    | WStartsWith WhereDot WhereLit
     
     | WEqualDot WhereDot WhereDot
     | WNotEqualDot WhereDot WhereDot
@@ -233,9 +228,11 @@ data WhereFunc
     | WLessOrEqualThanDot WhereDot WhereDot
     | WGreaterOrEqualThanDot WhereDot WhereDot
     | WStartsWithDot WhereDot WhereDot
+    deriving (Show, Eq)
 
 data WhereDot
     = WDot String WhereDotOptions
+    deriving (Show, Eq)
 
 data WhereDotOptions
     = WFieldName String
@@ -244,9 +241,10 @@ data WhereDotOptions
     | WStartField
     | WEndField
     | WType
+    deriving (Show, Eq)
 
-data WhereVal
-    | WStr String
+data WhereLit
+    = WStr String
     | WInt Int
     | WBool Bool
     | WNull
