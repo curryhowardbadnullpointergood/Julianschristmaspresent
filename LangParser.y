@@ -240,8 +240,8 @@ data BoolCondition
 
 
 data Return
-    = ReturnNode Outputs
-    | ReturnNodeRelation Outputs
+    = ReturnNode [Outputs]
+    | ReturnNodeRelation [Outputs] [Outputs]
     deriving (Eq, Show)
 
 type Outputs
