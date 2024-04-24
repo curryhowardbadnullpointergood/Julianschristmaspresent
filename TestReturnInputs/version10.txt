@@ -1,0 +1,15 @@
+:ID, exstr1:string, exint1:integer, exbool1:boolean
+a, "a", 1, true
+b, "b", 2, false
+c, "c", 3, true
+d, "d", 4, false
+e, "e", 5, true
+f, "f", 6, false
+
+:ID, exstr2:string, exint2:integer, exbool2:boolean
+g, "g", 7, true
+h, "h", 8, false
+i, "i", 9, true
+j, "j", 10, false
+k, "k", 11, true
+l, "l", 12, false

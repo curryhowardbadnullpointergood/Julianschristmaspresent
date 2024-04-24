@@ -1,0 +1,8 @@
+:ID, exstr:string, exint:integer, exbool:boolean, :LABEL
+a, "a", 1, true, A
+b, "b", 2, false, B
+c, "c", 3, true, C
+d, "d", 4, false, D
+e, "e", 5, true, E
+f, "f", 6, false, F
+

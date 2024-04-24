@@ -1,0 +1,7 @@
+:START_ID, exstr1:string, exint1:integer, exbool1:boolean, exstr2:string, exint2:integer, exbool2:boolean, :END_ID, :TYPE
+a, "a", 1, true, "g", 7, true, a, a
+b, "b", 2, false, "h", 8, false, b, b
+c, "c", 3, true, "i", 9, true, c, c
+d, "d", 4, false, "j", 10, false, d, d
+e, "e", 5, true, "k", 11, true, e, e
+f, "f", 6, false, "l", 12, false, f, f
