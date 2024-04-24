@@ -66,21 +66,23 @@ extractVariableNodes (TypeNodes nodes) = nodes
 extractVariableRelations :: VariableValue -> Relations
 extractVariableRelations (TypeRelations relations) = relations 
 ---------------------------------------------------------------------------------------------------
--- Evaluating Query
----------------------------------------------------------------------------------------------------
-evalQuery :: Variables -> Query -> Variables
-evalQuery vars (Query read match) = []
----------------------------------------------------------------------------------------------------
 -- Evaluating ReadFile
 ---------------------------------------------------------------------------------------------------
-evalReadFile :: Variables -> ReadFile -> Variables
-evalReadFile  vars (ReadFile fileName) = []
+evalReadFile :: ReadFile -> String
+evalReadFile (ReadFile fileName) = fileName
 ---------------------------------------------------------------------------------------------------
 -- Evaluating Match
 ---------------------------------------------------------------------------------------------------
-evalMatch :: Variables -> Match -> Variables
-evalMatch vars (Match patterns return) = []
-evalMatch vars (MatchWhere patterns whereConditions return) = [] 
+evalMatch :: Variables -> Match -> File -> [String]
+evalMatch vars (Match patterns return) file = output
+    where
+        matchVars = evalPatterns vars patterns file
+        output = evalReturn matchVars return
+evalMatch vars (MatchWhere patterns whereConditions return) file = output
+    where
+        matchVars = evalPatterns vars patterns file 
+        whereVars = evalWhereConditions matchVars whereConditions
+        output = evalReturn whereVars return
 ---------------------------------------------------------------------------------------------------
 -- Evaluating Patterns 
 ---------------------------------------------------------------------------------------------------
@@ -307,7 +309,7 @@ endsWith xs ys = startsWith (reverse xs) (reverse ys)
 ---------------------------------------------------------------------------------------------------
 -- Evaluating Return
 ---------------------------------------------------------------------------------------------------
-evalReturn :: Variables -> Return -> Variables
+evalReturn :: Variables -> Return -> [String]
 evalReturn vars (Return (outputs:outputss)) = []
 ---------------------------------------------------------------------------------------------------
 -- Evaluating Outputs

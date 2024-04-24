@@ -1,61 +1,54 @@
+import LangLexer
+import LangParser
 import InputLexer
 import InputParser
-import GqlEval
+import GqlEvaluator
 import System.Environment ( getArgs )
 import Control.Exception
 import System.IO
 
+
 main :: IO ()
 main = do
-    (fileName : _ ) <- getArgs
-    sourceText <- readFile fileName
+    (programFileName : _ ) <- getArgs
+    sourceText <- readFile programFileName
     putStrLn ("Input File: \n" ++ replicate 50 '-'  ++ "\n" ++ sourceText ++ "\n" ++ replicate 50 '-')
-    catch (main' sourceText) noLex
+    catch (lexProgram sourceText) noLex
 
-main' :: String -> IO ()
-main' sourceText = do
-    let lexedProg = alexScanTokens sourceText
+lexProgram :: String -> IO ()
+lexProgram programSourceText = do
+    let lexedProg = LangLexer.alexScanTokens programSourceText
     -- putStrLn ("Lexed As: \n" ++ replicate 50 '-'  ++ "\n" ++ show lexedProg ++ "\n" ++ replicate 50 '-')
-    catch (main'' lexedProg) noParse
+    catch (parseProgram lexedProg) noParse
 
-
-main'' :: [InputToken] -> IO ()
-main'' lexedProg = do
-    let parsedProg = inputParser lexedProg
+parseProgram :: [LangToken] -> IO ()
+parseProgram lexedProg = do
+    let parsedProg = langParser lexedProg
     putStrLn ("Parsed As: \n" ++ replicate 50 '-'  ++ "\n" ++ show parsedProg ++ "\n" ++ replicate 50 '-')
-    main''' parsedProg
+    getInputFile parsedProg
 
-main''' :: File -> IO ()
-main''' parsedProg = do
-    print $ getField parsedProg "stringField"
-    print $ getField parsedProg "intField"
-    print $ getField parsedProg "boolField"
-    print $ getLabels parsedProg
+getInputFile :: Query -> IO ()
+getInputFile (Query read match) = do 
+    let inputFileName   = evalReadFile read
+    inputFileText       <- readFile inputFileName
+    let inputFileLexed  = InputLexer.alexScanTokens inputFileText
+    let inputFileParse  = inputParser inputFileLexed
+    evalQuery match inputFileParse
 
-    let intField = getField parsedProg "intField"
-    let less30 = filterIntField intField (\z -> z < 30) False
-    let null = filterNullFieldValues intField
-    putStrLn ("Nodes with intField value of < 30: " ++ show less30)
-    putStrLn ("Nodes with value of 'null' in intField: " ++ show null)
+evalQuery :: Match -> File -> IO()
+evalQuery  match file = do
+    let matchEval = evalMatch [] match file
+    putStrLn $ printTables matchEval
 
-    let labels = getLabels parsedProg
-    let label1 = filterLabel labels (\s -> s == "label1")
-    putStrLn ("Nodes with a label with value of 'label1': " ++ show label1)
+printTables :: [[String]] -> String
+printTables (table:tables) = printTable table ++ "\n" ++ printTables tables
 
-    putStrLn (show $ problem1 parsedProg)
+printTable :: [String] -> String
+printTable [] = "\n"
+printTable (line:lines) = line ++ "\n" ++ printTable lines
 
 
--- haskell version of what problem 1 would look like
-problem1 :: File -> [String]
-problem1 file = output
-    where
-        ageField = getField file "age"
-        labels = getLabels file
 
-        nodesLess30 = filterIntField ageField (\x -> x <= 30) False
-        nodesLabelVisitor = filterLabel labels (\s -> s == "Visitor")
-
-        output = unionLists nodesLess30 nodesLabelVisitor
 
 noParse :: ErrorCall -> IO ()
 noParse e = do let err =  show e
