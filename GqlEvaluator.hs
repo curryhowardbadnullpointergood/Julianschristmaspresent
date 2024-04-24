@@ -289,16 +289,20 @@ complementVars ((var1Name, (TypeRelations var1Relations)):vars1) vars2 = outputV
 -- Evaluating Return
 ---------------------------------------------------------------------------------------------------
 evalReturn :: Variables -> Return -> File
-evalReturn vars (Return (outputs:outputss)) = File [] []
+evalReturn vars (ReturnNode (outputs:outputss)) = File [] []
+evalReturn vars (ReturnNodeRelation (outputs:outputss)) = File [] []
+evalReturn vars (ReturnRelation (outputs:outputss)) = File [] []
 ---------------------------------------------------------------------------------------------------
 -- Evaluating Outputs
 ---------------------------------------------------------------------------------------------------
-evalOutputs :: Variables -> Outputs -> [[Literal]]-> [[Literal]]
-evalOutputs vars [] acc = multiZipL acc 
-evalOutputs vars (output:outputs) acc = evalOutputs vars outputs (evalOutput vars output:acc)
+evalOutputsN :: Variables -> Outputs -> [NodeEntry]-> [NodeEntry]
+evalOutputsN vars [] acc = multiZipL acc 
+evalOutputsN vars (output:outputs) acc = evalOutputs vars outputs (evalOutputN vars output:acc)
 
 
 
+-- evalOutputsN :: Variables -> Outputs -> [NodeEntry]
+-- evalOutputsN vars output =  (evalOutputs vars output)
 
 -- generateNodeEntries :: [String] -> [[Literal]] -> [Labels] -> [[NodeEntries]]
 -- generateNodeEntries strlist litlist lablist = [ | str <- strlist, lit <- litlist, lab <- lablist]
@@ -320,37 +324,68 @@ generateRelationshipsEntry startid lits endid types = RelationshipEntry startid 
 ---------------------------------------------------------------------------------------------------
 -- Evaluating Output
 ---------------------------------------------------------------------------------------------------
-evalOutput :: Variables ->  Output -> [Literal]
-evalOutput  vars (StrOutput varName fieldName asName)
-    | isTypeNodes val == True = (getNodeLiteralsStr (getValN val) fieldName) 
-    | otherwise = getRelationLiteralsString (getValR val) fieldName 
+evalOutputN :: Variables ->  Output -> [NodeEntry]
+evalOutputN  vars (StrOutput varName fieldName asName) = generateNodeEntries (getNodeId nodes []) (getNodeLiteralsStr (getValN val) fieldName) 
+    -- | otherwise = getRelationLiteralsString (getValR val) fieldName 
+    -- | otherwise = [] 
         where
             val = (getVarValueFromName vars varName)
             nodes = (getValN val)
             
 
-evalOutput  vars (IntOutput varName fieldName asName) 
-    | isTypeNodes (getVarValueFromName vars varName) == True = getNodeLiteralsInt (getValN val) fieldName
-    | otherwise = getRelationLiteralsInt (getValR val) fieldName 
+evalOutputN  vars (IntOutput varName fieldName asName) = getNodeLiteralsInt (getValN val) fieldName
+    -- | otherwise = []
+    -- | otherwise = getRelationLiteralsInt (getValR val) fieldName 
         where
             val = (getVarValueFromName vars varName)
         
-evalOutput vars (BoolOutput varName fieldName asName)
-    | isTypeNodes (getVarValueFromName vars varName) == True = getNodeLiteralsBool (getValN val) fieldName
-    | otherwise = getRelationLiteralsBool  (getValR val) fieldName 
+evalOutputN vars (BoolOutput varName fieldName asName) = getNodeLiteralsBool (getValN val) fieldName
+    -- | otherwise = []
+    -- | otherwise = getRelationLiteralsBool  (getValR val) fieldName 
         where
             val = (getVarValueFromName vars varName)
              
             
-evalOutput  vars (IdOutput varName) = []
-evalOutput  vars (StartOutput varName) = []
-evalOutput  vars (EndOutput varName) = []
-evalOutput  vars (LabelOutput varName) = []
+evalOutputN  vars (IdOutput varName) = []
+evalOutputN vars (StartOutput varName) = []
+evalOutputN  vars (EndOutput varName) = []
+evalOutputN  vars (LabelOutput varName) = []
 
-isTypeNodes :: VariableValue -> Bool
-isTypeNodes val = case val of 
-    TypeNodes nodes -> True 
-    TypeRelations relations -> False 
+
+
+evalOutputR :: Variables ->  Output -> [Literal]
+evalOutputR  vars (StrOutput varName fieldName asName) =  getRelationLiteralsString relations fieldName
+    -- | otherwise = getRelationLiteralsString (getValR val) fieldName 
+    -- | otherwise = [] 
+        where
+            val = (getVarValueFromName vars varName)
+            relations = (getValR val)
+            
+
+evalOutputR  vars (IntOutput varName fieldName asName) = getRelationLiteralsInt relations fieldName 
+    -- | otherwise = []
+    -- | otherwise = getRelationLiteralsInt (getValR val) fieldName 
+        where
+            val = (getVarValueFromName vars varName)
+            relations = (getValR val)
+        
+evalOutputR vars (BoolOutput varName fieldName asName) = getRelationLiteralsBool  relations fieldName 
+    -- | otherwise = []
+    -- | otherwise = getRelationLiteralsBool  (getValR val) fieldName 
+        where
+            val = (getVarValueFromName vars varName)
+            relations = (getValR val)
+             
+            
+evalOutputR  vars (IdOutput varName) = []
+evalOutputR vars (StartOutput varName) = []
+evalOutputR  vars (EndOutput varName) = []
+evalOutputR  vars (LabelOutput varName) = []
+
+-- isTypeNodes :: VariableValue -> Bool
+-- isTypeNodes val = case val of 
+--     TypeNodes nodes -> True 
+--     TypeRelations relations -> False 
 
 getValN :: VariableValue -> Nodes 
 getValN val = case val of 
@@ -365,6 +400,10 @@ getValR val = case val of
 getNodeId :: Nodes -> [String] -> [String] 
 getNodeId [] acc = reverseList acc
 getNodeId ((nH,NodeEntry str _ _): rest) acc = getNodeId rest (str:acc)
+
+getNodeLabel :: Nodes -> [String] -> [String] 
+getNodeLabel [] acc = reverseList acc
+getNodeLabel ((nH,NodeEntry str _ _): rest) acc = getNodeId rest (str:acc)
 
 getRelationshipStartId :: Relations -> [String] -> [String]
 getRelationshipStartId [] acc = reverseList acc 
@@ -414,45 +453,45 @@ getRelationshipTypeId ((rH, RelationshipEntry _ _ _ typeid): rest) acc = getRela
 -- evalWhereConditions vars (WhereConditionNot whereConditions) = complementVars (evalWhereConditions vars whereConditions) vars
 -- evalWhereConditions vars (WhereCondition whereCondition) = evalWhereCondition vars whereCondition
 
- 
+                   
 
-evalWhere :: Variables -> Where -> Variables
-evalWhere vars (Where whereExp) = evalWhereExp vars  whereExp 
+-- evalWhere :: Variables -> Where -> Variables
+-- evalWhere vars (Where whereExp) = evalWhereExp vars  whereExp 
 
-evalWhereExp :: Variables -> WhereExp -> Variables
-evalWhereExp vars (WAnd whereExp1 whereExp2) = evalWhereExp (evalWhereExp vars whereExp1) whereExp2 
-evalWhereExp vars (WOr whereExp1 whereExp2) = unionVars (evalWhereExp vars whereExp1) (evalWhereExp vars whereExp2) 
-evalWhereExp vars (WNot whereExp1) = complementVars (evalWhereExp vars whereExp1) vars
-evalWhereExp vars (WEqual (WDot ) whereExp2) =
-evalWhereExp vars (WNotEqual whereExp1 whereExp2) =
-evalWhereExp vars (WLessThan whereExp1 whereExp2) =
-evalWhereExp vars (WGreaterThan whereExp1 whereExp2) =
-evalWhereExp vars (WLessOrEqualThan whereExp1 whereExp2) =
-evalWhereExp vars (WGreaterOrEqualThan whereExp1 whereExp2) =
-evalWhereExp vars (WStartsWith whereExp1 whereExp2) =
-evalWhereExp _ _ = error ("invalid where expression")
+-- evalWhereExp :: Variables -> WhereExp -> Variables
+-- evalWhereExp vars (WAnd whereExp1 whereExp2) = evalWhereExp (evalWhereExp vars whereExp1) whereExp2 
+-- evalWhereExp vars (WOr whereExp1 whereExp2) = unionVars (evalWhereExp vars whereExp1) (evalWhereExp vars whereExp2) 
+-- evalWhereExp vars (WNot whereExp1) = complementVars (evalWhereExp vars whereExp1) vars
+-- evalWhereExp vars (WEqual (WDot ) whereExp2) =
+-- evalWhereExp vars (WNotEqual whereExp1 whereExp2) =
+-- evalWhereExp vars (WLessThan whereExp1 whereExp2) =
+-- evalWhereExp vars (WGreaterThan whereExp1 whereExp2) =
+-- evalWhereExp vars (WLessOrEqualThan whereExp1 whereExp2) =
+-- evalWhereExp vars (WGreaterOrEqualThan whereExp1 whereExp2) =
+-- evalWhereExp vars (WStartsWith whereExp1 whereExp2) =
+-- evalWhereExp _ _ = error ("invalid where expression")
 
-unionVars :: Variables -> Variables -> Variables
-unionVars [] _ = []
-unionVars ((var1Name, (TypeNodes var1Nodes)):vars1) vars2 = outputVar : unionVars vars1 vars2 
-    where 
-        var2Value = getVarValueFromName vars2 var1Name
-        outputVar = (var1Name, TypeNodes $ unionLists var1Nodes (extractVariableNodes var2Value))
-unionVars ((var1Name, (TypeRelations var1Relations)):vars1) vars2 = outputVar : unionVars vars1 vars2 
-    where 
-        var2Value = getVarValueFromName vars2 var1Name
-        outputVar = (var1Name, TypeRelations $ unionLists var1Relations (extractVariableRelations var2Value))   
+-- unionVars :: Variables -> Variables -> Variables
+-- unionVars [] _ = []
+-- unionVars ((var1Name, (TypeNodes var1Nodes)):vars1) vars2 = outputVar : unionVars vars1 vars2 
+--     where 
+--         var2Value = getVarValueFromName vars2 var1Name
+--         outputVar = (var1Name, TypeNodes $ unionLists var1Nodes (extractVariableNodes var2Value))
+-- unionVars ((var1Name, (TypeRelations var1Relations)):vars1) vars2 = outputVar : unionVars vars1 vars2 
+--     where 
+--         var2Value = getVarValueFromName vars2 var1Name
+--         outputVar = (var1Name, TypeRelations $ unionLists var1Relations (extractVariableRelations var2Value))   
 
-complementVars :: Variables -> Variables -> Variables
-complementVars [] _ = []
-complementVars ((var1Name, (TypeNodes var1Nodes)):vars1) vars2 = outputVar : complementVars vars1 vars2 
-    where 
-        var2Value = getVarValueFromName vars2 var1Name
-        outputVar = (var1Name, TypeNodes $ complementLists var1Nodes (extractVariableNodes var2Value))   
-complementVars ((var1Name, (TypeRelations var1Relations)):vars1) vars2 = outputVar : complementVars vars1 vars2 
-    where 
-        var2Value = getVarValueFromName vars2 var1Name
-        outputVar = (var1Name, TypeRelations $ complementLists var1Relations (extractVariableRelations var2Value))  
+-- complementVars :: Variables -> Variables -> Variables
+-- complementVars [] _ = []
+-- complementVars ((var1Name, (TypeNodes var1Nodes)):vars1) vars2 = outputVar : complementVars vars1 vars2 
+--     where 
+--         var2Value = getVarValueFromName vars2 var1Name
+--         outputVar = (var1Name, TypeNodes $ complementLists var1Nodes (extractVariableNodes var2Value))   
+-- complementVars ((var1Name, (TypeRelations var1Relations)):vars1) vars2 = outputVar : complementVars vars1 vars2 
+--     where 
+--         var2Value = getVarValueFromName vars2 var1Name
+--         outputVar = (var1Name, TypeRelations $ complementLists var1Relations (extractVariableRelations var2Value))  
 -- evalWhereConditions :: Variables -> WhereConditions -> Variables
 -- evalWhereConditions vars (WhereConditionOr whereCondition whereConditions) = unionVars (evalWhereCondition vars whereCondition) (evalWhereConditions vars whereConditions) 
 -- evalWhereConditions vars (WhereConditionAnd whereCondition whereConditions) = evalWhereConditions (evalWhereCondition vars whereCondition) whereConditions
@@ -461,40 +500,40 @@ complementVars ((var1Name, (TypeRelations var1Relations)):vars1) vars2 = outputV
 
  
 
-evalWhere :: Variables -> Where -> Variables
-evalWhere vars (Where whereExp) = evalWhereExp vars  whereExp 
+-- evalWhere :: Variables -> Where -> Variables
+-- evalWhere vars (Where whereExp) = evalWhereExp vars  whereExp 
 
-evalWhereExp :: Variables -> WhereExp -> Variables
-evalWhereExp vars (WAnd whereExp1 whereExp2) = evalWhereExp (evalWhereExp vars whereExp1) whereExp2 
-evalWhereExp vars (WOr whereExp1 whereExp2) = unionVars (evalWhereExp vars whereExp1) (evalWhereExp vars whereExp2) 
-evalWhereExp vars (WNot whereExp1) = complementVars (evalWhereExp vars whereExp1) vars
-evalWhereExp vars (WEqual (WDot ) whereExp2) =
-evalWhereExp vars (WNotEqual whereExp1 whereExp2) =
-evalWhereExp vars (WLessThan whereExp1 whereExp2) =
-evalWhereExp vars (WGreaterThan whereExp1 whereExp2) =
-evalWhereExp vars (WLessOrEqualThan whereExp1 whereExp2) =
-evalWhereExp vars (WGreaterOrEqualThan whereExp1 whereExp2) =
-evalWhereExp vars (WStartsWith whereExp1 whereExp2) =
-evalWhereExp _ _ = error ("invalid where expression")
+-- evalWhereExp :: Variables -> WhereExp -> Variables
+-- evalWhereExp vars (WAnd whereExp1 whereExp2) = evalWhereExp (evalWhereExp vars whereExp1) whereExp2 
+-- evalWhereExp vars (WOr whereExp1 whereExp2) = unionVars (evalWhereExp vars whereExp1) (evalWhereExp vars whereExp2) 
+-- evalWhereExp vars (WNot whereExp1) = complementVars (evalWhereExp vars whereExp1) vars
+-- evalWhereExp vars (WEqual (WDot ) whereExp2) =
+-- evalWhereExp vars (WNotEqual whereExp1 whereExp2) =
+-- evalWhereExp vars (WLessThan whereExp1 whereExp2) =
+-- evalWhereExp vars (WGreaterThan whereExp1 whereExp2) =
+-- evalWhereExp vars (WLessOrEqualThan whereExp1 whereExp2) =
+-- evalWhereExp vars (WGreaterOrEqualThan whereExp1 whereExp2) =
+-- evalWhereExp vars (WStartsWith whereExp1 whereExp2) =
+-- evalWhereExp _ _ = error ("invalid where expression")
 
-unionVars :: Variables -> Variables -> Variables
-unionVars [] _ = []
-unionVars ((var1Name, (TypeNodes var1Nodes)):vars1) vars2 = outputVar : unionVars vars1 vars2 
-    where 
-        var2Value = getVarValueFromName vars2 var1Name
-        outputVar = (var1Name, TypeNodes $ unionLists var1Nodes (extractVariableNodes var2Value))
-unionVars ((var1Name, (TypeRelations var1Relations)):vars1) vars2 = outputVar : unionVars vars1 vars2 
-    where 
-        var2Value = getVarValueFromName vars2 var1Name
-        outputVar = (var1Name, TypeRelations $ unionLists var1Relations (extractVariableRelations var2Value))   
+-- unionVars :: Variables -> Variables -> Variables
+-- unionVars [] _ = []
+-- unionVars ((var1Name, (TypeNodes var1Nodes)):vars1) vars2 = outputVar : unionVars vars1 vars2 
+--     where 
+--         var2Value = getVarValueFromName vars2 var1Name
+--         outputVar = (var1Name, TypeNodes $ unionLists var1Nodes (extractVariableNodes var2Value))
+-- unionVars ((var1Name, (TypeRelations var1Relations)):vars1) vars2 = outputVar : unionVars vars1 vars2 
+--     where 
+--         var2Value = getVarValueFromName vars2 var1Name
+--         outputVar = (var1Name, TypeRelations $ unionLists var1Relations (extractVariableRelations var2Value))   
 
-complementVars :: Variables -> Variables -> Variables
-complementVars [] _ = []
-complementVars ((var1Name, (TypeNodes var1Nodes)):vars1) vars2 = outputVar : complementVars vars1 vars2 
-    where 
-        var2Value = getVarValueFromName vars2 var1Name
-        outputVar = (var1Name, TypeNodes $ complementLists var1Nodes (extractVariableNodes var2Value))   
-complementVars ((var1Name, (TypeRelations var1Relations)):vars1) vars2 = outputVar : complementVars vars1 vars2 
-    where 
-        var2Value = getVarValueFromName vars2 var1Name
-        outputVar = (var1Name, TypeRelations $ complementLists var1Relations (extractVariableRelations var2Value))  
+-- complementVars :: Variables -> Variables -> Variables
+-- complementVars [] _ = []
+-- complementVars ((var1Name, (TypeNodes var1Nodes)):vars1) vars2 = outputVar : complementVars vars1 vars2 
+--     where 
+--         var2Value = getVarValueFromName vars2 var1Name
+--         outputVar = (var1Name, TypeNodes $ complementLists var1Nodes (extractVariableNodes var2Value))   
+-- complementVars ((var1Name, (TypeRelations var1Relations)):vars1) vars2 = outputVar : complementVars vars1 vars2 
+--     where 
+--         var2Value = getVarValueFromName vars2 var1Name
+--         outputVar = (var1Name, TypeRelations $ complementLists var1Relations (extractVariableRelations var2Value))  
