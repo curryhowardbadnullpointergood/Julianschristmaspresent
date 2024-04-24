@@ -282,7 +282,8 @@ endsWith xs ys = startsWith (reverse xs) (reverse ys)
 -- Evaluating Return
 ---------------------------------------------------------------------------------------------------
 evalReturn :: Variables -> Return -> File
-evalReturn vars (Return (outputs:outputss)) = File [] []
+evalReturn vars (ReturnNodeRelation (outputs1:outputss1) (outputs2:outputss2)) = File [] []
+evalReturn vars (ReturnNode         (outputs1:outputss1)) = File [] []
 ---------------------------------------------------------------------------------------------------
 -- Evaluating Outputs
 ---------------------------------------------------------------------------------------------------
