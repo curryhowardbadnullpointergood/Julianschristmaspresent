@@ -16,6 +16,7 @@ tokens :-
     "."                     {\p s -> LTok p LTokenFullStop}
     ","                     {\p s -> LTok p LTokenComma}
     ":"                     {\p s -> LTok p LTokenColon}
+    "|"                     {\p s -> LTok p LTokenBar}
 
     "-"                     {\p s -> LTok p LTokenRelated}
     "->"                    {\p s -> LTok p LTokenRelatedRight}
@@ -24,11 +25,11 @@ tokens :-
     ":integer"              {\p s -> LTok p LTokenIntField}
     ":string"               {\p s -> LTok p LTokenStrField}
     ":boolean"              {\p s -> LTok p LTokenBoolField}
-    "LABEL"                 {\p s -> LTok p LTokenLabelField}
-    "ID"                    {\p s -> LTok p LTokenIdField}
-    "STARTID"               {\p s -> LTok p LTokenStartField}
-    "ENDID"                 {\p s -> LTok p LTokenEndField}
-    "TYPE"                  {\p s -> LTok p LTokenTypeField}
+    ":LABEL"                 {\p s -> LTok p LTokenLabelField}
+    ":ID"                    {\p s -> LTok p LTokenIdField}
+    ":STARTID"               {\p s -> LTok p LTokenStartField}
+    ":ENDID"                 {\p s -> LTok p LTokenEndField}
+    ":TYPE"                  {\p s -> LTok p LTokenTypeField}
 
     "OR"                    {\p s -> LTok p LTokenOr}                 
     "AND"                   {\p s -> LTok p LTokenAnd}
@@ -77,6 +78,7 @@ data LangTokenClass
     | LTokenComma
     | LTokenColon
     | LTokenSemiColon
+    | LTokenBar
 
     | LTokenRelated
     | LTokenRelatedRight

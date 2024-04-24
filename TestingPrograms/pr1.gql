@@ -1,7 +1,4 @@
 READ "access.n4j"
-
 MATCH people
-
-WHERE people."age":string == "hello"
-
-RETURN people."age":string AS "age:String"
+WHERE people."age":integer <= 25 AND people:LABEL == "Visitor"
+RETURN people:ID, people."age":integer AS "age", people:LABEL
