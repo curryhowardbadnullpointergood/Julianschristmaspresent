@@ -73,7 +73,7 @@ evalReadFile (ReadFile fileName) = fileName
 ---------------------------------------------------------------------------------------------------
 -- Evaluating Match
 ---------------------------------------------------------------------------------------------------
-evalMatch :: Variables -> Match -> File -> [String]
+evalMatch :: Variables -> Match -> File -> [[String]]
 evalMatch vars (Match patterns return) file = output
     where
         matchVars = evalPatterns vars patterns file
@@ -309,17 +309,17 @@ endsWith xs ys = startsWith (reverse xs) (reverse ys)
 ---------------------------------------------------------------------------------------------------
 -- Evaluating Return
 ---------------------------------------------------------------------------------------------------
-evalReturn :: Variables -> Return -> [String]
+evalReturn :: Variables -> Return -> [[String]]
 evalReturn vars (Return (outputs:outputss)) = []
 ---------------------------------------------------------------------------------------------------
 -- Evaluating Outputs
 ---------------------------------------------------------------------------------------------------
-evalOutputs :: Variables -> Outputs -> Variables
+evalOutputs :: Variables -> Outputs -> [String]
 evalOutputs vars (output:outputs) = []
 ---------------------------------------------------------------------------------------------------
 -- Evaluating Output
 ---------------------------------------------------------------------------------------------------
-evalOutput :: Variables ->  Output -> Variables
+evalOutput :: Variables ->  Output -> String
 evalOutput  vars (StrOutput varName fieldName asName) = []
 evalOutput  vars (IntOutput varName fieldName asName) = []
 evalOutput  vars (BoolOutput varName fieldName asName) = []
