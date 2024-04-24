@@ -34,14 +34,16 @@ not         {LTok _ LTokenNot}
 read        {LTok _ LTokenRead}
 match       {LTok _ LTokenMatch}
 where       {LTok _ LTokenWhere}
-return      {LTok _ LTokenReturn}
+getNode     {LTok _ LTokenGetNode}
+getRelation {LTok _ LTokenGetRelation}
+-- return      {LTok _ LTokenReturn}
 as          {LTok _ LTokenAs}
 starts      {LTok _ LTokenStartWith}
 
-"("         {LTok _ LTokenLParen}
-")"         {LTok _ LTokenRParen}
-"["         {LTok _ LTokenLBrack}
-"]"         {LTok _ LTokenRBrack}
+-- "("         {LTok _ LTokenLParen}
+-- ")"         {LTok _ LTokenRParen}
+-- "["         {LTok _ LTokenLBrack}
+-- "]"         {LTok _ LTokenRBrack}
 
 "<="        {LTok _ LTokenLessThanEqual}
 ">="        {LTok _ LTokenGreaterThanEqual}
@@ -134,7 +136,9 @@ BoolCondition
     | "/=" null     {BoolNotNull} 
 
 Return
-    : return Return1 {Return $2}
+    : getNode Return1 getRelation Return1   {ReturnNodeRelation $2 $4}
+    | getNode Return1                       {ReturnNode $2}
+
 
 Return1
     : Outputs "|" Return1   {$1 : $3}
@@ -234,8 +238,10 @@ data BoolCondition
     | BoolNotNull
     deriving (Eq, Show)
 
+
 data Return
-    = Return [Outputs]
+    = ReturnNode Outputs
+    | ReturnNodeRelation Outputs
     deriving (Eq, Show)
 
 type Outputs

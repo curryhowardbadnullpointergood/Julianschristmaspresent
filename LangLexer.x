@@ -25,11 +25,11 @@ tokens :-
     ":integer"              {\p s -> LTok p LTokenIntField}
     ":string"               {\p s -> LTok p LTokenStrField}
     ":boolean"              {\p s -> LTok p LTokenBoolField}
-    ":LABEL"                 {\p s -> LTok p LTokenLabelField}
-    ":ID"                    {\p s -> LTok p LTokenIdField}
-    ":STARTID"               {\p s -> LTok p LTokenStartField}
-    ":ENDID"                 {\p s -> LTok p LTokenEndField}
-    ":TYPE"                  {\p s -> LTok p LTokenTypeField}
+    ":LABEL"                {\p s -> LTok p LTokenLabelField}
+    ":ID"                   {\p s -> LTok p LTokenIdField}
+    ":STARTID"              {\p s -> LTok p LTokenStartField}
+    ":ENDID"                {\p s -> LTok p LTokenEndField}
+    ":TYPE"                 {\p s -> LTok p LTokenTypeField}
 
     "OR"                    {\p s -> LTok p LTokenOr}                 
     "AND"                   {\p s -> LTok p LTokenAnd}
@@ -39,7 +39,9 @@ tokens :-
 
     "MATCH"                 {\p s -> LTok p LTokenMatch}
     "WHERE"                 {\p s -> LTok p LTokenWhere}
-    "RETURN"                {\p s -> LTok p LTokenReturn}
+    -- "RETURN"                {\p s -> LTok p LTokenReturn}
+    "GETNODES"              {\p s -> LTok p LTokenGetNode}
+    "GETRELATIONS"          {\p s -> LTok p LTokenGetRelation}
     "AS"                    {\p s -> LTok p LTokenAs}
     
     "STARTS WITH"           {\p s -> LTok p LTokenStartWith}
@@ -100,7 +102,9 @@ data LangTokenClass
     | LTokenRead
     | LTokenMatch
     | LTokenWhere
-    | LTokenReturn
+    -- | LTokenReturn
+    | LTokenGetNode
+    | LTokenGetRelation
     | LTokenAs
     | LTokenStartWith
 

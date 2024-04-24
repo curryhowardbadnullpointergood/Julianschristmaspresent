@@ -26,6 +26,9 @@ import InputLexer
 
 %%
 File                    : NodeSets RelationshipSets                         {File (reverse $1) (reverse $2)}
+                        | NodeSets                                          {File (reverse $1) []}
+                        | RelationshipSets                                  {File [] (reverse $1)}
+                        |                                                   {File [] []}
 
 
 NodeSets                : NodeSets NodeSet                                  {$2 : $1}             
@@ -71,6 +74,7 @@ Label                   : string                                            {Lab
 
 RelationshipSets        : RelationshipSets RelationshipSet                  {$2 : $1}  
                         | RelationshipSet                                   {[$1]}
+
 
 RelationshipSet         : RelationshipHeader RelationshipEntries            {RelationshipSet $1 (reverse $2)}
 

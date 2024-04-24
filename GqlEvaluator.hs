@@ -73,7 +73,7 @@ evalReadFile (ReadFile fileName) = fileName
 ---------------------------------------------------------------------------------------------------
 -- Evaluating Match
 ---------------------------------------------------------------------------------------------------
-evalMatch :: Variables -> Match -> File -> [[String]]
+evalMatch :: Variables -> Match -> File -> File
 evalMatch vars (Match patterns return) file = output
     where
         matchVars = evalPatterns vars patterns file
@@ -191,33 +191,6 @@ getNodesfromString (x:xs) nodes acc = getNodesfromString xs nodes ((filterTypeRe
 reverseList :: [a] -> [a]
 reverseList [] = []
 reverseList (x:xs) = reverseList xs ++ [x]
-
--- evalMatch :: Variables -> Match -> File -> Variables
--- evalMatch vars (MatchWhere patterns conditions return) file = undefined
--- evalMatch vars (Match (PatternFinal str) return) datafile = addVariable vars str (TypeNodes (getNodes datafile))
--- evalMatch vars (Match (PatternRelatedTo str (PatternFinal str1)) return) datafile = output
---         where 
---         vars' = addVariable vars str (TypeNodes (getNodesfromString (getStartId (getRelationships datafile)) (getNodes datafile) []))
---         vars'' = addVariable vars' str1 (TypeNodes (getNodesfromString (getEndId (getRelationships datafile)) (getNodes datafile) []))
---         output = reverseList vars'' 
--- evalMatch vars (Match (PatternRelatedToVar str str1 (PatternFinal str2)) return ) datafile = output
---         where 
---         vars' = addVariable vars str (TypeNodes (getNodesfromString (getStartId (getRelationships datafile)) (getNodes datafile) []))
---         vars'' = addVariable vars' str2 (TypeNodes (getNodesfromString (getEndId (getRelationships datafile)) (getNodes datafile) []))
---         vars''' = addVariable vars'' str1 (TypeRelations (getRelationshipsfromString (getStartId (getRelationships datafile)) (getRelationships datafile) [] ))
---         output = reverseList vars'''  
--- evalMatch vars (Match (PatternRelatedBy str (PatternFinal str1)) return) datafile 
---     = reverseList (evalMatch vars (Match (PatternRelatedTo str1 (PatternFinal str)) return) datafile)
--- evalMatch vars (Match (PatternRelatedByVar str str1 (PatternFinal str2)) return ) datafile = output 
---     where 
---     x =  rearrange (evalMatch vars (Match (PatternRelatedToVar str2 str1 (PatternFinal str)) return ) datafile) 
---     output = x 
--- evalMatch vars (Match (PatternRelated str (PatternFinal str1)) return) datafile = output 
---     where 
---     vals = nub (getStartId (getRelationships datafile) ++ getEndId (getRelationships datafile))
---     vars' = addVariable vars str (TypeNodes ((getNodesfromString (vals) (getNodes datafile) [])))
---     vars'' = addVariable vars' str1 (TypeNodes ((getNodesfromString (vals) (getNodes datafile) [])))
---     output = reverseList vars''
 ---------------------------------------------------------------------------------------------------
 -- Evaluating WhereConditions
 ---------------------------------------------------------------------------------------------------
@@ -233,7 +206,6 @@ unionVars ((var1Name, (TypeNodes var1Nodes)):vars1) vars2 = outputVar : unionVar
     where 
         var2Value = getVarValueFromName vars2 var1Name
         outputVar = (var1Name, TypeNodes $ unionLists var1Nodes (extractVariableNodes var2Value))
-
 unionVars ((var1Name, (TypeRelations var1Relations)):vars1) vars2 = outputVar : unionVars vars1 vars2 
     where 
         var2Value = getVarValueFromName vars2 var1Name
@@ -309,17 +281,17 @@ endsWith xs ys = startsWith (reverse xs) (reverse ys)
 ---------------------------------------------------------------------------------------------------
 -- Evaluating Return
 ---------------------------------------------------------------------------------------------------
-evalReturn :: Variables -> Return -> [[String]]
-evalReturn vars (Return (outputs:outputss)) = []
+evalReturn :: Variables -> Return -> File
+evalReturn vars (Return (outputs:outputss)) = File [] []
 ---------------------------------------------------------------------------------------------------
 -- Evaluating Outputs
 ---------------------------------------------------------------------------------------------------
-evalOutputs :: Variables -> Outputs -> [String]
+evalOutputs :: Variables -> Outputs -> [[Literal]]
 evalOutputs vars (output:outputs) = []
 ---------------------------------------------------------------------------------------------------
 -- Evaluating Output
 ---------------------------------------------------------------------------------------------------
-evalOutput :: Variables ->  Output -> String
+evalOutput :: Variables ->  Output -> [Literal]
 evalOutput  vars (StrOutput varName fieldName asName) = []
 evalOutput  vars (IntOutput varName fieldName asName) = []
 evalOutput  vars (BoolOutput varName fieldName asName) = []
