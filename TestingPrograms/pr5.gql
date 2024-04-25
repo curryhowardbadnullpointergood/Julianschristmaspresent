@@ -1,0 +1,4 @@
+READ “loyalty.n4j”
+MATCH
+WHERE
+RETURN

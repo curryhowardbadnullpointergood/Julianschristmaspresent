@@ -1,0 +1,4 @@
+READ “tasks.n4j”
+MATCH a-r1->b c-r2->d
+WHERE r1.priority:integer >= 8 AND d:LABEL == "Staff" AND r2.available:boolean == TRUE
+APPEND_RELATION b--"PossibleAllocated"--d
