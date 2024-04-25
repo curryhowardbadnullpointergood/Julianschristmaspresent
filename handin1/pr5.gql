@@ -1,0 +1,26 @@
+READ = “loyalty.n4j”
+MATCH = a-r->b
+WHERE
+    = r:TYPE == "Recommended
+RETURN 
+
+
+MATCH p-c->b | p'-r->q | q'-c'->b'
+
+WHERE
+    =   a:ID == a':ID
+    AND q:ID == q':ID
+    AND b:ID == b':ID
+
+    AND c:TYPE == "CustomerOf"
+    AND c':TYPE == "CustomerOf"
+    AND r:TYPE == "Recommended"
+
+WHERE
+    = r:TYPE == "Recommended"
+
+UPDATE 
+    =   c:START_ID == p:ID , c.reward ++ b.bonus , c:END_ID, c:TYPE 
+    |   c':START_ID == q':ID , c'.reward ++ b.bonus , c':END_ID, c':TYPE 
+DELETE 
+    = Recommended

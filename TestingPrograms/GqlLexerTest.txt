@@ -1,8 +1,0 @@
-// This file is atest program
-File file = Read "problem1.txt";
-
-Nodes nodes = GetNodes file; 
-
-Nodes filtered = FilterField nodes :LABEL (== "hello");
-
-File output = file;
