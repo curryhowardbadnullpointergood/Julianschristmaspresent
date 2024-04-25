@@ -35,10 +35,15 @@ getInputFile (Query read match) = do
     let inputFileParse  = inputParser inputFileLexed
     evalQuery match inputFileParse
 
+-- THIS NEEDS FIXING
+
 evalQuery :: Match -> File -> IO()
-evalQuery  match file = do
-    let matchEval = evalMatch [] match file
-    putStrLn $ printFile matchEval
+evalQuery  match file = undefined
+
+-- evalQuery :: Match -> File -> IO()
+-- evalQuery  match file = do
+--     let matchEval = evalMatch [] match file
+--     putStrLn $ printFile matchEval
 
 
 printFile :: File -> String
