@@ -1,0 +1,14 @@
+READ  “table.n4j”
+
+MATCH n-x->n1  n1'-y-n2   n2'-z->n'
+WHERE   
+        n.points:integer /= NULL  
+    AND n.points:integer =  n2.points:integer  
+    AND n:ID     == n':ID  
+    AND n1:ID    == n1':ID 
+    AND n2:ID    == n2':ID 
+    AND x:TYPE   == "Beat"
+    AND y:TYPE   == "DrewWith"
+    AND z:TYPE   == "Beat" 
+
+RETURN_NODE n.points:integer AS points

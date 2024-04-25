@@ -1,0 +1,13 @@
+READ “network.n4j”
+
+MATCH persons -r-> friend friend' -r'-> workPlace
+WHERE   persons.name starts "A"         OR
+        persons.name starts "B"         OR
+        persons.name starts "C"         AND
+        r:TYPE == "isFriend"              AND
+        friend."age" < persons."age"    AND
+        friend.ID == friend'.ID         AND
+        r'.TYPE == "WorksFor"            AND
+        workPlace:LABEL /= "Cafe"
+RETURN_NODE     friend.firstname, persons.firstName, persons.familyName, friend.familyName, friend.age, persons.age 
+RETURN_RELATION
