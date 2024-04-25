@@ -78,10 +78,16 @@ evalReadFile (ReadFile fileName) = fileName
 ---------------------------------------------------------------------------------------------------
 -- Evaluating Match
 ---------------------------------------------------------------------------------------------------
-evalMatch vars (Match patterns whereConditions return) file = whereVars
+-- evalMatch :: Variables -> Match -> File -> File
+-- evalMatch vars (Match patterns return) file = output
+--     where
+--         matchVars = evalPatterns vars patterns file
+--         output = evalReturn matchVars return
+evalMatch vars (Match patterns whereConditions return) file = output
     where
         matchVars = evalPatterns vars patterns file 
-        whereVars = outputCoord matchVars return
+        whereVars = evalWhereConditions matchVars whereConditions
+        output = evalReturn whereVars return
 ---------------------------------------------------------------------------------------------------
 -- Evaluating Patterns 
 ---------------------------------------------------------------------------------------------------
@@ -196,33 +202,33 @@ reverseList (x:xs) = reverseList xs ++ [x]
 ---------------------------------------------------------------------------------------------------
 -- Evaluating WhereConditions
 ---------------------------------------------------------------------------------------------------
--- evalWhereConditions :: Variables -> WhereConditions -> Variables
--- evalWhereConditions vars (WhereConditionOr whereCondition whereConditions) = unionVars (evalWhereCondition vars whereCondition) (evalWhereConditions vars whereConditions) 
+evalWhereConditions :: Variables -> WhereExp -> Variables
+evalWhereConditions vars (WOr whereCondition whereConditions) = unionVars (evalWhereCondition vars whereCondition) (evalWhereConditions vars whereConditions) 
 -- evalWhereConditions vars (WhereConditionAnd whereCondition whereConditions) = evalWhereConditions (evalWhereCondition vars whereCondition) whereConditions
 -- evalWhereConditions vars (WhereConditionNot whereConditions) = complementVars (evalWhereConditions vars whereConditions) vars
--- evalWhereConditions vars (WhereCondition whereCondition) = evalWhereCondition vars whereCondition
+evalWhereConditions vars (WFinal whereCondition) = evalWhereCondition vars whereCondition
 
--- unionVars :: Variables -> Variables -> Variables
--- unionVars [] _ = []
--- unionVars ((var1Name, (TypeNodes var1Nodes)):vars1) vars2 = outputVar : unionVars vars1 vars2
---     where
---         var2Value = getVarValueFromName vars2 var1Name
---         outputVar = (var1Name, TypeNodes $ unionLists var1Nodes (extractVariableNodes var2Value))
--- unionVars ((var1Name, (TypeRelations var1Relations)):vars1) vars2 = outputVar : unionVars vars1 vars2
---     where
---         var2Value = getVarValueFromName vars2 var1Name
---         outputVar = (var1Name, TypeRelations $ unionLists var1Relations (extractVariableRelations var2Value))
+unionVars :: Variables -> Variables -> Variables
+unionVars [] _ = []
+unionVars ((var1Name, (TypeNodes var1Nodes)):vars1) vars2 = outputVar : unionVars vars1 vars2
+    where
+        var2Value = getVarValueFromName vars2 var1Name
+        outputVar = (var1Name, TypeNodes $ unionLists var1Nodes (extractVariableNodes var2Value))
+unionVars ((var1Name, (TypeRelations var1Relations)):vars1) vars2 = outputVar : unionVars vars1 vars2
+    where
+        var2Value = getVarValueFromName vars2 var1Name
+        outputVar = (var1Name, TypeRelations $ unionLists var1Relations (extractVariableRelations var2Value))
 
--- complementVars :: Variables -> Variables -> Variables
--- complementVars [] _ = []
--- complementVars ((var1Name, (TypeNodes var1Nodes)):vars1) vars2 = outputVar : complementVars vars1 vars2
---     where
---         var2Value = getVarValueFromName vars2 var1Name
---         outputVar = (var1Name, TypeNodes $ complementLists var1Nodes (extractVariableNodes var2Value))
--- complementVars ((var1Name, (TypeRelations var1Relations)):vars1) vars2 = outputVar : complementVars vars1 vars2
---     where
---         var2Value = getVarValueFromName vars2 var1Name
---         outputVar = (var1Name, TypeRelations $ complementLists var1Relations (extractVariableRelations var2Value))
+complementVars :: Variables -> Variables -> Variables
+complementVars [] _ = []
+complementVars ((var1Name, (TypeNodes var1Nodes)):vars1) vars2 = outputVar : complementVars vars1 vars2
+    where
+        var2Value = getVarValueFromName vars2 var1Name
+        outputVar = (var1Name, TypeNodes $ complementLists var1Nodes (extractVariableNodes var2Value))
+complementVars ((var1Name, (TypeRelations var1Relations)):vars1) vars2 = outputVar : complementVars vars1 vars2
+    where
+        var2Value = getVarValueFromName vars2 var1Name
+        outputVar = (var1Name, TypeRelations $ complementLists var1Relations (extractVariableRelations var2Value))
 
 -- evalWhereCondition vars cond@(IntWhereCondition varName field intCondition) = vars'
 --     where
@@ -942,27 +948,27 @@ startsWith (x:xs) (y:ys) = x == y && startsWith xs ys
 endsWith :: Eq a => [a] -> [a] -> Bool
 endsWith xs ys = startsWith (reverse xs) (reverse ys)
 
-unionVars :: Variables -> Variables -> Variables
-unionVars [] _ = []
-unionVars ((var1Name, (TypeNodes var1Nodes)):vars1) vars2 = outputVar : unionVars vars1 vars2 
-    where 
-        var2Value = getVarValueFromName vars2 var1Name
-        outputVar = (var1Name, TypeNodes $ unionLists var1Nodes (extractVariableNodes var2Value))
-unionVars ((var1Name, (TypeRelations var1Relations)):vars1) vars2 = outputVar : unionVars vars1 vars2 
-    where 
-        var2Value = getVarValueFromName vars2 var1Name
-        outputVar = (var1Name, TypeRelations $ unionLists var1Relations (extractVariableRelations var2Value))   
+-- unionVars :: Variables -> Variables -> Variables
+-- unionVars [] _ = []
+-- unionVars ((var1Name, (TypeNodes var1Nodes)):vars1) vars2 = outputVar : unionVars vars1 vars2 
+--     where 
+--         var2Value = getVarValueFromName vars2 var1Name
+--         outputVar = (var1Name, TypeNodes $ unionLists var1Nodes (extractVariableNodes var2Value))
+-- unionVars ((var1Name, (TypeRelations var1Relations)):vars1) vars2 = outputVar : unionVars vars1 vars2 
+--     where 
+--         var2Value = getVarValueFromName vars2 var1Name
+--         outputVar = (var1Name, TypeRelations $ unionLists var1Relations (extractVariableRelations var2Value))   
 
-complementVars :: Variables -> Variables -> Variables
-complementVars [] _ = []
-complementVars ((var1Name, (TypeNodes var1Nodes)):vars1) vars2 = outputVar : complementVars vars1 vars2 
-    where 
-        var2Value = getVarValueFromName vars2 var1Name
-        outputVar = (var1Name, TypeNodes $ complementLists var1Nodes (extractVariableNodes var2Value))
-complementVars ((var1Name, (TypeRelations var1Relations)):vars1) vars2 = outputVar : complementVars vars1 vars2 
-    where 
-        var2Value = getVarValueFromName vars2 var1Name
-        outputVar = (var1Name, TypeRelations $ complementLists var1Relations (extractVariableRelations var2Value))
+-- complementVars :: Variables -> Variables -> Variables
+-- complementVars [] _ = []
+-- complementVars ((var1Name, (TypeNodes var1Nodes)):vars1) vars2 = outputVar : complementVars vars1 vars2 
+--     where 
+--         var2Value = getVarValueFromName vars2 var1Name
+--         outputVar = (var1Name, TypeNodes $ complementLists var1Nodes (extractVariableNodes var2Value))
+-- complementVars ((var1Name, (TypeRelations var1Relations)):vars1) vars2 = outputVar : complementVars vars1 vars2 
+--     where 
+--         var2Value = getVarValueFromName vars2 var1Name
+--         outputVar = (var1Name, TypeRelations $ complementLists var1Relations (extractVariableRelations var2Value))
 
 
 

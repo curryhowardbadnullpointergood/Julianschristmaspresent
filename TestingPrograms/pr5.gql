@@ -1,0 +1,15 @@
+READ = “loyalty.n4j”
+MATCH = a-r->b
+WHERE
+    = r:TYPE == "Recommended
+RETURN 
+
+
+UPDATE ()
+DELETE ()
+
+
+RETURN::
+
+fat pattern matching
+

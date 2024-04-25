@@ -1,5 +1,5 @@
-import InputParser
-import InputLexer
+import LangParser
+import LangLexer
 import Control.Exception
 import System.IO
 import System.Environment ( getArgs )
@@ -19,9 +19,9 @@ main' sourceText = do
     putStrLn ("Lexed As: \n" ++ replicate 50 '-'  ++ "\n" ++ show lexedProg ++ "\n" ++ replicate 50 '-')
     catch (main'' lexedProg) noParse
 
-main'' :: [InputToken] -> IO ()
+main'' :: [LangToken] -> IO ()
 main'' lexedProg = do
-    let parsedProg = inputParser lexedProg
+    let parsedProg = langParser lexedProg
     putStrLn ("Parsed As: \n" ++ replicate 50 '-'  ++ "\n" ++ show parsedProg ++ "\n" ++ replicate 50 '-')
 
 

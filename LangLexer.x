@@ -17,7 +17,7 @@ tokens :-
     ","                     {\p s -> LTok p LTokenComma}
     ":"                     {\p s -> LTok p LTokenColon}
     "|"                     {\p s -> LTok p LTokenBar}
-
+    "="                     {\p s -> LTok p LTokenAssignment}
     "-"                     {\p s -> LTok p LTokenRelated}
     "->"                    {\p s -> LTok p LTokenRelatedRight}
     "<-"                    {\p s -> LTok p LTokenRelatedLeft}                   
@@ -81,7 +81,7 @@ data LangTokenClass
     | LTokenColon
     | LTokenSemiColon
     | LTokenBar
-
+    | LTokenAssignment
     | LTokenRelated
     | LTokenRelatedRight
     | LTokenRelatedLeft
