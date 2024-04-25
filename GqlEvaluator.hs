@@ -83,11 +83,11 @@ evalReadFile (ReadFile fileName) = fileName
 --     where
 --         matchVars = evalPatterns vars patterns file
 --         output = evalReturn matchVars return
-evalMatch vars (Match patterns whereConditions return) file = output
-    where
-        matchVars = evalPatterns vars patterns file 
-        whereVars = evalWhereConditions matchVars whereConditions
-        output = evalReturn whereVars return
+-- evalMatch vars (Match patterns whereConditions return) file = output
+--     where
+--         matchVars = evalPatterns vars patterns file 
+--         whereVars = evalWhereConditions matchVars whereConditions
+--         output = evalReturn whereVars return
 ---------------------------------------------------------------------------------------------------
 -- Evaluating Patterns 
 ---------------------------------------------------------------------------------------------------
@@ -202,11 +202,11 @@ reverseList (x:xs) = reverseList xs ++ [x]
 ---------------------------------------------------------------------------------------------------
 -- Evaluating WhereConditions
 ---------------------------------------------------------------------------------------------------
-evalWhereConditions :: Variables -> WhereExp -> Variables
-evalWhereConditions vars (WOr whereCondition whereConditions) = unionVars (evalWhereCondition vars whereCondition) (evalWhereConditions vars whereConditions) 
+-- evalWhereConditions :: Variables -> WhereExp -> Variables
+-- evalWhereConditions vars (WOr whereCondition whereConditions) = unionVars (evalWhereCondition vars whereCondition) (evalWhereConditions vars whereConditions) 
 -- evalWhereConditions vars (WhereConditionAnd whereCondition whereConditions) = evalWhereConditions (evalWhereCondition vars whereCondition) whereConditions
 -- evalWhereConditions vars (WhereConditionNot whereConditions) = complementVars (evalWhereConditions vars whereConditions) vars
-evalWhereConditions vars (WFinal whereCondition) = evalWhereCondition vars whereCondition
+-- evalWhereConditions vars (WFinal whereCondition) = evalWhereCondition vars whereCondition
 
 unionVars :: Variables -> Variables -> Variables
 unionVars [] _ = []
