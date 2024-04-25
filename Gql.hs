@@ -12,7 +12,7 @@ main :: IO ()
 main = do
     (programFileName : _ ) <- getArgs
     sourceText <- readFile programFileName
-    putStrLn ("Input File: \n" ++ replicate 50 '-'  ++ "\n" ++ sourceText ++ "\n" ++ replicate 50 '-')
+    --putStrLn ("Input File: \n" ++ replicate 50 '-'  ++ "\n" ++ sourceText ++ "\n" ++ replicate 50 '-')
     catch (lexProgram sourceText) noLex
 
 lexProgram :: String -> IO ()
@@ -24,7 +24,7 @@ lexProgram programSourceText = do
 parseProgram :: [LangToken] -> IO ()
 parseProgram lexedProg = do
     let parsedProg = langParser lexedProg
-    putStrLn ("Parsed As: \n" ++ replicate 50 '-'  ++ "\n" ++ show parsedProg ++ "\n" ++ replicate 50 '-')
+    --putStrLn ("Parsed As: \n" ++ replicate 50 '-'  ++ "\n" ++ show parsedProg ++ "\n" ++ replicate 50 '-')
     getInputFile parsedProg
 
 getInputFile :: Query -> IO ()
