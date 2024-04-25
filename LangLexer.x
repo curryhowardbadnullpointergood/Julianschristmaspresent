@@ -39,9 +39,9 @@ tokens :-
 
     "MATCH"                 {\p s -> LTok p LTokenMatch}
     "WHERE"                 {\p s -> LTok p LTokenWhere}
-    -- "RETURN"                {\p s -> LTok p LTokenReturn}
-    "GETNODES"              {\p s -> LTok p LTokenGetNode}
-    "GETRELATIONS"          {\p s -> LTok p LTokenGetRelation}
+
+    "RETURN_NODE"              {\p s -> LTok p LTokenGetNode}
+    "RETURN_RELATION"          {\p s -> LTok p LTokenGetRelation}
     "AS"                    {\p s -> LTok p LTokenAs}
     
     "STARTS WITH"           {\p s -> LTok p LTokenStartWith}

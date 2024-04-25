@@ -1,6 +1,7 @@
 {
 module LangParser where
 import LangLexer
+import InputParser (Literal(..))
 }
 
 %name langParser
@@ -41,8 +42,8 @@ starts      {LTok _ LTokenStartWith}
 
 "("         {LTok _ LTokenLParen}
 ")"         {LTok _ LTokenRParen}
-"["         {LTok _ LTokenLBrack}
-"]"         {LTok _ LTokenRBrack}
+-- "["         {LTok _ LTokenLBrack}
+-- "]"         {LTok _ LTokenRBrack}
 
 "<="        {LTok _ LTokenLessThanEqual}
 ">="        {LTok _ LTokenGreaterThanEqual}
@@ -74,14 +75,8 @@ Read
     : read string {ReadFile $2}
     
 
--- Matches
---     : Match Matches {$1 : $2}
---     | Match         {[$1]}
-
-
 Match
-    : match Patterns Where Return   {MatchWhere $2 $3 $4}
-    | match Patterns Return         {Match $2 $3}
+    : match Patterns Where Return   {Match $2 $3 $4}
 
 Patterns
     : Pattern Patterns  {$1 : $2}
@@ -97,10 +92,9 @@ Pattern
     | name                      {PatternFinal $1} 
 
 Return
-    : getNode Return1 getRelation Return1    {ReturnNodeRelation $2 $4}
-    | getNode Return1                        {ReturnNode $2}
-    | getRelation Return1                        {ReturnRelation $2}
-
+    : getNode Return1 getRelation Return1   {ReturnNodeRelation $2 $4}
+    | getNode Return1                       {ReturnNode $2}
+    | getRelation Return1                   {ReturnRelation $2}
 
 Return1
     : Outputs "|" Return1   {$1 : $3}
@@ -111,13 +105,10 @@ Outputs
     | Output                {[$1]}
 
 Output
-    : name "." string intField as string    {IntOutput $1 $3 $6}  
-    | name "." string strField as string    {StrOutput $1 $3 $6}  
-    | name "." string boolField as string   {BoolOutput $1 $3 $6}
-    -- | name idField                          {IdOutput $1}
-    -- | name startField                       {StartOutput $1}
-    -- | name endField                         {EndOutput $1}
-    | name labelField                       {LabelOutput $1} 
+    : name "." name intField as string    {IntOutput $1 $3 $6}  
+    | name "." name strField as string    {StrOutput $1 $3 $6}  
+    | name "." name boolField as string   {BoolOutput $1 $3 $6}
+    | name labelField                      {LabelOutput $1} 
 
 
 
@@ -149,19 +140,21 @@ WhereFunc
     | WhereDot starts WhereDot    {WStartsWithDot $1 $3}
 
 WhereDot 
-    : name "." idField          {WDot $1 WId}
-    | name "." typeField        {WDot $1 WType}
-    | name "." startField       {WDot $1 WStartField}
-    | name "." endField         {WDot $1 WEndField}
-    | name "." labelField       {WDot $1 WLabelField}
-    | name "." name             {WDot $1 (WFieldName $3)}
+    : name idField          {WDot $1 WId}
+    | name typeField        {WDot $1 WType}
+    | name startField       {WDot $1 WStartField}
+    | name endField         {WDot $1 WEndField}
+    | name labelField       {WDot $1 WLabelField}
+    | name "." name intField    {WDot $1 (WFieldName $3)}
+    | name "." name strField    {WDot $1 (WFieldName $3)}
+    | name "." name boolField   {WDot $1 (WFieldName $3)}
 
 WhereLit
-    : string                    {WStr $1}
-    | null                      {WNull}
-    | int                       {WInt $1}
-    | true                      {WBool True}
-    | false                     {WBool False}
+    : string                    {LiteralStr $1}
+    | null                      {LiteralNull}
+    | int                       {LiteralInt $1}
+    | true                      {LiteralBool True}
+    | false                     {LiteralBool False}
 
 {
 
@@ -179,12 +172,8 @@ data ReadFile
     = ReadFile String
     deriving (Show, Eq)
 
--- type Matches
---     = [Match]
-
 data Match
-    = MatchWhere Patterns Where Return
-    | Match Patterns Return     
+    = Match Patterns Where Return
     deriving (Eq, Show)
 
 type Patterns
@@ -213,13 +202,13 @@ data WhereExp
     deriving (Show, Eq)
 
 data WhereFunc
-    = WEqual WhereDot WhereLit
-    | WNotEqual WhereDot WhereLit
-    | WLessThan WhereDot WhereLit
-    | WGreaterThan WhereDot WhereLit
-    | WLessOrEqualThan WhereDot WhereLit
-    | WGreaterOrEqualThan WhereDot WhereLit
-    | WStartsWith WhereDot WhereLit
+    = WEqual WhereDot Literal
+    | WNotEqual WhereDot Literal
+    | WLessThan WhereDot Literal
+    | WGreaterThan WhereDot Literal
+    | WLessOrEqualThan WhereDot Literal
+    | WGreaterOrEqualThan WhereDot Literal
+    | WStartsWith WhereDot Literal
     
     | WEqualDot WhereDot WhereDot
     | WNotEqualDot WhereDot WhereDot

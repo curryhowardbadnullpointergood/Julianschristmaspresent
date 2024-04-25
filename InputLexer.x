@@ -75,19 +75,4 @@ data TokenClass =
     TokenEndID               |
     TokenType
     deriving (Eq, Show)
-
-
--- tokenPosn :: Token -> String
--- tokenPosn (TokenStr     (AlexPn a l c) s)   = show(l) ++ ":" ++ show(c)
--- tokenPosn (TokenInt     (AlexPn a l c) x)   = show(l) ++ ":" ++ show(c)
--- tokenPosn (TokenBool    (AlexPn a l c) b)   = show(l) ++ ":" ++ show(c)
--- tokenPosn (TokenAlNu    (AlexPn a l c) s)   = show(l) ++ ":" ++ show(c)
--- tokenPosn (TokenID      (AlexPn a l c))     = show(l) ++ ":" ++ show(c)
--- tokenPosn (TokenField   (AlexPn a l c) s t) = show(l) ++ ":" ++ show(c)
--- tokenPosn (TokenLabel   (AlexPn a l c))     = show(l) ++ ":" ++ show(c)
--- tokenPosn (TokenStartID (AlexPn a l c))     = show(l) ++ ":" ++ show(c)
--- tokenPosn (TokenEndID   (AlexPn a l c))     = show(l) ++ ":" ++ show(c)
--- tokenPosn (TokenType    (AlexPn a l c))     = show(l) ++ ":" ++ show(c)
-
-
 }
