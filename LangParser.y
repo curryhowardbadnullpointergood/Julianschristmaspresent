@@ -72,14 +72,14 @@ Query
     : Read Match {Query $1 $2}
 
 Read
-    : read "=" string {ReadFile $2}
+    : read "=" string {ReadFile $3}
     
 
 Match
-    : match "=" Patterns Where Return   {Match $2 $3 $4}
+    : match "=" Patterns Where Return   {Match $3 $4 $5}
 
 Patterns
-    : Pattern "|" Patterns  {$1 : $2}
+    : Pattern "|" Patterns  {$1 : $3}
     | Pattern           {[$1]}
 
 Pattern
@@ -92,9 +92,9 @@ Pattern
     | name                      {PatternFinal $1} 
 
 Return
-    : getNode "=" Return1 getRelation "=" Return1   {ReturnNodeRelation $2 $4}
-    | getNode "=" Return1                       {ReturnNode $2}
-    | getRelation "=" Return1                   {ReturnRelation $2}
+    : getNode "=" Return1 getRelation "=" Return1   {ReturnNodeRelation $3 $6}
+    | getNode "=" Return1                       {ReturnNode $3}
+    | getRelation "=" Return1                   {ReturnRelation $3}
 
 Return1
     : Outputs "|" Return1   {$1 : $3}
@@ -108,18 +108,19 @@ Output
     : name "." name intField as string    {IntOutput $1 $3 $6}  
     | name "." name strField as string    {StrOutput $1 $3 $6}  
     | name "." name boolField as string   {BoolOutput $1 $3 $6}
-    | name labelField                      {LabelOutput $1} 
+    | name labelField                     {LabelOutput $1} 
 
 
 
 Where
-    : where "=" WhereExp1    {Where $2}
+    : where "=" WhereExp1    {Where $3}
 
 
 WhereExp1
     : WhereFunc and WhereExp1   {WAnd $1 $3}
     | WhereFunc or WhereExp1    {WOr $1 $3}
     | not WhereExp1             {WNot $2}
+    | "(" WhereExp1 ")"         {$2}
     | WhereFunc                 {WFinal $1}
 
 WhereFunc

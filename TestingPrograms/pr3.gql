@@ -9,7 +9,7 @@ MATCH = n-x->n1 | n1'-y-n2 | n2'-z->n'
 
 WHERE 
     =   n.points /= NULL  
-    AND n.points =  n2.points  
+    AND n.points == n2.points  
     AND n:ID     == n':ID  
     AND n1:ID    == n1':ID 
     AND n2:ID    == n2':ID 
@@ -17,4 +17,7 @@ WHERE
     AND y:TYPE   == "DrewWith"
     AND z:TYPE   == "Beat" 
 
-RETURN_NODE = n.points:integer AS points
+RETURN_NODE = n.points AS points
+
+
+
