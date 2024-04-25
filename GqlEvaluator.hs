@@ -6,87 +6,6 @@ import InputParser
 
 import Data.List (nub, elemIndex, transpose,groupBy, sort)
 import Data.Function (on)
-printFile :: File -> String
-printFile (File nodeSets relationshipSets) = printNodeSets nodeSets ++ "\n" ++ printRelationshipSets relationshipSets
-
-printNodeSets :: [NodeSet] -> String
-printNodeSets [] = ""
-printNodeSets (nodeSet : []) = printNodeSet nodeSet
-printNodeSets (nodeSet : nodeSets) = printNodeSet nodeSet ++ "\n" ++ printNodeSets nodeSets
-
-printNodeSet :: NodeSet -> String
-printNodeSet (NodeSet nodeHeader nodeEntries) = printNodeHeader nodeHeader ++ "\n" ++ printNodeEntries nodeEntries
-
-printNodeHeader :: NodeHeader -> String
-printNodeHeader (NodeHeader [] True) = ":ID" ++ ", "  ++  ":LABEL"
-printNodeHeader (NodeHeader fields True) = ":ID" ++ ", " ++ printFields fields ++ ", " ++  ":LABEL"
-printNodeHeader (NodeHeader [] False) = ":ID"
-printNodeHeader (NodeHeader fields False) = ":ID" ++ ", " ++  printFields fields
-
-printNodeEntries :: [NodeEntry] -> String
-printNodeEntries [] = ""
-printNodeEntries (nodeEntry : []) = printNodeEntry nodeEntry  ++ "\n"
-printNodeEntries (nodeEntry : nodeEntries) = printNodeEntry nodeEntry ++ "\n" ++ printNodeEntries nodeEntries
-
-printNodeEntry :: NodeEntry -> String
-printNodeEntry (NodeEntry str [] []) = str
-printNodeEntry (NodeEntry str [] labels) = str ++  ", " ++ printLabels labels
-printNodeEntry (NodeEntry str literals []) = str ++ ", " ++ printLiterals literals
-printNodeEntry (NodeEntry str literals labels) = str ++ ", " ++ printLiterals literals ++ ", " ++ printLabels labels
-
-printRelationshipSets :: [RelationshipSet] -> String
-printRelationshipSets [] = ""
-printRelationshipSets (relationshipSet : []) = printRelationshipSet relationshipSet
-printRelationshipSets (relationshipSet : relationShipSets) = printRelationshipSet relationshipSet ++ "\n" ++ printRelationshipSets relationShipSets
-
-printRelationshipSet :: RelationshipSet -> String
-printRelationshipSet (RelationshipSet relationshipHeader relationshipEntries) = printRelationshipHeader relationshipHeader ++ "\n" ++ printRelationshipEntries relationshipEntries
-
-printRelationshipHeader :: RelationshipHeader -> String
-printRelationshipHeader (RelationshipHeader []) = ":START_ID" ++ ", " ++ ":END_ID" ++ ", " ++ ":TYPE"
-printRelationshipHeader (RelationshipHeader fields) = ":START_ID" ++ ", " ++ printFields fields ++ ", " ++ ":END_ID" ++ ", " ++ ":TYPE"
-
-printRelationshipEntries :: [RelationshipEntry] -> String
-printRelationshipEntries [] = ""
-printRelationshipEntries (relationshipentry : []) = printRelationshipEntry relationshipentry ++ "\n"
-printRelationshipEntries (relationshipentry : relationshipEntries) = printRelationshipEntry relationshipentry ++ "\n" ++ printRelationshipEntries relationshipEntries
-
-printRelationshipEntry :: RelationshipEntry -> String
-printRelationshipEntry (RelationshipEntry str1 [] str2 str3) = str1 ++ ", " ++ str2 ++ ", " ++ str3
-printRelationshipEntry (RelationshipEntry str1 literals str2 str3) = str1 ++ ", " ++ printLiterals literals ++ ", " ++ str2 ++ ", " ++ str3
-
-printType :: FieldType -> String
-printType TypeString = "string"
-printType TypeBoolean = "boolean"
-printType TypeInteger = "integer"
-
-printFields :: [Field] -> String
-printFields [] = ""
-printFields (field : []) = printField field
-printFields (field : fields) = printField field ++ ", " ++ printFields fields
-
-printField :: Field -> String
-printField (Field str fieldType) = str ++ ":" ++ printType fieldType
-
-printLiterals :: [Literal] -> String
-printLiterals [] = ""
-printLiterals (literal : []) = printLiteral literal
-printLiterals (literal : literals) = printLiteral literal ++ ", " ++ printLiterals literals
-
-printLiteral :: Literal -> String
-printLiteral (LiteralStr str) = "\"" ++ str ++ "\""
-printLiteral (LiteralInt int) = show int
-printLiteral (LiteralBool True) = "true"
-printLiteral (LiteralBool False) = "false"
-printLiteral (LiteralNull) = "null"
-
-printLabels :: [Label] -> String
-printLabels [] = ""
-printLabels (label : []) = printLabel label
-printLabels (label : labels) = printLabel label ++ ";" ++ printLabels labels
-
-printLabel :: Label -> String
-printLabel (Label str) = str
 
 
 data VariableValue
@@ -159,16 +78,10 @@ evalReadFile (ReadFile fileName) = fileName
 ---------------------------------------------------------------------------------------------------
 -- Evaluating Match
 ---------------------------------------------------------------------------------------------------
--- evalMatch :: Variables -> Match -> File -> File
--- evalMatch vars (Match patterns return) file = output
---     where
---         matchVars = evalPatterns vars patterns file
---         output = evalReturn matchVars return
--- evalMatch vars (MatchWhere patterns whereConditions return) file = output
---     where
---         matchVars = evalPatterns vars patterns file 
---         whereVars = evalWhereConditions matchVars whereConditions
---         output = evalReturn whereVars return
+evalMatch vars (Match patterns whereConditions return) file = whereVars
+    where
+        matchVars = evalPatterns vars patterns file 
+        whereVars = outputCoord matchVars return
 ---------------------------------------------------------------------------------------------------
 -- Evaluating Patterns 
 ---------------------------------------------------------------------------------------------------
@@ -467,9 +380,10 @@ evalOutputR' vars out = concatNodeR output
         output = ggg
 
 
-outputCoord vars (ReturnNode outputs b ) = File ([evalOutputN' vars outputsi b | outputsi <- outputs]) []
+outputCoord :: Variables -> Return -> File
+outputCoord vars (ReturnNode outputs ) = File ([evalOutputN' vars outputsi True | outputsi <- outputs]) []
 outputCoord vars (ReturnRelation outputs ) = File [] [(evalOutputR' vars o) | o <- outputs]
-outputCoord vars (ReturnNodeRelation outputs1 outputs2 b ) = File [(evalOutputN' vars o1 b) | o1 <- outputs1] [(evalOutputR' vars (o2)) | o2 <- outputs2]
+outputCoord vars (ReturnNodeRelation outputs1 outputs2  ) = File [(evalOutputN' vars o1 True) | o1 <- outputs1] [(evalOutputR' vars (o2)) | o2 <- outputs2]
 
 
 
@@ -887,14 +801,14 @@ evalWhereExp vars (WOr whereFunc whereExp) = unionVars (evalWhereFunc vars where
 evalWhereExp vars (WNot whereExp) = complementVars (evalWhereExp vars whereExp) vars
 evalWhereExp vars (WFinal whereFunc) = evalWhereFunc vars whereFunc
 
-evalWhereFunc :: Variables -> WhereFunc -> Variables
-evalWhereFunc vars (WEqual wdot wlit) = [evalWhereEqual vars wdot wlit]
-evalWhereFunc vars (WNotEqual wdot wlit) = evalWhereCompG vars wdot wlit (/=)
-evalWhereFunc vars (WLessThan wdot wlit) = evalWhereCompI vars wdot wlit (<)
-evalWhereFunc vars (WGreaterThan wdot wlit) = evalWhereCompI vars wdot wlit (>)
-evalWhereFunc vars (WLessOrEqualThan wdot wlit) = evalWhereCompI vars wdot wlit (<=)
-evalWhereFunc vars (WGreaterOrEqualThan wdot wlit) = evalWhereCompI vars wdot wlit (>=)
-evalWhereFunc vars (WStartsWith wdot wlit) = evalWhereCompS vars wdot wlit (startsWith)
+-- evalWhereFunc :: Variables -> WhereFunc -> Variables
+-- evalWhereFunc vars (WEqual wdot wlit) = [evalWhereEqual vars wdot wlit]
+-- evalWhereFunc vars (WNotEqual wdot wlit) = evalWhereCompG vars wdot wlit (/=)
+-- evalWhereFunc vars (WLessThan wdot wlit) = evalWhereCompI vars wdot wlit (<)
+-- evalWhereFunc vars (WGreaterThan wdot wlit) = evalWhereCompI vars wdot wlit (>)
+-- evalWhereFunc vars (WLessOrEqualThan wdot wlit) = evalWhereCompI vars wdot wlit (<=)
+-- evalWhereFunc vars (WGreaterOrEqualThan wdot wlit) = evalWhereCompI vars wdot wlit (>=)
+-- evalWhereFunc vars (WStartsWith wdot wlit) = evalWhereCompS vars wdot wlit (startsWith)
 
 evalWhereFunc vars (WEqualDot wdot1 wdot2) = undefined
 evalWhereFunc vars (WNotEqualDot wdot1 wdot2) = undefined
