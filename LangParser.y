@@ -14,7 +14,7 @@ import InputParser (Literal(..))
 ","         {LTok _ LTokenComma}
 -- ":"         {LTok _ LTokenColon}
 "|"         {LTok _ LTokenBar}
-
+"="         {LTok _ LTokenAssignment}
 "-"         {LTok _ LTokenRelated}
 "->"        {LTok _ LTokenRelatedRight}
 "<-"        {LTok _ LTokenRelatedLeft}
@@ -72,14 +72,14 @@ Query
     : Read Match {Query $1 $2}
 
 Read
-    : read string {ReadFile $2}
+    : read "=" string {ReadFile $2}
     
 
 Match
-    : match Patterns Where Return   {Match $2 $3 $4}
+    : match "=" Patterns Where Return   {Match $2 $3 $4}
 
 Patterns
-    : Pattern Patterns  {$1 : $2}
+    : Pattern "|" Patterns  {$1 : $2}
     | Pattern           {[$1]}
 
 Pattern
@@ -92,9 +92,9 @@ Pattern
     | name                      {PatternFinal $1} 
 
 Return
-    : getNode Return1 getRelation Return1   {ReturnNodeRelation $2 $4}
-    | getNode Return1                       {ReturnNode $2}
-    | getRelation Return1                   {ReturnRelation $2}
+    : getNode "=" Return1 getRelation "=" Return1   {ReturnNodeRelation $2 $4}
+    | getNode "=" Return1                       {ReturnNode $2}
+    | getRelation "=" Return1                   {ReturnRelation $2}
 
 Return1
     : Outputs "|" Return1   {$1 : $3}
@@ -113,7 +113,7 @@ Output
 
 
 Where
-    : where WhereExp1    {Where $2}
+    : where "=" WhereExp1    {Where $2}
 
 
 WhereExp1

@@ -1,4 +1,6 @@
-READ “tasks.n4j”
-MATCH a-r1->b c-r2->d
-WHERE r1.priority:integer >= 8 AND d:LABEL == "Staff" AND r2.available:boolean == TRUE
-APPEND_RELATION b--"PossibleAllocated"--d
+READ = “tasks.n4j”
+MATCH = a-r1->b | c-r2->d 
+WHERE = r1.priority >= 8 AND d:LABEL == "Staff" AND r2.available == TRUE
+
+// Append a Relation to the relations section of the original file 
+APPEND_RELATION = b--"PossibleAllocated"--d
