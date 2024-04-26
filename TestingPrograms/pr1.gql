@@ -1,9 +1,9 @@
-READ "access.n4j"
+READ = "access.n4j"
 
 MATCH = people
 
-WHERE
+WHERE 
     =  people.age   <= 25 
     OR people:LABEL == "Visitor"
 
-RETURN_NODE = people.age AS "age", n:LABEL
+RETURN_NODE = people.age AS "age", people:LABEL

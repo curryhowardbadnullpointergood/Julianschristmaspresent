@@ -93,8 +93,8 @@ Pattern
 
 Return
     : getNode "=" Return1 getRelation "=" Return1   {ReturnNodeRelation $3 $6}
-    | getNode "=" Return1                       {ReturnNode $3}
-    | getRelation "=" Return1                   {ReturnRelation $3}
+    | getNode "=" Return1                           {ReturnNode $3}
+    | getRelation "=" Return1                       {ReturnRelation $3}
 
 Return1
     : Outputs "|" Return1   {$1 : $3}
@@ -105,10 +105,13 @@ Outputs
     | Output                {[$1]}
 
 Output
-    : name "." name intField as string    {IntOutput $1 $3 $6}  
-    | name "." name strField as string    {StrOutput $1 $3 $6}  
-    | name "." name boolField as string   {BoolOutput $1 $3 $6}
-    | name labelField                     {LabelOutput $1} 
+    : name "." name intField as string    {Output $1 $3 $6}  
+    | name "." name strField as string    {Output $1 $3 $6}  
+    | name "." name boolField as string   {Output $1 $3 $6}
+    | name labelField                     {Output ":LABEL" $1} 
+    | name type                     {Output ":LABEL" $1} 
+    | name startField                     {Output ":LABEL" $1} 
+    | name endField                     {Output ":LABEL" $1} 
 
 
 
@@ -141,21 +144,20 @@ WhereFunc
     | WhereDot starts WhereDot    {WStartsWithDot $1 $3}
 
 WhereDot 
-    : name idField          {WDot $1 WId}
-    | name typeField        {WDot $1 WType}
-    | name startField       {WDot $1 WStartField}
-    | name endField         {WDot $1 WEndField}
-    | name labelField       {WDot $1 WLabelField}
-    | name "." name intField    {WDot $1 (WFieldName $3)}
-    | name "." name strField    {WDot $1 (WFieldName $3)}
-    | name "." name boolField   {WDot $1 (WFieldName $3)}
+    : name idField              {WDot $1 ":ID"}
+    | name typeField            {WDot $1 ":TYPE"}
+    | name startField           {WDot $1 ":START"}
+    | name endField             {WDot $1 ":START_ID"}
+    | name labelField           {WDot $1 ":END_ID"}
+    | name "." name             {WDot $1 $3}
+
 
 WhereLit
-    : string                    {LiteralStr $1}
-    | null                      {LiteralNull}
-    | int                       {LiteralInt $1}
-    | true                      {LiteralBool True}
-    | false                     {LiteralBool False}
+    : string                    {WStr $1}
+    | int                       {WInt $1}
+    | true                      {WBool True}
+    | false                     {WBool False}
+    | null                      {WNull}
 
 {
 
@@ -203,13 +205,13 @@ data WhereExp
     deriving (Show, Eq)
 
 data WhereFunc
-    = WEqual WhereDot Literal
-    | WNotEqual WhereDot Literal
-    | WLessThan WhereDot Literal
-    | WGreaterThan WhereDot Literal
-    | WLessOrEqualThan WhereDot Literal
-    | WGreaterOrEqualThan WhereDot Literal
-    | WStartsWith WhereDot Literal
+    = WEqual WhereDot WhereLit
+    | WNotEqual WhereDot WhereLit
+    | WLessThan WhereDot WhereLit
+    | WGreaterThan WhereDot WhereLit
+    | WLessOrEqualThan WhereDot WhereLit
+    | WGreaterOrEqualThan WhereDot WhereLit
+    | WStartsWith WhereDot WhereLit
     
     | WEqualDot WhereDot WhereDot
     | WNotEqualDot WhereDot WhereDot
@@ -221,16 +223,7 @@ data WhereFunc
     deriving (Show, Eq)
 
 data WhereDot
-    = WDot String WhereDotOptions
-    deriving (Show, Eq)
-
-data WhereDotOptions
-    = WFieldName String
-    | WId
-    | WLabelField
-    | WStartField
-    | WEndField
-    | WType
+    = WDot String String
     deriving (Show, Eq)
 
 data WhereLit
@@ -250,13 +243,14 @@ type Outputs
     = [Output]
 
 data Output
-    = StrOutput String String String 
-    | IntOutput String String String 
-    | BoolOutput String String String 
-    -- | IdOutput String
-    -- | StartOutput String
-    -- | EndOutput String
-    | LabelOutput String
+    = Output String String String
+    -- = StrOutput String String String 
+    -- | IntOutput String String String 
+    -- | BoolOutput String String String 
+    -- -- | IdOutput String
+    -- -- | StartOutput String
+    -- -- | EndOutput String
+    -- | LabelOutput String
     deriving (Eq, Show)
 
 }
