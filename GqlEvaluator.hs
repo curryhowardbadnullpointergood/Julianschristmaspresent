@@ -9,7 +9,8 @@ import Data.List (nub, elemIndex, transpose,groupBy, sort)
 import Data.Function (on)
 
 data VariableValue
-    = TypeNodes [[FieldEntry]]
+    = TypeFile ([[FieldEntry]],[[FieldEntry]])
+    | TypeNodes [[FieldEntry]]
     | TypeRelations [[FieldEntry]]
     deriving (Show, Eq)
 
@@ -50,14 +51,15 @@ evalPatterns' :: [Variable] -> Pattern -> InputData -> [Variable]
 evalPatterns' vars (PatternFinal str1) (nodes,relation) = addVariable vars str1 (TypeNodes nodes) 
 evalPatterns' vars (PatternRelatedTo str1 str2) (nodes,relation) = output
     where 
-        startIDRelations = getNodesValFromString relation ":ID"
-        endIDRelations = getNodesValFromString relation ":END_ID"
-        vars'   = addVariable vars      str1 (TypeNodes (getNodesbyString startIDRelations nodes ":ID" []))
-        vars''  = addVariable vars'     str2 (TypeNodes (getNodesbyString endIDRelations nodes ":ID" []))
+        startIDRelations = getNodesValFromString relation ":START_ID"
+        endIDRelations = getNodesValFromString relation "END_ID"
+        -- ! list reversed 
+        vars'   = addVariable vars      str1 (TypeNodes (reverseList (getNodesbyString startIDRelations nodes ":ID" [])))
+        vars''  = addVariable vars'     str2 (TypeNodes (reverseList(getNodesbyString endIDRelations nodes ":ID" [])))
         output  = reverseList vars''
-evalPatterns' vars (PatternRelatedToVar str1 str2 str3) (nodes,relation)= output 
+evalPatterns' vars (PatternRelatedToVar str1 str2 str3) (nodes,relation) = output 
     where
-        startIDRelations = getNodesValFromString relation ":ID"
+        startIDRelations = getNodesValFromString relation ":START_ID"
         endIDRelations = getNodesValFromString relation ":END_ID"
         vars'   = addVariable vars      str1 (TypeNodes (getNodesbyString startIDRelations nodes ":ID" []))
         vars''  = addVariable vars'     str3 (TypeNodes (getNodesbyString endIDRelations nodes ":ID" []))
