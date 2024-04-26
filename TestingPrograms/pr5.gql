@@ -13,3 +13,38 @@ RETURN::
 
 fat pattern matching
 
+
+
+Read = "loyalty.n4j"
+MATCH =  match relationships 3 variables , but chained together 
+Where = a.id, b.id blah blah, so the id's values of the relationships, equaating that to c, or d or smth 
+
+
+UPDATE things, where he has pipes, so you can pip in ndoes, he access all the datatypes and values he needed with the name of the variable, match , 
+
+ += operator that adds and equates two numbers, 
+
+Delete at th end, that deletes 
+
+DELETE Recommended, this can be chained, so you can multiple things, can has the ability to delete labels if needed 
+
+
+
+
+
+READ "loyalty.n4j"
+MATCH a--x--b, c --y--d
+WHERE  a.id = c
+UPDATE 
+DELETE Recommended 
+
+
+
+
+
+
+
+
+
+
+
