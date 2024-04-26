@@ -19,12 +19,6 @@ type Variable = (String, VariableValue)
 type InputData = ([[FieldEntry]],[[FieldEntry]])
 
 
-data DataType
-    = TypeString 
-    | TypeInt 
-    | TypeBool 
-    | TypeNull
-    deriving (Show, Eq)
 
 
 -- evalQuery :: InputData -> Query -> String 
@@ -80,6 +74,9 @@ evalReadFile (ReadFile fileName) = fileName
 -- Evaluating Match
 ---------------------------------------------------------------------------------------------------
 
+
+
+
 ---------------------------------------------------------------------------------------------------
 -- Evaluating Patterns 
 ---------------------------------------------------------------------------------------------------
@@ -95,7 +92,7 @@ evalPatterns' vars (PatternFinal str1) (nodes,relation) = addVariable vars str1 
 evalPatterns' vars (PatternRelatedTo str1 str2) (nodes,relation) = output
     where 
         startIDRelations = getNodesValFromString relation ":START_ID"
-        endIDRelations = getNodesValFromString relation "END_ID"
+        endIDRelations = getNodesValFromString relation ":END_ID"
         -- ! list reversed 
         vars'   = addVariable vars      str1 (TypeNodes (reverseList (getNodesbyString startIDRelations nodes ":ID" [])))
         vars''  = addVariable vars'     str2 (TypeNodes (reverseList(getNodesbyString endIDRelations nodes ":ID" [])))
@@ -104,9 +101,10 @@ evalPatterns' vars (PatternRelatedToVar str1 str2 str3) (nodes,relation) = outpu
     where
         startIDRelations = getNodesValFromString relation ":START_ID"
         endIDRelations = getNodesValFromString relation ":END_ID"
-        vars'   = addVariable vars      str1 (TypeNodes (getNodesbyString startIDRelations nodes ":ID" []))
-        vars''  = addVariable vars'     str3 (TypeNodes (getNodesbyString endIDRelations nodes ":ID" []))
-        vars''' = addVariable vars''    str2 (TypeRelations (getNodesbyString startIDRelations relation ":START_ID" [] ))
+        -- ! list reversed 
+        vars'   = addVariable vars      str1 (TypeNodes (reverseList (getNodesbyString startIDRelations nodes ":ID" [])))
+        vars''  = addVariable vars'     str3 (TypeNodes (reverseList(getNodesbyString endIDRelations nodes ":ID" [])))
+        vars''' = addVariable vars''    str2 (TypeRelations (reverseList (getNodesbyString startIDRelations relation ":START_ID" [] )))
         output  = reverseList vars'''
 evalPatterns' vars (PatternRelatedBy str1 str2) (nodes,relation)= 
     reverseList (evalPatterns' vars (PatternRelatedTo str2 str1) (nodes,relation))
@@ -114,15 +112,16 @@ evalPatterns' vars (PatternRelatedByVar str1 str2 str3) (nodes,relation) =
     rearrange (evalPatterns' vars (PatternRelatedToVar str3 str2 str1) (nodes,relation))
 evalPatterns' vars (PatternRelated str1 str2) (nodes,relation) = output 
     where
-        startIDRelations = getNodesValFromString relation ":ID"
+        startIDRelations = getNodesValFromString relation ":START_ID"
         endIDRelations = getNodesValFromString relation ":END_ID"
-        vals    = nub ( startIDRelations ++ endIDRelations)
-        vars'   = addVariable vars  str1 (TypeNodes ((getNodesbyString (vals) nodes ":ID" [])))
-        vars''  = addVariable vars' str2 (TypeNodes ((getNodesbyString (vals) nodes ":ID" [])))
+        vals    = ( startIDRelations ++ endIDRelations)
+        -- ! list reversed 
+        vars'   = addVariable vars  str1 (TypeNodes (reverseList ((getNodesbyString (vals) nodes ":ID" []))))
+        vars''  = addVariable vars' str2 (TypeNodes (reverseList ((getNodesbyString (vals) nodes ":ID" []))))
         output  = reverseList vars''
 
 rearrange :: [a] -> [a]
-rearrange  (x:s:y) = (s:x:y)
+rearrange (x:s:y) = (s:x:y)
 
 
 
@@ -166,3 +165,7 @@ getFieldVal line ((field,value,t):xs) str
     | otherwise = getFieldVal line xs str 
 
 
+
+{----------------------------------------------------
+
+-}
