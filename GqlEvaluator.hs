@@ -14,9 +14,10 @@ data VariableValue
     | TypeRelations [[FieldEntry]]
     deriving (Show, Eq)
 
+type Variables = [Variable]
 type Variable = (String, VariableValue)
 type InputData = ([[FieldEntry]],[[FieldEntry]])
-type FieldEntry = (String, String, DataType)
+
 
 data DataType
     = TypeString 
@@ -33,13 +34,55 @@ data DataType
 -- evalMatch :: [Variable] -> InputData -> Match -> [Variable]
 -- evalMatch vars file (Match patterns w r) = undefined 
 
-    
-{-----------------------------------------------------------------
-----------------------------PATTERNS-----------------------------
-------------------------------------------------------------------
--}
+---------------------------------------------------------------------------------------------------
+-- Helper Functions
+---------------------------------------------------------------------------------------------------
+reverseList :: [a] -> [a]
+reverseList [] = []
+reverseList (x:xs) = reverseList xs ++ [x]
+---------------------------------------------------------------------------------------------------
+-- Variable Management Functions
+---------------------------------------------------------------------------------------------------
+varPresent :: Variables -> String -> Bool
+varPresent [] _ = False
+varPresent ((varName, varValue):vars) name
+    | varName == name   = True
+    | otherwise         = varPresent vars name
 
--- Evaluates the pattern 
+getVarValueFromName :: Variables -> String -> VariableValue
+getVarValueFromName [] name = error ("No binding found for: " ++ name)
+getVarValueFromName ((varName, varValue) : vars) name
+    | name == varName   = varValue
+    | otherwise         = getVarValueFromName vars name
+
+
+addVariable :: Variables -> String -> VariableValue -> Variables
+addVariable vars name value
+    | varPresent vars name = error ("Binding already made for: " ++ name)
+    | otherwise            = (name, value) : vars
+
+updateVariable :: Variables -> String -> VariableValue -> Variables
+updateVariable [] name _    = error ("No binding found for: " ++ name)
+updateVariable (var@(varName, varValue) : vars) name value
+    | name == varName       = (name, value) : vars
+    | otherwise             = var : updateVariable vars name value
+
+extractVariableNodes :: VariableValue -> Nodes
+extractVariableNodes (TypeNodes nodes) = nodes
+extractVariableRelations :: VariableValue -> Relations
+extractVariableRelations (TypeRelations relations) = relations
+---------------------------------------------------------------------------------------------------
+-- Evaluating ReadFile
+---------------------------------------------------------------------------------------------------
+evalReadFile :: ReadFile -> String
+evalReadFile (ReadFile fileName) = fileName
+---------------------------------------------------------------------------------------------------
+-- Evaluating Match
+---------------------------------------------------------------------------------------------------
+
+---------------------------------------------------------------------------------------------------
+-- Evaluating Patterns 
+---------------------------------------------------------------------------------------------------
 evalPatterns :: [Variable] -> Patterns -> InputData -> [Variable]
 evalPatterns vars [] _ = vars 
 evalPatterns vars (p:ps) inputdata = evalPatterns vars' ps inputdata 
@@ -80,24 +123,6 @@ evalPatterns' vars (PatternRelated str1 str2) (nodes,relation) = output
 
 rearrange :: [a] -> [a]
 rearrange  (x:s:y) = (s:x:y)
-
-{-----------------------------------------------------------------
-----------------------------VARIABLES-----------------------------
-------------------------------------------------------------------
--}
-
--- Add variables to current variable list 
-addVariable :: [Variable] -> String -> VariableValue -> [Variable]
-addVariable vars name value
-    | varPresent vars name = error ("Binding already made for: " ++ name)
-    | otherwise            = (name, value) : vars
-
-
-varPresent :: [Variable] -> String -> Bool
-varPresent [] _ = False
-varPresent ((varName, varValue):vars) name
-    | varName == name   = True
-    | otherwise         = varPresent vars name
 
 
 
@@ -141,6 +166,3 @@ getFieldVal line ((field,value,t):xs) str
     | otherwise = getFieldVal line xs str 
 
 
-reverseList :: [a] -> [a]
-reverseList [] = []
-reverseList (x:xs) = reverseList xs ++ [x]
