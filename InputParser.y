@@ -196,7 +196,7 @@ postComputateRelationshipEntries fields (relationshipEntry : relationshipEntries
 
 postComputateRelationshipEntry :: Fields -> IRelationshipEntry -> Relation
 postComputateRelationshipEntry fields (IRelationshipEntry start literals end t)
-    = [(":START_ID", start, TypeString)] ++ postComputateLiterals fields literals ++ [("END_ID", end, TypeString)] ++ [("TYPE", t, TypeString)]
+    = [(":START_ID", start, TypeString)] ++ postComputateLiterals fields literals ++ [(":END_ID", end, TypeString)] ++ [(":TYPE", t, TypeString)]
 
 postComputateLiterals :: Fields -> Literals -> [FieldEntry]
 postComputateLiterals []                                        []                              = []
