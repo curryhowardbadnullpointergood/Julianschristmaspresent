@@ -18,9 +18,9 @@ tokens :-
     :ID             { \p s -> Tok p TokenID }
     :START_ID       { \p s -> Tok p TokenStartID }
 
-    string          { \p s -> Tok p (TokenFieldType TypeString) }
-    integer         { \p s -> Tok p (TokenFieldType TypeInteger) }
-    boolean         { \p s -> Tok p (TokenFieldType TypeBoolean) } 
+    string          { \p s -> Tok p (TokenFieldType TTypeString) }
+    integer         { \p s -> Tok p (TokenFieldType TTypeInteger) }
+    boolean         { \p s -> Tok p (TokenFieldType TTypeBoolean) } 
 
     :LABEL          { \p s -> Tok p TokenLabel }
     :END_ID         { \p s -> Tok p TokenEndID }
@@ -39,10 +39,10 @@ tokens :-
 
 {
 
-data FieldType = 
-    TypeString  |
-    TypeBoolean |
-    TypeInteger
+data TokenFieldType = 
+    TTypeString  |
+    TTypeBoolean |
+    TTypeInteger
     deriving (Show, Eq)
 
 
@@ -69,7 +69,7 @@ data TokenClass =
 
     -- The header tokens
     TokenID                  |
-    TokenFieldType FieldType |
+    TokenFieldType TokenFieldType |
     TokenLabel               |
     TokenStartID             |
     TokenEndID               |
