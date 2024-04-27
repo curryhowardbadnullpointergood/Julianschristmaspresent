@@ -175,7 +175,7 @@ filterTables (n:ns) fieldName predicate acc = filterTables ns fieldName predicat
     where
         line = (filterFieldEntry n n fieldName predicate)
 
--- filters based on value 
+
 
 filterFieldEntry :: [FieldEntry] -> [FieldEntry] -> String -> (String -> Bool)  -> [FieldEntry]
 filterFieldEntry _ [] _ _ = []
@@ -199,6 +199,132 @@ getFieldVal [] _  = []
 getFieldVal ((field,value,_):xs) str
     | str == field = value
     | otherwise = getFieldVal xs str
+
+
+getNodeVal :: [[FieldEntry]] -> String -> [FieldEntry]
+getNodeVal [] _ = [] 
+getNodeVal (f:fs) str  = (getNodeVal' f f str) : getNodeVal fs str 
+
+getNodeVal' :: [FieldEntry] -> [FieldEntry] -> String  -> FieldEntry
+getNodeVal' _ [] str  = (str,"null", TypeNull)
+getNodeVal' line ((field,value,t):xs) str 
+    | str == field = (field,value,t)  
+    | otherwise = getNodeVal' line xs str 
+
+
+multiZipL :: [[a]] -> [[a]]
+multiZipL = transpose
+
+
+extractVarVal :: VariableValue -> [[FieldEntry]]
+extractVarVal (TypeNodes node ) = node 
+extractVarVal (TypeRelations relation ) = relation 
+
+
+getHeader:: [[FieldEntry]] -> [[String]]
+getHeader [] = [] 
+getHeader (n:ns) = [getHeader'' result  result]
+    where 
+        result =  (nub ((getHeader' n) : (getHeader ns)))
+
+getHeader' :: [FieldEntry] -> [String]
+getHeader' [] = [] 
+getHeader' ((str,val,t):fs) = (str ++ showDataType t) : getHeader' fs 
+
+getHeader'' :: [[String]] -> [[String]] -> [String]
+getHeader'' [] (str1:xs) = str1  -- process the plus out of it 
+getHeader'' (str:strlist) str1
+    | allTrue (getHeader''' str) = str 
+    | otherwise = getHeader'' strlist str1
+
+getHeader''' :: [String] -> [Bool] 
+getHeader''' [] = [] 
+getHeader''' (x:xs) 
+    | '+' `elem` x = False : getHeader''' xs 
+    | otherwise = True : getHeader''' xs 
+
+allTrue :: [Bool] -> Bool
+allTrue = and
+
+showDataType:: DataType -> String 
+showDataType (TypeString) = ":string"
+showDataType (TypeInt) = ":integer"
+showDataType (TypeBool) = ":boolean"
+showDataType (TypeNull) = ":null"
+
+getEntryVal:: [[FieldEntry]] -> [[String]]
+getEntryVal [] = [] 
+getEntryVal (x:xs) = getValF x : getEntryVal xs 
+
+getValF:: [FieldEntry] -> [String]
+getValF [] = [] 
+getValF ((s,v,t):xs) = v : getValF xs
+
+removeHeader :: [[[String]]] -> [[[String]]]
+removeHeader [] = [] 
+removeHeader (x:xs) = removeHeader' x : removeHeader xs
+
+removeHeader' :: [[String]] -> [[String]]
+removeHeader' [] = [] 
+removeHeader' (x:xs) = xs 
+
+
+
+sameHeader:: [[[String]]] ->[[[String]]]
+sameHeader [] = []
+sameHeader ((h:rest):xs) = result ++ sameHeader notsameheader
+    where 
+        boollist = sameHeader'' h xs 
+        mapped = (map snd $ filter fst $ zip boollist xs )
+        mapped1 = removeHeader mapped 
+        result = (h:rest) : mapped1
+        notsameheader = map snd $ filter (not . fst) $ zip boollist xs
+
+sameHeader' :: [String] -> [[String]] -> Bool 
+sameHeader' header list 
+    | header `elem` list = True 
+    | otherwise = False 
+
+sameHeader'' :: [String] -> [[[String]]] -> [Bool]
+sameHeader'' _ [] = [] 
+sameHeader'' header (x:xs) = (sameHeader' header x ) : sameHeader'' header xs 
+
+
+{--------------------------------------------------------------------------------------------------
+------------------------------------------RETURN---------------------------------------------------
+---------------------------------------------------------------------------------------------------}
+
+-- checks if any two outputs have the same header, and if so merges them to be a part of the same output
+evalOutputChecker :: [[[String]]] -> [[[String]]]
+evalOutputChecker outlist = undefined
+
+
+evalOutputs :: [Variable] -> Outputs -> [[String]] 
+evalOutputs vars out = concat (getHeader (result)) : resultval
+    where
+        result = evalOutputs'' vars out 
+        resultval = getEntryVal result 
+
+
+evalOutputs'' :: [Variable] -> Outputs -> [[FieldEntry]] 
+evalOutputs'' vars outs = multiZipL (evalOutputs''' vars outs)
+
+evalOutputs''' :: [Variable] -> Outputs -> [[FieldEntry]] 
+evalOutputs''' vars [] = [] 
+evalOutputs''' vars (out:outs) = evalOutput vars out : evalOutputs''' vars outs 
+
+evalOutput :: [Variable] -> Output -> [FieldEntry]
+evalOutput vars (Output str1 str2 str3) = output 
+    where 
+        node = (evalOutputHelper vars (Output str1 str2 str3))
+        filteredval = getNodeVal node str2 
+        output = filteredval 
+
+
+evalOutputHelper :: [Variable] -> Output -> [[FieldEntry]]
+evalOutputHelper vars (Output str1 str2 str3) = extractVarVal (getVarValueFromName vars str1)
+
+
 
 -------------------------------------------------------------------
 -- Evaluating Where 
