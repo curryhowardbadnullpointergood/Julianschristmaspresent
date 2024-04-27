@@ -105,14 +105,20 @@ Outputs
     | Output                {[$1]}
 
 Output
-    : name "." name intField as string    {Output $1 $3 $6}  
-    | name "." name strField as string    {Output $1 $3 $6}  
-    | name "." name boolField as string   {Output $1 $3 $6}
-    | name labelField                     {Output ":LABEL" $1} 
-    | name type                     {Output ":LABEL" $1} 
-    | name startField                     {Output ":LABEL" $1} 
-    | name endField                     {Output ":LABEL" $1} 
-
+    : name "." name as string  {Output $1 $3 $5}  
+    | name labelField          {Output $1 ":LABEL"    ":LABEL"}
+    | name typeField           {Output $1 ":TYPE"     ":TYPE"} 
+    | name startField          {Output $1 ":START_ID" ":START_ID"} 
+    | name endField            {Output $1 ":END_ID"   ":END_ID" } 
+    | name idField             {Output $1 ":ID"        ":ID"}
+-- Output
+--     : name "." name intField as string  {Output $1 $3 $6}  
+--     | name "." name strField as string  {Output $1 $3 $6}  
+--     | name "." name boolField as string {Output $1 $3 $6}
+--     | name labelField                   {Output ":LABEL" $1} 
+--     | name type                         {Output ":TYPE" $1} 
+--     | name startField                   {Output ":START_ID" $1} 
+--     | name endField                     {Output ":END_ID" $1} 
 
 
 Where
@@ -146,9 +152,9 @@ WhereFunc
 WhereDot 
     : name idField              {WDot $1 ":ID"}
     | name typeField            {WDot $1 ":TYPE"}
-    | name startField           {WDot $1 ":START"}
-    | name endField             {WDot $1 ":START_ID"}
-    | name labelField           {WDot $1 ":END_ID"}
+    | name startField           {WDot $1 ":START_ID"}
+    | name endField             {WDot $1 ":END_ID"}
+    | name labelField           {WDot $1 ":LABEL"}
     | name "." name             {WDot $1 $3}
 
 

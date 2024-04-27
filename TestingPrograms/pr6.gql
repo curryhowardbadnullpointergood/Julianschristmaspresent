@@ -1,0 +1,11 @@
+READ = "space.n4j"
+
+MATCH = faction -r-> planet | planet' --> resource
+
+WHERE = 
+    =   r:TYPE == "HasOutpost"
+    AND faction:LABEL == "Faction"
+    AND planet:LABEL == "Planet"
+
+    AND planet':TYPE == "Planet"
+    AND resource:TYPE == "Resource"
