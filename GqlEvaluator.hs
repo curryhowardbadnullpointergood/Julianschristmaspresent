@@ -198,7 +198,7 @@ getFieldVal :: [FieldEntry] -> String  -> String
 getFieldVal [] _  = [] 
 getFieldVal ((field,value,_):xs) str 
     | str == field = value  
-    | otherwise = getFieldVal line xs str 
+    | otherwise = getFieldVal xs str 
 
 
 getNodeVal :: [[FieldEntry]] -> String -> [FieldEntry]
@@ -338,28 +338,27 @@ varTypeRelations :: VariableValue -> Bool
 varTypeRelations (TypeRelations _) = True
 varTypeRelations _ = False 
 
-getFieldType :: [FieldEntry] -> String -> DataType 
-getFieldType ((field,_,t):xs) str 
-    | str == field = t  
-    | otherwise = getFieldType xs str 
+-- getFieldType :: [FieldEntry] -> String -> DataType 
+-- getFieldType ((field,_,t):xs) str 
+--     | str == field = t  
+--     | otherwise = getFieldType xs str 
 
 
-evalWhere :: Variables -> Where -> Variables
-evalWhere vars (Where whereExp) = evalWhereExp vars  whereExp 
+-- evalWhere :: Variables -> Where -> Variables
+-- evalWhere vars (Where whereExp) = evalWhereExp vars  whereExp 
 
-evalWhereExp :: Variables -> WhereExp -> Variables
-evalWhereExp vars (WAnd whereFunc whereExp) = evalWhereExp (evalWhereFunc vars whereFunc) whereExp
-evalWhereExp vars (WOr whereFunc whereExp) = unionVars (evalWhereFunc vars whereFunc) (evalWhereExp vars whereExp) 
-evalWhereExp vars (WNot whereExp) = complementVars (evalWhereExp vars whereExp) vars
-evalWhereExp vars (WFinal whereFunc) = evalWhereFunc vars whereFunc
-
-
-evalWhereFunc :: Variables -> WhereFunc -> Variables
-evalWhereFunc vars (WEqual wdot@(WDot _ _) wlit) = evalWhereEqual vars wdot wlit (==)
+-- evalWhereExp :: Variables -> WhereExp -> Variables
+-- evalWhereExp vars (WAnd whereFunc whereExp) = evalWhereExp (evalWhereFunc vars whereFunc) whereExp
+-- evalWhereExp vars (WOr whereFunc whereExp) = unionVars (evalWhereFunc vars whereFunc) (evalWhereExp vars whereExp) 
+-- evalWhereExp vars (WNot whereExp) = complementVars (evalWhereExp vars whereExp) vars
+-- evalWhereExp vars (WFinal whereFunc) = evalWhereFunc vars whereFunc
 
 
-evalGeneralFunc 
+-- evalWhereFunc :: Variables -> WhereFunc -> Variables
+-- evalWhereFunc vars (WEqual wdot@(WDot _ _) wlit) = evalWhereEqual vars wdot wlit (==)
 
+
+evalGeneralFunc = undefined
 -- evalWhereEqual :: Variables -> WhereDot -> WhereLit -> (String -> String -> Bool) -> Variables
 evalWhereEqual vars (WDot str1 str2) (WStr s) predicate
     | varTypeNodes var = updateVariable vars str1 $ TypeNodes (x nodes str1 str2 predicate)
