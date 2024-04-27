@@ -206,6 +206,19 @@ postComputateLiterals ((Field fieldName TTypeBoolean) : fields) ((LiteralBool bo
 postComputateLiterals ((Field fieldName _)            : fields) (LiteralNull        : literals) = (fieldName, "null",    TypeNull)   : postComputateLiterals fields literals
 postComputateLiterals _ _ = error "Invalid n4j input"
 
+postComputateLiterals :: Fields -> Literals -> [FieldEntry]
+postComputateLiterals []                                        []                              = []
+postComputateLiterals ((Field fieldName TTypeString)  : fields) ((LiteralStr str)   : literals) = (fieldName, str,       TypeString) : postComputateLiterals fields literals
+postComputateLiterals ((Field fieldName TTypeInteger) : fields) ((LiteralInt int)   : literals) = (fieldName, show int,  TypeInt)    : postComputateLiterals fields literals
+postComputateLiterals ((Field fieldName TTypeBoolean) : fields) ((LiteralBool bool) : literals) = (fieldName, show bool, TypeBool)   : postComputateLiterals fields literals
+
+postComputateLiterals ((Field fieldName TTypeString)  : fields) ((LiteralNull str)  : literals) = (fieldName, "null",    TypeString)   : postComputateLiterals fields literals
+postComputateLiterals ((Field fieldName TTypeInteger) : fields) ((LiteralNull int)  : literals) = (fieldName, "null",    TypeInt)      : postComputateLiterals fields literals
+postComputateLiterals ((Field fieldName TTypeBoolean) : fields) ((LiteralNull bool) : literals) = (fieldName, "null",    TypeBool)     : postComputateLiterals fields literals
+
+postComputateLiterals _ _ = error "Invalid n4j input"
+
+
 }
 
 

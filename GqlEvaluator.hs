@@ -19,7 +19,6 @@ type InputData = ([[FieldEntry]],[[FieldEntry]])
 
 
 
-
 -- evalQuery :: InputData -> Query -> String 
 -- evalQuery inputData (Query _ match) = evalMatch [] inputData match 
 
@@ -33,6 +32,26 @@ type InputData = ([[FieldEntry]],[[FieldEntry]])
 reverseList :: [a] -> [a]
 reverseList [] = []
 reverseList (x:xs) = reverseList xs ++ [x]
+
+removeDuplicates :: Eq a => [a] -> [a]
+removeDuplicates [] = []
+removeDuplicates (a:as) = a : removeDuplicates (filter (\x -> x /= a) as)
+
+unionLists :: Eq a => [a] -> [a] -> [a]
+unionLists a b = removeDuplicates $ a ++ b
+
+interSectionLists :: Eq a => [a] -> [a] -> [a]
+interSectionLists [] _ = []
+interSectionLists _ [] = []
+interSectionLists a b = removeDuplicates $ filter (\x -> elem x a) b
+
+complementLists :: (Eq a) => [a] -> [a] -> [a]
+complementLists a b = filter (\x -> notElem x b) a
+
+extractVariableData :: VariableValue -> [[FieldEntry]]
+extractVariableData (TypeNodes nodes) = nodes
+extractVariableData (TypeRelations relations) = relations
+
 ---------------------------------------------------------------------------------------------------
 -- Variable Management Functions
 ---------------------------------------------------------------------------------------------------
@@ -60,10 +79,28 @@ updateVariable (var@(varName, varValue) : vars) name value
     | name == varName       = (name, value) : vars
     | otherwise             = var : updateVariable vars name value
 
-extractVariableNodes :: VariableValue -> Nodes
-extractVariableNodes (TypeNodes nodes) = nodes
-extractVariableRelations :: VariableValue -> Relations
-extractVariableRelations (TypeRelations relations) = relations
+
+unionVars :: Variables -> Variables -> Variables
+unionVars [] _ = []
+unionVars ((var1Name, (TypeNodes var1Nodes)):vars1) vars2 = outputVar : unionVars vars1 vars2
+    where
+        var2Value = getVarValueFromName vars2 var1Name
+        outputVar = (var1Name, TypeNodes $ unionLists var1Nodes (extractVariableData var2Value))
+unionVars ((var1Name, (TypeRelations var1Relations)):vars1) vars2 = outputVar : unionVars vars1 vars2
+    where
+        var2Value = getVarValueFromName vars2 var1Name
+        outputVar = (var1Name, TypeRelations $ unionLists var1Relations (extractVariableData var2Value))
+
+complementVars :: Variables -> Variables -> Variables
+complementVars [] _ = []
+complementVars ((var1Name, (TypeNodes var1Nodes)):vars1) vars2 = outputVar : complementVars vars1 vars2
+    where
+        var2Value = getVarValueFromName vars2 var1Name
+        outputVar = (var1Name, TypeNodes $ complementLists var1Nodes (extractVariableData var2Value))
+complementVars ((var1Name, (TypeRelations var1Relations)):vars1) vars2 = outputVar : complementVars vars1 vars2
+    where
+        var2Value = getVarValueFromName vars2 var1Name
+        outputVar = (var1Name, TypeRelations $ complementLists var1Relations (extractVariableData var2Value))
 ---------------------------------------------------------------------------------------------------
 -- Evaluating ReadFile
 ---------------------------------------------------------------------------------------------------
@@ -96,9 +133,9 @@ evalPatterns' vars (PatternRelatedTo str1 str2) (nodes,relation) = output
         vars'   = addVariable vars      str1 (TypeNodes (reverseList (getNodesbyString startIDRelations nodes ":ID" [])))
         vars''  = addVariable vars'     str2 (TypeNodes (reverseList(getNodesbyString endIDRelations nodes ":ID" [])))
         output  = reverseList vars''
-evalPatterns' vars (PatternRelatedToVar str1 str2 str3) (nodes,relation) = output 
+evalPatterns' vars (PatternRelatedToVar str1 str2 str3) (nodes,relation)= output 
     where
-        startIDRelations = getNodesValFromString relation ":START_ID"
+        startIDRelations = getNodesValFromString relation ":ID"
         endIDRelations = getNodesValFromString relation ":END_ID"
         -- ! list reversed 
         vars'   = addVariable vars      str1 (TypeNodes (reverseList (getNodesbyString startIDRelations nodes ":ID" [])))
@@ -154,12 +191,12 @@ getNodesbyString (x:xs) nodes str acc = getNodesbyString xs nodes str ((filterTa
 
 getNodesValFromString :: [[FieldEntry]] -> String -> [String]
 getNodesValFromString [] _ = []
-getNodesValFromString (n:ns) str = (getFieldVal n n str) : getNodesValFromString ns str 
+getNodesValFromString (n:ns) str = (getFieldVal n str) : getNodesValFromString ns str 
 
 -- filters values and produces a list of values 
-getFieldVal :: [FieldEntry] -> [FieldEntry] -> String  -> String
-getFieldVal _ [] _  = [] 
-getFieldVal line ((field,value,t):xs) str 
+getFieldVal :: [FieldEntry] -> String  -> String
+getFieldVal [] _  = [] 
+getFieldVal ((field,value,_):xs) str 
     | str == field = value  
     | otherwise = getFieldVal line xs str 
 
@@ -288,5 +325,71 @@ evalOutputHelper :: [Variable] -> Output -> [[FieldEntry]]
 evalOutputHelper vars (Output str1 str2 str3) = extractVarVal (getVarValueFromName vars str1)
 
 
+
+-------------------------------------------------------------------
+-- Evaluating Where 
+-------------------------------------------------------------------
+
+varTypeNodes :: VariableValue -> Bool
+varTypeNodes (TypeNodes _) = True
+varTypeNodes _ = False 
+
+varTypeRelations :: VariableValue -> Bool
+varTypeRelations (TypeRelations _) = True
+varTypeRelations _ = False 
+
+getFieldType :: [FieldEntry] -> String -> DataType 
+getFieldType ((field,_,t):xs) str 
+    | str == field = t  
+    | otherwise = getFieldType xs str 
+
+
+evalWhere :: Variables -> Where -> Variables
+evalWhere vars (Where whereExp) = evalWhereExp vars  whereExp 
+
+evalWhereExp :: Variables -> WhereExp -> Variables
+evalWhereExp vars (WAnd whereFunc whereExp) = evalWhereExp (evalWhereFunc vars whereFunc) whereExp
+evalWhereExp vars (WOr whereFunc whereExp) = unionVars (evalWhereFunc vars whereFunc) (evalWhereExp vars whereExp) 
+evalWhereExp vars (WNot whereExp) = complementVars (evalWhereExp vars whereExp) vars
+evalWhereExp vars (WFinal whereFunc) = evalWhereFunc vars whereFunc
+
+
+evalWhereFunc :: Variables -> WhereFunc -> Variables
+evalWhereFunc vars (WEqual wdot@(WDot _ _) wlit) = evalWhereEqual vars wdot wlit (==)
+
+
+evalGeneralFunc 
+
+-- evalWhereEqual :: Variables -> WhereDot -> WhereLit -> (String -> String -> Bool) -> Variables
+evalWhereEqual vars (WDot str1 str2) (WStr s) predicate
+    | varTypeNodes var = updateVariable vars str1 $ TypeNodes (x nodes str1 str2 predicate)
+    | otherwise = updateVariable vars str1 $ TypeRelations (x nodes str1 str2 predicate)
+    where
+        var = getVarValueFromName vars str1
+        nodes = extractVariableData var
+
+
+-- x :: [[FieldEntry]] -> String -> String -> (String -> String -> Bool) -> [[FieldEntry]] 
+x [] _ _ _ = []
+x (node:nodes) fieldName comp predicate
+    | predicate fieldVal comp = node : x nodes fieldName comp predicate
+    | otherwise = x nodes fieldName comp predicate
+    where
+        fieldVal = getFieldVal node fieldName
+
+
+
+
+-- evalWhereEqual :: Variables -> WhereDot -> WhereLit -> Variables
+-- evalWhereEqual vars (WDot str1 str2) (WStr s) = filter (\n -> filterWhereFunc n (==) str1 str2) nodes  
+--     where
+--         nodes = extractVariableData $ getVarValueFromName vars str1
+        
+
+-- filterWhereFunc :: [FieldEntry] -> (String -> String -> Bool) -> String -> String -> Bool
+-- filterWhereFunc entrys pred field compareTo = pred fieldVal compareTo 
+--     where
+--         fieldVal = getFieldVal entrys field 
+        
 
 
