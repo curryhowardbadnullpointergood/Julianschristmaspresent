@@ -177,7 +177,7 @@ getNodeString:: NodeEntry -> String
 getNodeString (NodeEntry s l _ ) = s
 
 getNE :: (a, NodeEntry) -> String
-getNE (nH, nE) = getNodeString nE
+getNE (nH, nE) = getNdeString nE
 
 matchesConditionN :: (a, NodeEntry) -> (String -> Bool) -> Bool
 matchesConditionN rE predicate = predicate (getNE rE)
