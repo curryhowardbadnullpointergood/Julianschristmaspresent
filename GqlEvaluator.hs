@@ -334,19 +334,20 @@ evalWhere :: Variables -> Where -> Variables
 evalWhere vars (Where whereExp) = evalWhereExp vars  whereExp
 
 evalWhereExp :: Variables -> WhereExp -> Variables
-evalWhereExp vars (WAnd whereFunc whereExp) = evalWhereExp (evalWhereFunc vars whereFunc) whereExp
-evalWhereExp vars (WOr whereFunc whereExp) = unionVars (evalWhereFunc vars whereFunc) (evalWhereExp vars whereExp)
-evalWhereExp vars (WNot whereExp) = complementVars (evalWhereExp vars whereExp) vars
-evalWhereExp vars (WFinal whereFunc) = evalWhereFunc vars whereFunc
+evalWhereExp vars (WAnd whereFunc whereExp) = evalWhereExp   (evalWhereFunc vars whereFunc) whereExp
+evalWhereExp vars (WOr whereFunc whereExp)  = unionVars      (evalWhereFunc vars whereFunc) (evalWhereExp vars whereExp)
+evalWhereExp vars (WNot whereExp)           = complementVars (evalWhereExp vars whereExp)   vars
+evalWhereExp vars (WFinal whereFunc)        = evalWhereFunc  vars                           whereFunc
 
 evalWhereFunc :: Variables -> WhereFunc -> Variables
 evalWhereFunc vars (WEqual              (WDot v1 f1) wlit) = evalWhereHelper vars v1 f1 wlit evalWhereEqual
-evalWhereFunc vars (WNotEqual           (WDot v1 f1) wlit) = evalWhereHelper vars v1 f1 wlit evalWhereNotEqual     
+evalWhereFunc vars (WNotEqual           (WDot v1 f1) wlit) = evalWhereHelper vars v1 f1 wlit evalWhereNotEqual      
 evalWhereFunc vars (WLessThan           (WDot v1 f1) wlit) = evalWhereHelper vars v1 f1 wlit evalWhereLess          
 evalWhereFunc vars (WGreaterThan        (WDot v1 f1) wlit) = evalWhereHelper vars v1 f1 wlit evalWhereGreater       
 evalWhereFunc vars (WLessOrEqualThan    (WDot v1 f1) wlit) = evalWhereHelper vars v1 f1 wlit evalWhereLessOrEqual   
 evalWhereFunc vars (WGreaterOrEqualThan (WDot v1 f1) wlit) = evalWhereHelper vars v1 f1 wlit evalWhereGreaterOrEqual
 evalWhereFunc vars (WStartsWith         (WDot v1 f1) wlit) = evalWhereHelper vars v1 f1 wlit evalWhereStarts        
+evalWhereFunc vars (WEndsWith           (WDot v1 f1) wlit) = evalWhereHelper vars v1 f1 wlit evalWhereEnds    
 
 -- evalWhereFunc vars (WEqualDot              (WDot v1 f1) (WDot v2 f2)) = evalWhereEqual          
 -- evalWhereFunc vars (WNotEqualDot           (WDot v1 f1) (WDot v2 f2)) = evalWhereNotEqual       
@@ -356,51 +357,57 @@ evalWhereFunc vars (WStartsWith         (WDot v1 f1) wlit) = evalWhereHelper var
 -- evalWhereFunc vars (WGreaterOrEqualThanDot (WDot v1 f1) (WDot v2 f2)) = evalWhereGreaterOrEqual 
 -- evalWhereFunc vars (WStartsWithDot         (WDot v1 f1) (WDot v2 f2)) = evalWhereStarts          
 
+
 evalWhereLess :: FieldEntry -> FieldEntry -> Bool
-evalWhereLess (f1,"null",t1) (f2,"null",t2) = False
+evalWhereLess (f1,"null",t1) (f2,"null",t2)   = False
 evalWhereLess (f1,v1,TypeInt) (f2,v2,TypeInt) = (read v1 :: Int) < (read v2)
-evalWhereLess (f1,v1,t1) (f2,v2,t2) = False
+evalWhereLess (f1,v1,t1) (f2,v2,t2)           = False
 
 evalWhereGreater :: FieldEntry -> FieldEntry -> Bool
-evalWhereGreater (f1,"null",t1) (f2,"null",t2) = False
+evalWhereGreater (f1,"null",t1) (f2,"null",t2)   = False
 evalWhereGreater (f1,v1,TypeInt) (f2,v2,TypeInt) = (read v1 :: Int) > (read v2)
-evalWhereGreater (f1,v1,t1) (f2,v2,t2) = False
+evalWhereGreater (f1,v1,t1) (f2,v2,t2)           = False
 
 evalWhereLessOrEqual :: FieldEntry -> FieldEntry -> Bool
-evalWhereLessOrEqual (f1,"null",t1) (f2,"null",t2) = False
+evalWhereLessOrEqual (f1,"null",t1) (f2,"null",t2)   = False
 evalWhereLessOrEqual (f1,v1,TypeInt) (f2,v2,TypeInt) = (read v1 :: Int) <= (read v2)
-evalWhereLessOrEqual (f1,v1,t1) (f2,v2,t2) = False
+evalWhereLessOrEqual (f1,v1,t1) (f2,v2,t2)           = False
 
 evalWhereGreaterOrEqual :: FieldEntry -> FieldEntry -> Bool
-evalWhereGreaterOrEqual (f1,"null",t1) (f2,"null",t2) = False
+evalWhereGreaterOrEqual (f1,"null",t1) (f2,"null",t2)   = False
 evalWhereGreaterOrEqual (f1,v1,TypeInt) (f2,v2,TypeInt) = (read v1 :: Int) >= (read v2)
-evalWhereGreaterOrEqual (f1,v1,t1) (f2,v2,t2) = False
+evalWhereGreaterOrEqual (f1,v1,t1) (f2,v2,t2)           = False
 
 evalWhereStarts :: FieldEntry -> FieldEntry -> Bool
-evalWhereStarts (f1,"null",t1) (f2,"null",t2) = False
+evalWhereStarts (f1,"null",t1) (f2,"null",t2)         = False
 evalWhereStarts (f1,v1,TypeString) (f2,v2,TypeString) = startsWith v1 v2
-evalWhereStarts (f1,v1,t1) (f2,v2,t2) = False
+evalWhereStarts (f1,v1,t1) (f2,v2,t2)                 = False
 
 startsWith :: Eq a => [a] -> [a] -> Bool
-startsWith [] _ = False
+startsWith [] _  = False
 startsWith _  [] = True
 startsWith (x:xs) (y:ys) = x == y && startsWith xs ys
+
+evalWhereEnds :: FieldEntry -> FieldEntry -> Bool 
+evalWhereEnds (f1,"null",t1) (f2,"null",t2)         = False
+evalWhereEnds (f1,v1,TypeString) (f2,v2,TypeString) = startsWith (reverse v1) (reverse v2)
+evalWhereEnds (f1,v1,t1) (f2,v2,t2)                 = False
 
 evalWhereHelper :: [Variable] -> String -> String -> WhereLit ->  (FieldEntry -> FieldEntry -> Bool) -> Variables
 evalWhereHelper vars v1 f1 wlit evalWhereFunc
     | typeNodes = updateVariable vars v1 (TypeNodes newNodes)
     | otherwise = updateVariable vars v1 (TypeRelations newNodes)
     where
-        var = getVarValueFromName vars v1
-        nodes = extractVariableData var
+        var       = getVarValueFromName vars v1
+        nodes     = extractVariableData var
         typeNodes = varTypeNodes var
-        newNodes = filterNodes nodes (makeFieldEntryFromWlit wlit) f1 evalWhereFunc 
+        newNodes  = filterNodes nodes (makeFieldEntryFromWlit wlit) f1 evalWhereFunc 
 
 makeFieldEntryFromWlit :: WhereLit -> FieldEntry
-makeFieldEntryFromWlit (WStr s) = ("",s,TypeString)
-makeFieldEntryFromWlit (WInt i) = ("",show i,TypeInt)
+makeFieldEntryFromWlit (WStr s)  = ("",s,TypeString)
+makeFieldEntryFromWlit (WInt i)  = ("",show i,TypeInt)
 makeFieldEntryFromWlit (WBool b) = ("",show b,TypeBool)
-makeFieldEntryFromWlit (WNull) = ("", "null", TypeNull)
+makeFieldEntryFromWlit (WNull)   = ("", "null", TypeNull)
 
 filterNodes :: Nodes -> FieldEntry -> String -> (FieldEntry -> FieldEntry -> Bool) -> Nodes
 filterNodes [] _ _ _ = []
