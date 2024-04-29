@@ -39,7 +39,7 @@ getRelation {LTok _ LTokenGetRelation}
 -- return      {LTok _ LTokenReturn}
 as          {LTok _ LTokenAs}
 starts      {LTok _ LTokenStartWith}
-
+ends        {LTok _ LTokenEndWith}
 "("         {LTok _ LTokenLParen}
 ")"         {LTok _ LTokenRParen}
 -- "["         {LTok _ LTokenLBrack}
@@ -140,6 +140,7 @@ WhereFunc
     | WhereDot "<=" WhereLit      {WLessOrEqualThan $1 $3}
     | WhereDot ">=" WhereLit      {WGreaterOrEqualThan $1 $3}
     | WhereDot starts WhereLit    {WStartsWith $1 $3}
+    | WhereDot ends WhereLit      {WEndsWith $1 $3}
 
     | WhereDot "==" WhereDot      {WEqualDot $1 $3}
     | WhereDot "/=" WhereDot      {WNotEqualDot $1 $3}
@@ -148,6 +149,7 @@ WhereFunc
     | WhereDot "<=" WhereDot      {WLessOrEqualThanDot $1 $3}
     | WhereDot ">=" WhereDot      {WGreaterOrEqualThanDot $1 $3}
     | WhereDot starts WhereDot    {WStartsWithDot $1 $3}
+    | WhereDot ends WhereDot      {WEndsWith $1 $3}
 
 WhereDot 
     : name idField              {WDot $1 ":ID"}

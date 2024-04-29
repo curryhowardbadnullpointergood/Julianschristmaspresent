@@ -40,12 +40,12 @@ tokens :-
     "MATCH"                 {\p s -> LTok p LTokenMatch}
     "WHERE"                 {\p s -> LTok p LTokenWhere}
 
-    "RETURN_NODE"              {\p s -> LTok p LTokenGetNode}
-    "RETURN_RELATION"          {\p s -> LTok p LTokenGetRelation}
+    "RETURN_NODE"           {\p s -> LTok p LTokenGetNode}
+    "RETURN_RELATION"       {\p s -> LTok p LTokenGetRelation}
     "AS"                    {\p s -> LTok p LTokenAs}
     
     "STARTS WITH"           {\p s -> LTok p LTokenStartWith}
-    
+    "ENDS WITH"             {\p s -> LTok p LTokenStartWith}
     "("                     {\p s -> LTok p LTokenLParen}
     ")"                     {\p s -> LTok p LTokenRParen}
     "["                     {\p s -> LTok p LTokenLBrack}
