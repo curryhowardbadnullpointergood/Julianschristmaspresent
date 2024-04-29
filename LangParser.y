@@ -18,6 +18,7 @@ import InputParser (Literal(..))
 "-"         {LTok _ LTokenRelated}
 "->"        {LTok _ LTokenRelatedRight}
 "<-"        {LTok _ LTokenRelatedLeft}
+"--"        {LTok _ LTokenNewRelation}
 intField    {LTok _ LTokenIntField}
 strField    {LTok _ LTokenStrField}
 boolField   {LTok _ LTokenBoolField}
@@ -35,8 +36,9 @@ match       {LTok _ LTokenMatch}
 where       {LTok _ LTokenWhere}
 getNode     {LTok _ LTokenGetNode}
 getRelation {LTok _ LTokenGetRelation}
+return      {LTok _ LTokenReturn}
+append      {LTok _ LTokenAppend}
 
--- return      {LTok _ LTokenReturn}
 as          {LTok _ LTokenAs}
 starts      {LTok _ LTokenStartWith}
 ends        {LTok _ LTokenEndWith}
@@ -69,18 +71,18 @@ name        {LTok _ (LTokenName $$)}
                         
 %%
 Query
-    : Read Match {Query $1 $2}
+    : Read Match Where Return{Query $1 $2 $3 $4}
 
 Read
     : read "=" string {ReadFile $3}
     
 
 Match
-    : match "=" Patterns Where Return   {Match $3 $4 $5}
+    : match "=" Patterns {Match $3}
 
 Patterns
     : Pattern "|" Patterns  {$1 : $3}
-    | Pattern           {[$1]}
+    | Pattern               {[$1]}
 
 Pattern
     : name "-" "->" name        {PatternRelatedTo $1 $4}
@@ -90,6 +92,56 @@ Pattern
     | name "-" "-" name         {PatternRelated $1 $4}
     | name "-" name "-" name    {PatternRelatedVar $1 $3 $5}
     | name                      {PatternFinal $1} 
+
+
+
+
+Where
+    : where "=" WhereExp1   {Where $3}
+
+
+WhereExp1
+    : WhereFunc and WhereExp1   {WAnd $1 $3}
+    | WhereFunc or WhereExp1    {WOr $1 $3}
+    | not WhereExp1             {WNot $2}
+    | "(" WhereExp1 ")"         {$2}
+    | WhereFunc                 {WFinal $1}
+
+WhereFunc
+    : WhereDot "==" WhereLit    {WEqual $1 $3}
+    | WhereDot "/=" WhereLit    {WNotEqual $1 $3}
+    | WhereDot "<"  WhereLit    {WLessThan $1 $3}
+    | WhereDot ">"  WhereLit    {WGreaterThan $1 $3}
+    | WhereDot "<=" WhereLit    {WLessOrEqualThan $1 $3}
+    | WhereDot ">=" WhereLit    {WGreaterOrEqualThan $1 $3}
+    | WhereDot starts WhereLit  {WStartsWith $1 $3}
+    | WhereDot ends WhereLit    {WEndsWith $1 $3}
+
+    | WhereDot "==" WhereDot    {WEqualDot $1 $3}
+    | WhereDot "/=" WhereDot    {WNotEqualDot $1 $3}
+    | WhereDot "<"  WhereDot    {WLessThanDot $1 $3}
+    | WhereDot ">"  WhereDot    {WGreaterThanDot $1 $3}
+    | WhereDot "<=" WhereDot    {WLessOrEqualThanDot $1 $3}
+    | WhereDot ">=" WhereDot    {WGreaterOrEqualThanDot $1 $3}
+    | WhereDot starts WhereDot  {WStartsWithDot $1 $3}
+    | WhereDot ends WhereDot    {WEndsWith $1 $3}
+
+WhereDot 
+    : name idField              {WDot $1 ":ID"}
+    | name typeField            {WDot $1 ":TYPE"}
+    | name startField           {WDot $1 ":START_ID"}
+    | name endField             {WDot $1 ":END_ID"}
+    | name labelField           {WDot $1 ":LABEL"}
+    | name "." name             {WDot $1 $3}
+
+
+WhereLit
+    : string                    {WStr $1}
+    | int                       {WInt $1}
+    | true                      {WBool True}
+    | false                     {WBool False}
+    | null                      {WNull}
+
 
 Return
     : getNode "=" Return1 getRelation "=" Return1   {ReturnNodeRelation $3 $6}
@@ -120,53 +172,6 @@ Output
 --     | name startField                   {Output ":START_ID" $1} 
 --     | name endField                     {Output ":END_ID" $1} 
 
-
-Where
-    : where "=" WhereExp1    {Where $3}
-
-
-WhereExp1
-    : WhereFunc and WhereExp1   {WAnd $1 $3}
-    | WhereFunc or WhereExp1    {WOr $1 $3}
-    | not WhereExp1             {WNot $2}
-    | "(" WhereExp1 ")"         {$2}
-    | WhereFunc                 {WFinal $1}
-
-WhereFunc
-    : WhereDot "==" WhereLit      {WEqual $1 $3}
-    | WhereDot "/=" WhereLit      {WNotEqual $1 $3}
-    | WhereDot "<"  WhereLit      {WLessThan $1 $3}
-    | WhereDot ">"  WhereLit      {WGreaterThan $1 $3}
-    | WhereDot "<=" WhereLit      {WLessOrEqualThan $1 $3}
-    | WhereDot ">=" WhereLit      {WGreaterOrEqualThan $1 $3}
-    | WhereDot starts WhereLit    {WStartsWith $1 $3}
-    | WhereDot ends WhereLit      {WEndsWith $1 $3}
-
-    | WhereDot "==" WhereDot      {WEqualDot $1 $3}
-    | WhereDot "/=" WhereDot      {WNotEqualDot $1 $3}
-    | WhereDot "<"  WhereDot      {WLessThanDot $1 $3}
-    | WhereDot ">"  WhereDot      {WGreaterThanDot $1 $3}
-    | WhereDot "<=" WhereDot      {WLessOrEqualThanDot $1 $3}
-    | WhereDot ">=" WhereDot      {WGreaterOrEqualThanDot $1 $3}
-    | WhereDot starts WhereDot    {WStartsWithDot $1 $3}
-    | WhereDot ends WhereDot      {WEndsWith $1 $3}
-
-WhereDot 
-    : name idField              {WDot $1 ":ID"}
-    | name typeField            {WDot $1 ":TYPE"}
-    | name startField           {WDot $1 ":START_ID"}
-    | name endField             {WDot $1 ":END_ID"}
-    | name labelField           {WDot $1 ":LABEL"}
-    | name "." name             {WDot $1 $3}
-
-
-WhereLit
-    : string                    {WStr $1}
-    | int                       {WInt $1}
-    | true                      {WBool True}
-    | false                     {WBool False}
-    | null                      {WNull}
-
 {
 
 parseError :: [LangToken] -> a
@@ -176,7 +181,7 @@ parseError ts = error $ "Parse error at line " ++ (show ln) ++ " column " ++ (sh
           AlexPn ch ln col = p
 
 data Query 
-    = Query ReadFile Match
+    = Query ReadFile Match Where Return
     deriving (Eq, Show)
 
 data ReadFile
@@ -184,7 +189,7 @@ data ReadFile
     deriving (Show, Eq)
 
 data Match
-    = Match Patterns Where Return
+    = Match Patterns
     deriving (Eq, Show)
 
 type Patterns

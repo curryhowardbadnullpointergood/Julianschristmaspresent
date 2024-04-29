@@ -6,4 +6,4 @@ WHERE
     =  people.age   <= 25 
     OR people:LABEL == "Visitor"
 
-RETURN_NODE = people.age AS "age", people:LABEL
+RETURN_NODE = people.age AS "age", people:LABEL 

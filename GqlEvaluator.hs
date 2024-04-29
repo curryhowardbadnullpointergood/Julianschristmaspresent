@@ -2,22 +2,18 @@ module GqlEvaluator where
 
 import LangParser
 import LangLexer
-
 import InputParser
 
 import Data.List (nub, elemIndex, transpose,groupBy, sort)
 import Data.Function (on)
 import LangParser (WhereFunc(WEqual))
 
-data VariableValue
-    = TypeNodes [[FieldEntry]]
-    | TypeRelations [[FieldEntry]]
-    deriving (Show, Eq)
 
-type Variables = [Variable]
-type Variable = (String, VariableValue)
-type InputData = ([[FieldEntry]],[[FieldEntry]])
 
+
+type Environment = [[Variable]]
+
+data Variable = (String, [FieldEntry])
 
 
 -- evalQuery :: InputData -> Query -> String 
@@ -340,14 +336,14 @@ evalWhereExp vars (WNot whereExp)           = complementVars (evalWhereExp vars 
 evalWhereExp vars (WFinal whereFunc)        = evalWhereFunc  vars                           whereFunc
 
 evalWhereFunc :: Variables -> WhereFunc -> Variables
-evalWhereFunc vars (WEqual              (WDot v1 f1) wlit) = evalWhereHelper vars v1 f1 wlit evalWhereEqual
+evalWhereFunc vars (WEqual              (WDot v1 f1) wlit) = evalWhereHelper vars v1 f1 wlit evalWhereEqual         
 evalWhereFunc vars (WNotEqual           (WDot v1 f1) wlit) = evalWhereHelper vars v1 f1 wlit evalWhereNotEqual      
 evalWhereFunc vars (WLessThan           (WDot v1 f1) wlit) = evalWhereHelper vars v1 f1 wlit evalWhereLess          
 evalWhereFunc vars (WGreaterThan        (WDot v1 f1) wlit) = evalWhereHelper vars v1 f1 wlit evalWhereGreater       
 evalWhereFunc vars (WLessOrEqualThan    (WDot v1 f1) wlit) = evalWhereHelper vars v1 f1 wlit evalWhereLessOrEqual   
 evalWhereFunc vars (WGreaterOrEqualThan (WDot v1 f1) wlit) = evalWhereHelper vars v1 f1 wlit evalWhereGreaterOrEqual
 evalWhereFunc vars (WStartsWith         (WDot v1 f1) wlit) = evalWhereHelper vars v1 f1 wlit evalWhereStarts        
-evalWhereFunc vars (WEndsWith           (WDot v1 f1) wlit) = evalWhereHelper vars v1 f1 wlit evalWhereEnds    
+evalWhereFunc vars (WEndsWith           (WDot v1 f1) wlit) = evalWhereHelper vars v1 f1 wlit evalWhereEnds          
 
 -- evalWhereFunc vars (WEqualDot              (WDot v1 f1) (WDot v2 f2)) = evalWhereEqual          
 -- evalWhereFunc vars (WNotEqualDot           (WDot v1 f1) (WDot v2 f2)) = evalWhereNotEqual       

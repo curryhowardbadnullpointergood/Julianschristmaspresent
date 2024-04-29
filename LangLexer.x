@@ -21,7 +21,7 @@ tokens :-
     "-"                     {\p s -> LTok p LTokenRelated}
     "->"                    {\p s -> LTok p LTokenRelatedRight}
     "<-"                    {\p s -> LTok p LTokenRelatedLeft}                   
-
+    "--"                    {\p s -> LTok p LTokenNewRelation}
     ":integer"              {\p s -> LTok p LTokenIntField}
     ":string"               {\p s -> LTok p LTokenStrField}
     ":boolean"              {\p s -> LTok p LTokenBoolField}
@@ -42,10 +42,12 @@ tokens :-
 
     "RETURN_NODE"           {\p s -> LTok p LTokenGetNode}
     "RETURN_RELATION"       {\p s -> LTok p LTokenGetRelation}
+    "RETURN"                {\p s -> LTok p LTokenReturn}
+    "APPEND"                {\p s -> LTok p LTokenAppend}
     "AS"                    {\p s -> LTok p LTokenAs}
     
     "STARTS WITH"           {\p s -> LTok p LTokenStartWith}
-    "ENDS WITH"             {\p s -> LTok p LTokenStartWith}
+    "ENDS WITH"             {\p s -> LTok p LTokenEndWith}
     "("                     {\p s -> LTok p LTokenLParen}
     ")"                     {\p s -> LTok p LTokenRParen}
     "["                     {\p s -> LTok p LTokenLBrack}
@@ -85,6 +87,7 @@ data LangTokenClass
     | LTokenRelated
     | LTokenRelatedRight
     | LTokenRelatedLeft
+    | LTokenNewRelation
 
     | LTokenIntField
     | LTokenStrField
@@ -107,6 +110,7 @@ data LangTokenClass
     | LTokenGetRelation
     | LTokenAs
     | LTokenStartWith
+    | LTokenEndWith
 
     | LTokenLParen
     | LTokenRParen
