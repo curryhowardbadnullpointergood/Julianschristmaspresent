@@ -54,7 +54,9 @@ getVar ((name, value):vars) varName
 
 getField :: [FieldEntry] -> String  -> FieldEntry
 getField []                                         field = (field,"null",TypeNull)
-getField ((fieldName,fieldValue,fieldType):entries) field = (fieldName,fieldValue,fieldType)
+getField ((fieldName,fieldValue,fieldType):entries) field
+    | fieldName == field = (fieldName,fieldValue,fieldType)
+    | otherwise         = getField entries field
 
 getVarField :: Instance -> String -> String -> FieldEntry
 getVarField inst varName fieldName = getField (getVar inst varName) fieldName 
