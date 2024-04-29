@@ -122,6 +122,8 @@ evalPatterns vars (p:ps) inputdata = evalPatterns vars' ps inputdata
     where
         vars' = evalPatterns' vars p inputdata
 
+
+
 -- Function that evaluates individual patterns 
 evalPatterns' :: [Variable] -> Pattern -> InputData -> [Variable]
 evalPatterns' vars (PatternFinal str1) (nodes,relation) = addVariable vars str1 (TypeNodes nodes)
