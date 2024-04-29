@@ -4,9 +4,10 @@ import LangParser
 import LangLexer
 import InputParser
 
-import Data.List (nub, elemIndex, transpose,groupBy, sort)
+import Data.List (nub, elemIndex, transpose,groupBy, sort, isInfixOf)
 import Data.Function (on)
 import LangParser (WhereFunc(WEqual))
+import System.Console.Terminfo (Attributes(reverseAttr))
 
 
 
@@ -14,6 +15,8 @@ import LangParser (WhereFunc(WEqual))
 type Environment = [[Variable]]
 
 data Variable = (String, [FieldEntry])
+
+
 
 
 -- evalQuery :: InputData -> Query -> String 
@@ -236,7 +239,7 @@ getHeader'' (str:strlist) str1
 getHeader''' :: [String] -> [Bool] 
 getHeader''' [] = [] 
 getHeader''' (x:xs) 
-    | '+' `elem` x = False : getHeader''' xs 
+    | isInfixOf ":null" x = False : getHeader''' xs 
     | otherwise = True : getHeader''' xs 
 
 allTrue :: [Bool] -> Bool
@@ -296,21 +299,22 @@ evalOutputChecker outlist = undefined
 
 
 evalOutputs :: [Variable] -> Outputs -> [[String]] 
-evalOutputs vars out = concat (getHeader (result)) : resultval
+evalOutputs vars out =  (concat (getHeader (result)) : (resultval))
     where
         result = evalOutputs'' vars out 
         resultval = getEntryVal result 
+    
 
 
 evalOutputs'' :: [Variable] -> Outputs -> [[FieldEntry]] 
-evalOutputs'' vars outs = multiZipL (evalOutputs''' vars outs)
+evalOutputs'' vars outs = (multiZipL (evalOutputs''' vars outs))
 
 evalOutputs''' :: [Variable] -> Outputs -> [[FieldEntry]] 
 evalOutputs''' vars [] = [] 
-evalOutputs''' vars (out:outs) = evalOutput vars out : evalOutputs''' vars outs 
+evalOutputs''' vars (out:outs) =  (evalOutput vars out : evalOutputs''' vars outs )
 
 evalOutput :: [Variable] -> Output -> [FieldEntry]
-evalOutput vars (Output str1 str2 str3) = output 
+evalOutput vars (Output str1 str2 str3) =  output 
     where 
         node = (evalOutputHelper vars (Output str1 str2 str3))
         filteredval = getNodeVal node str2 
@@ -318,7 +322,7 @@ evalOutput vars (Output str1 str2 str3) = output
 
 
 evalOutputHelper :: [Variable] -> Output -> [[FieldEntry]]
-evalOutputHelper vars (Output str1 str2 str3) = extractVarVal (getVarValueFromName vars str1)
+evalOutputHelper vars (Output str1 str2 str3) =  (extractVarVal (getVarValueFromName vars str1))
 
 
 
