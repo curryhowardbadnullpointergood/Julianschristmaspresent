@@ -108,23 +108,23 @@ WhereExp1
     | WhereFunc                 {WFinal $1}
 
 WhereFunc
-    : WhereDot "==" WhereLit    {WEqual $1 $3}
-    | WhereDot "/=" WhereLit    {WNotEqual $1 $3}
-    | WhereDot "<"  WhereLit    {WLessThan $1 $3}
-    | WhereDot ">"  WhereLit    {WGreaterThan $1 $3}
-    | WhereDot "<=" WhereLit    {WLessOrEqualThan $1 $3}
-    | WhereDot ">=" WhereLit    {WGreaterOrEqualThan $1 $3}
-    | WhereDot starts WhereLit  {WStartsWith $1 $3}
-    | WhereDot ends WhereLit    {WEndsWith $1 $3}
+    : WhereDot "=="   WhereLit    {WEqual $1 $3}
+    | WhereDot "/="   WhereLit    {WNotEqual $1 $3}
+    | WhereDot "<"    WhereLit    {WLessThan $1 $3}
+    | WhereDot ">"    WhereLit    {WGreaterThan $1 $3}
+    | WhereDot "<="   WhereLit    {WLessOrEqualThan $1 $3}
+    | WhereDot ">="   WhereLit    {WGreaterOrEqualThan $1 $3}
+    | WhereDot starts WhereLit    {WStartsWith $1 $3}
+    | WhereDot ends   WhereLit    {WEndsWith $1 $3}
 
-    | WhereDot "==" WhereDot    {WEqualDot $1 $3}
-    | WhereDot "/=" WhereDot    {WNotEqualDot $1 $3}
-    | WhereDot "<"  WhereDot    {WLessThanDot $1 $3}
-    | WhereDot ">"  WhereDot    {WGreaterThanDot $1 $3}
-    | WhereDot "<=" WhereDot    {WLessOrEqualThanDot $1 $3}
-    | WhereDot ">=" WhereDot    {WGreaterOrEqualThanDot $1 $3}
-    | WhereDot starts WhereDot  {WStartsWithDot $1 $3}
-    | WhereDot ends WhereDot    {WEndsWith $1 $3}
+    | WhereDot "=="   WhereDot    {WEqualDot $1 $3}
+    | WhereDot "/="   WhereDot    {WNotEqualDot $1 $3}
+    | WhereDot "<"    WhereDot    {WLessThanDot $1 $3}
+    | WhereDot ">"    WhereDot    {WGreaterThanDot $1 $3}
+    | WhereDot "<="   WhereDot    {WLessOrEqualThanDot $1 $3}
+    | WhereDot ">="   WhereDot    {WGreaterOrEqualThanDot $1 $3}
+    | WhereDot starts WhereDot    {WStartsWithDot $1 $3}
+    | WhereDot ends   WhereDot    {WEndsWithDot $1 $3}
 
 WhereDot 
     : name idField              {WDot $1 ":ID"}
@@ -225,7 +225,8 @@ data WhereFunc
     | WLessOrEqualThan WhereDot WhereLit
     | WGreaterOrEqualThan WhereDot WhereLit
     | WStartsWith WhereDot WhereLit
-    
+    | WEndsWith WhereDot WhereLit
+
     | WEqualDot WhereDot WhereDot
     | WNotEqualDot WhereDot WhereDot
     | WLessThanDot WhereDot WhereDot
@@ -233,6 +234,7 @@ data WhereFunc
     | WLessOrEqualThanDot WhereDot WhereDot
     | WGreaterOrEqualThanDot WhereDot WhereDot
     | WStartsWithDot WhereDot WhereDot
+    | WEndsWithDot WhereDot WhereDot
     deriving (Show, Eq)
 
 data WhereDot

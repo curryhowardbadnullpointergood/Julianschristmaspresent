@@ -84,10 +84,10 @@ data LangTokenClass
     | LTokenSemiColon
     | LTokenBar
     | LTokenAssignment
+    
     | LTokenRelated
     | LTokenRelatedRight
     | LTokenRelatedLeft
-    | LTokenNewRelation
 
     | LTokenIntField
     | LTokenStrField
@@ -105,18 +105,17 @@ data LangTokenClass
     | LTokenRead
     | LTokenMatch
     | LTokenWhere
-    -- | LTokenReturn
+    | LTokenReturn
     | LTokenGetNode
     | LTokenGetRelation
     | LTokenAs
-    | LTokenStartWith
-    | LTokenEndWith
+    | LTokenAppend
+    | LTokenNewRelation
 
     | LTokenLParen
     | LTokenRParen
     | LTokenLBrack
     | LTokenRBrack
-
 
     | LTokenLessThanEqual
     | LTokenGreaterThanEqual
@@ -124,6 +123,8 @@ data LangTokenClass
     | LTokenGreaterThan
     | LTokenEquals
     | LTokenNotEquals
+    | LTokenStartWith
+    | LTokenEndWith
 
     | LTokenNull
     | LTokenTrue
