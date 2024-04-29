@@ -7,15 +7,12 @@ import InputParser
 import Data.List (nub, elemIndex, transpose,groupBy, sort, isInfixOf)
 import Data.Function (on)
 import LangParser (WhereFunc(WEqual))
-import System.Console.Terminfo (Attributes(reverseAttr))
 
 
 
-
-type Environment = [[Variable]]
-
-data Variable = (String, [FieldEntry])
-
+data Variable    = (String, [FieldEntry])
+type Instance    = [Variable]
+type Environment = [Instance]
 
 
 
