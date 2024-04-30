@@ -10,7 +10,7 @@ type Variable       = (String, VariableValue)
 type Instance       = [Variable]
 type Environment    = [Instance]
 
-
+type InputData      = ([Node],[Relation])
 
 -- evalQuery :: InputData -> Query -> String 
 -- evalQuery inputData (Query _ match) = evalMatch [] inputData match 
@@ -61,10 +61,10 @@ getField ((fieldName,fieldValue,fieldType):entries) field
 getVarField :: Instance -> String -> String -> FieldEntry
 getVarField inst varName fieldName = getField (getVar inst varName) fieldName 
 
--- addVariable :: Variables -> String -> VariableValue -> Variables
--- addVariable vars name value
---     | varPresent vars name = error ("Binding already made for: " ++ name)
---     | otherwise            = (name, value) : vars
+addVariable :: Instance -> String -> VariableValue -> Instance
+addVariable inst name value
+    | varPresent inst name = error ("Binding already made for: " ++ name)
+    | otherwise            = (name, value) : inst
 
 unionEnv :: Environment -> Environment -> Environment
 unionEnv env1 env2 = nub $ unionLists env1 env2
@@ -80,13 +80,21 @@ evalReadFile (ReadFile fileName) = fileName
 ---------------------------------------------------------------------------------------------------
 -- Evaluating Match
 ---------------------------------------------------------------------------------------------------
-
-
-
-
+evalMatch :: Match -> InputData -> Environment
+evalMatch (Match patterns) (nodes, relations) = evalPatterns patterns (nodes++relations)
 ---------------------------------------------------------------------------------------------------
 -- Evaluating Patterns 
 ---------------------------------------------------------------------------------------------------
+evalPatterns :: Pattern -> [[FieldEntry]] -> Environment
+evalPatterns (PatternFinal str1) graph = env
+    where 
+        env = [map (\x -> evalPatterns' [] str1 x graph) graph] 
+
+evalPatterns' env var1 line graph = addVariable [] var1 line
+
+
+
+
 -- evalPatterns :: [Variable] -> Patterns -> InputData -> [Variable]
 -- evalPatterns vars [] _ = vars
 -- evalPatterns vars (p:ps) inputdata = evalPatterns vars' ps inputdata
@@ -95,39 +103,40 @@ evalReadFile (ReadFile fileName) = fileName
 
 
 
--- Function that evaluates individual patterns 
-evalPatterns' :: [Variable] -> Pattern -> InputData -> [Variable]
-evalPatterns' vars (PatternFinal str1) (nodes,relation) = addVariable vars str1 (TypeNodes nodes)
-evalPatterns' vars (PatternRelatedTo str1 str2) (nodes,relation) = output
-    where
-        startIDRelations = getNodesValFromString relation ":START_ID"
-        endIDRelations = getNodesValFromString relation ":END_ID"
-        -- ! list reversed 
-        vars'   = addVariable vars      str1 (TypeNodes (reverseList (getNodesbyString startIDRelations nodes ":ID" [])))
-        vars''  = addVariable vars'     str2 (TypeNodes (reverseList (getNodesbyString endIDRelations nodes ":ID" [])))
-        output  = reverseList vars''
-evalPatterns' vars (PatternRelatedToVar str1 str2 str3) (nodes,relation)= output
-    where
-        startIDRelations = getNodesValFromString relation ":ID"
-        endIDRelations = getNodesValFromString relation ":END_ID"
-        -- ! list reversed 
-        vars'   = addVariable vars      str1 (TypeNodes (reverseList (getNodesbyString startIDRelations nodes ":ID" [])))
-        vars''  = addVariable vars'     str3 (TypeNodes (reverseList (getNodesbyString endIDRelations nodes ":ID" [])))
-        vars''' = addVariable vars''    str2 (TypeRelations (reverseList (getNodesbyString startIDRelations relation ":START_ID" [] )))
-        output  = reverseList vars'''
-evalPatterns' vars (PatternRelatedBy str1 str2) (nodes,relation)=
-    reverseList (evalPatterns' vars (PatternRelatedTo str2 str1) (nodes,relation))
-evalPatterns' vars (PatternRelatedByVar str1 str2 str3) (nodes,relation) =
-    rearrange (evalPatterns' vars (PatternRelatedToVar str3 str2 str1) (nodes,relation))
-evalPatterns' vars (PatternRelated str1 str2) (nodes,relation) = output
-    where
-        startIDRelations = getNodesValFromString relation ":START_ID"
-        endIDRelations = getNodesValFromString relation ":END_ID"
-        vals    = ( startIDRelations ++ endIDRelations)
-        -- ! list reversed 
-        vars'   = addVariable vars  str1 (TypeNodes (reverseList ((getNodesbyString (vals) nodes ":ID" []))))
-        vars''  = addVariable vars' str2 (TypeNodes (reverseList ((getNodesbyString (vals) nodes ":ID" []))))
-        output  = reverseList vars''
+
+-- -- Function that evaluates individual patterns 
+-- evalPatterns' :: [Variable] -> Pattern -> InputData -> [Variable]
+-- evalPatterns' vars (PatternFinal str1) (nodes,relation) = addVariable vars str1 (TypeNodes nodes)
+-- evalPatterns' vars (PatternRelatedTo str1 str2) (nodes,relation) = output
+--     where
+--         startIDRelations = getNodesValFromString relation ":START_ID"
+--         endIDRelations = getNodesValFromString relation ":END_ID"
+--         -- ! list reversed 
+--         vars'   = addVariable vars      str1 (TypeNodes (reverseList (getNodesbyString startIDRelations nodes ":ID" [])))
+--         vars''  = addVariable vars'     str2 (TypeNodes (reverseList (getNodesbyString endIDRelations nodes ":ID" [])))
+--         output  = reverseList vars''
+-- evalPatterns' vars (PatternRelatedToVar str1 str2 str3) (nodes,relation)= output
+--     where
+--         startIDRelations = getNodesValFromString relation ":ID"
+--         endIDRelations = getNodesValFromString relation ":END_ID"
+--         -- ! list reversed 
+--         vars'   = addVariable vars      str1 (TypeNodes (reverseList (getNodesbyString startIDRelations nodes ":ID" [])))
+--         vars''  = addVariable vars'     str3 (TypeNodes (reverseList (getNodesbyString endIDRelations nodes ":ID" [])))
+--         vars''' = addVariable vars''    str2 (TypeRelations (reverseList (getNodesbyString startIDRelations relation ":START_ID" [] )))
+--         output  = reverseList vars'''
+-- evalPatterns' vars (PatternRelatedBy str1 str2) (nodes,relation)=
+--     reverseList (evalPatterns' vars (PatternRelatedTo str2 str1) (nodes,relation))
+-- evalPatterns' vars (PatternRelatedByVar str1 str2 str3) (nodes,relation) =
+--     rearrange (evalPatterns' vars (PatternRelatedToVar str3 str2 str1) (nodes,relation))
+-- evalPatterns' vars (PatternRelated str1 str2) (nodes,relation) = output
+--     where
+--         startIDRelations = getNodesValFromString relation ":START_ID"
+--         endIDRelations = getNodesValFromString relation ":END_ID"
+--         vals    = ( startIDRelations ++ endIDRelations)
+--         -- ! list reversed 
+--         vars'   = addVariable vars  str1 (TypeNodes (reverseList ((getNodesbyString (vals) nodes ":ID" []))))
+--         vars''  = addVariable vars' str2 (TypeNodes (reverseList ((getNodesbyString (vals) nodes ":ID" []))))
+--         output  = reverseList vars''
 
 -- rearrange :: [a] -> [a]
 -- rearrange (x:s:y) = (s:x:y)
