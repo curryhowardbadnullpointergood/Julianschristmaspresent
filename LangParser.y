@@ -259,13 +259,6 @@ type Outputs
 
 data Output
     = Output String String String
-    -- = StrOutput String String String 
-    -- | IntOutput String String String 
-    -- | BoolOutput String String String 
-    -- -- | IdOutput String
-    -- -- | StartOutput String
-    -- -- | EndOutput String
-    -- | LabelOutput String
+    | NewRelation String String String String String
     deriving (Eq, Show)
-
 }
