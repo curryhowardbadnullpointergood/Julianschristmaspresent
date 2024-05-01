@@ -3,7 +3,8 @@ module GqlEvaluator where
 import LangParser
 import InputParser
 
-import Data.List (nub, elemIndex, transpose,groupBy, sort, isInfixOf)
+import Data.List (nub, elemIndex, transpose,groupBy, sort, isInfixOf, intercalate)
+import Distribution.Fields.Field (fieldName, Field)
 
 type VariableValue  = [FieldEntry]
 type Variable       = (String, VariableValue)
@@ -50,7 +51,11 @@ getVar :: Instance -> String -> VariableValue
 getVar [] name = error ("No binding found for: " ++ name)
 getVar ((name, value):vars) varName
     | name == varName = value
-    | otherwise       = getVar vars varName 
+    | otherwise       = getVar vars varName
+
+getFields :: [[FieldEntry]] -> String -> [FieldEntry]
+getFields [] _ = [] 
+getFields (x:xs) str = getField x str : getFields xs str
 
 getField :: [FieldEntry] -> String  -> FieldEntry
 getField []                                         field = (field,"null",TypeNull)
@@ -59,7 +64,7 @@ getField ((fieldName,fieldValue,fieldType):entries) field
     | otherwise         = getField entries field
 
 getVarField :: Instance -> String -> String -> FieldEntry
-getVarField inst varName fieldName = getField (getVar inst varName) fieldName 
+getVarField inst varName fieldName = getField (getVar inst varName) fieldName
 
 addVariable :: Instance -> String -> VariableValue -> Instance
 addVariable inst name value
@@ -70,7 +75,7 @@ unionEnv :: Environment -> Environment -> Environment
 unionEnv env1 env2 = nub $ unionLists env1 env2
 
 complementEnv :: Environment -> Environment -> Environment
-complementEnv env1 env2 = complementLists env1 env2 
+complementEnv env1 env2 = complementLists env1 env2
 
 ---------------------------------------------------------------------------------------------------
 -- Evaluating ReadFile
@@ -80,17 +85,17 @@ evalReadFile (ReadFile fileName) = fileName
 ---------------------------------------------------------------------------------------------------
 -- Evaluating Match
 ---------------------------------------------------------------------------------------------------
-evalMatch :: Match -> InputData -> Environment
-evalMatch (Match patterns) (nodes, relations) = evalPatterns patterns (nodes++relations)
+-- evalMatch :: Match -> InputData -> Environment
+-- evalMatch (Match patterns) (nodes, relations) = evalPatterns patterns (nodes++relations)
 ---------------------------------------------------------------------------------------------------
 -- Evaluating Patterns 
 ---------------------------------------------------------------------------------------------------
-evalPatterns :: Pattern -> [[FieldEntry]] -> Environment
-evalPatterns (PatternFinal str1) graph = env
-    where 
-        env = [map (\x -> evalPatterns' [] str1 x graph) graph] 
+-- evalPatterns :: Pattern -> [[FieldEntry]] -> Environment
+-- evalPatterns (PatternFinal str1) graph = [[env]]
+--     where
+--         env = [map (\x -> evalPatterns' [] str1 x graph) graph]
 
-evalPatterns' env var1 line graph = addVariable [] var1 line
+-- evalPatterns' env var1 line graph = addVariable [] var1 line
 
 
 
@@ -174,12 +179,17 @@ evalPatterns' env var1 line graph = addVariable [] var1 line
 -- getNodesValFromString [] _ = []
 -- getNodesValFromString (n:ns) str = (getFieldVal n str) : getNodesValFromString ns str
 
+
+getFieldVals :: [[FieldEntry]] -> String -> [String]
+getFieldVals [] _ = [] 
+getFieldVals (f:fs) str = getFieldVal f str : getFieldVals fs str 
+
 -- -- filters values and produces a list of values 
--- getFieldVal :: [FieldEntry] -> String  -> String
--- getFieldVal [] _  = []
--- getFieldVal ((field,value,_):xs) str
---     | str == field = value
---     | otherwise = getFieldVal xs str
+getFieldVal :: [FieldEntry] -> String  -> String
+getFieldVal [] _  = []
+getFieldVal ((field,value,_):xs) str
+    | str == field = value
+    | otherwise = getFieldVal xs str
 
 
 -- getNodeVal :: [[FieldEntry]] -> String -> [FieldEntry]
@@ -193,8 +203,8 @@ evalPatterns' env var1 line graph = addVariable [] var1 line
 --     | otherwise = getNodeVal' line xs str 
 
 
--- multiZipL :: [[a]] -> [[a]]
--- multiZipL = transpose
+multiZipL :: [[a]] -> [[a]]
+multiZipL = transpose
 
 
 -- extractVarVal :: VariableValue -> [[FieldEntry]]
@@ -202,73 +212,83 @@ evalPatterns' env var1 line graph = addVariable [] var1 line
 -- extractVarVal (TypeRelations relation ) = relation 
 
 
--- getHeader:: [[FieldEntry]] -> [[String]]
--- getHeader [] = [] 
--- getHeader (n:ns) = [getHeader'' result  result]
---     where 
---         result =  (nub ((getHeader' n) : (getHeader ns)))
+getHeader:: [[FieldEntry]] -> [[String]]
+getHeader [] = [] 
+getHeader (n:ns) = [getHeader'' result  result]
+    where 
+        result =  (nub ((getHeader' n) : (getHeader ns)))
 
--- getHeader' :: [FieldEntry] -> [String]
--- getHeader' [] = [] 
--- getHeader' ((str,val,t):fs) = (str ++ showDataType t) : getHeader' fs 
+getHeader' :: [FieldEntry] -> [String]
+getHeader' [] = [] 
+getHeader' ((str,val,t):fs) 
+    | str == ":ID" = (str) : getHeader' fs 
+    | str == ":LABEL" = (str) : getHeader' fs 
+    | str == ":TYPE" = (str) : getHeader' fs 
+    | otherwise = (str ++ showDataType t) : getHeader' fs 
 
--- getHeader'' :: [[String]] -> [[String]] -> [String]
--- getHeader'' [] (str1:xs) = str1  -- process the plus out of it 
--- getHeader'' (str:strlist) str1
---     | allTrue (getHeader''' str) = str 
---     | otherwise = getHeader'' strlist str1
+getHeader'' :: [[String]] -> [[String]] -> [String]
+getHeader'' [] (str1:xs) = str1  -- process the plus out of it 
+getHeader'' (str:strlist) str1
+    | allTrue (getHeader''' str) = str 
+    | otherwise = getHeader'' strlist str1
 
--- getHeader''' :: [String] -> [Bool] 
--- getHeader''' [] = [] 
--- getHeader''' (x:xs) 
---     | isInfixOf ":null" x = False : getHeader''' xs 
---     | otherwise = True : getHeader''' xs 
+getHeader''' :: [String] -> [Bool] 
+getHeader''' [] = [] 
+getHeader''' (x:xs) 
+    | isInfixOf ":null" x = False : getHeader''' xs 
+    | otherwise = True : getHeader''' xs 
 
--- allTrue :: [Bool] -> Bool
--- allTrue = and
+allTrue :: [Bool] -> Bool
+allTrue = and
 
--- showDataType:: DataType -> String 
--- showDataType (TypeString) = ":string"
--- showDataType (TypeInt) = ":integer"
--- showDataType (TypeBool) = ":boolean"
--- showDataType (TypeNull) = ":null"
+showDataType:: DataType -> String 
+showDataType (TypeString) = ":string"
+showDataType (TypeInt) = ":integer"
+showDataType (TypeBool) = ":boolean"
+showDataType (TypeNull) = ":null"
 
--- getEntryVal:: [[FieldEntry]] -> [[String]]
--- getEntryVal [] = [] 
--- getEntryVal (x:xs) = getValF x : getEntryVal xs 
+getEntryVal:: [[FieldEntry]] -> [[String]]
+getEntryVal [] = [] 
+getEntryVal (x:xs) = getValF x : getEntryVal xs 
 
--- getValF:: [FieldEntry] -> [String]
--- getValF [] = [] 
--- getValF ((s,v,t):xs) = v : getValF xs
+getValF:: [FieldEntry] -> [String]
+getValF [] = [] 
+getValF ((s,v,t):xs) = v : getValF xs
 
--- removeHeader :: [[[String]]] -> [[[String]]]
--- removeHeader [] = [] 
--- removeHeader (x:xs) = removeHeader' x : removeHeader xs
+removeHeader :: [[[String]]] -> [[[String]]]
+removeHeader [] = [] 
+removeHeader (x:xs) = removeHeader' x : removeHeader xs
 
--- removeHeader' :: [[String]] -> [[String]]
--- removeHeader' [] = [] 
--- removeHeader' (x:xs) = xs 
+removeHeader' :: [[String]] -> [[String]]
+removeHeader' [] = [] 
+removeHeader' (x:xs) = xs 
 
 
 
--- sameHeader:: [[[String]]] ->[[[String]]]
--- sameHeader [] = []
--- sameHeader ((h:rest):xs) = result ++ sameHeader notsameheader
---     where 
---         boollist = sameHeader'' h xs 
---         mapped = (map snd $ filter fst $ zip boollist xs )
---         mapped1 = removeHeader mapped 
---         result = (h:rest) : mapped1
---         notsameheader = map snd $ filter (not . fst) $ zip boollist xs
+sameHeader:: [[[String]]] ->[[[String]]]
+sameHeader [] = []
+sameHeader ((h:rest):xs) = [result] ++ sameHeader notsameheader
+    where 
+        boollist = sameHeader'' h xs 
+        mapped = (map snd $ filter fst $ zip boollist xs )
+        mapped1 = removeHeader mapped 
+        result = mergeNodes (h:rest) mapped1 
+        notsameheader = map snd $ filter (not . fst) $ zip boollist xs
 
--- sameHeader' :: [String] -> [[String]] -> Bool 
--- sameHeader' header list 
---     | header `elem` list = True 
---     | otherwise = False 
 
--- sameHeader'' :: [String] -> [[[String]]] -> [Bool]
--- sameHeader'' _ [] = [] 
--- sameHeader'' header (x:xs) = (sameHeader' header x ) : sameHeader'' header xs 
+mergeNodes :: [[String]] -> [[[String]]] -> [[String]] 
+mergeNodes ori nodes = ori ++ concat nodes 
+
+sameHeader' :: [String] -> [[String]] -> Bool 
+sameHeader' header list 
+    | header `elem` list = True 
+    | otherwise = False 
+
+sameHeader'' :: [String] -> [[[String]]] -> [Bool]
+sameHeader'' _ [] = [] 
+sameHeader'' header (x:xs) = (sameHeader' header x ) : sameHeader'' header xs 
+
+
 
 
 {--------------------------------------------------------------------------------------------------
@@ -280,12 +300,107 @@ evalPatterns' env var1 line graph = addVariable [] var1 line
 -- evalOutputChecker outlist = undefined
 
 
+
+evalReturn :: Environment -> Return -> [[[String]]]
+evalReturn env ret = sameHeader result
+    where 
+        result = (evalReturn' env ret)
+
+
+
+evalReturn' :: Environment -> Return -> [[[String]]]
+evalReturn' env (ReturnNode []) = [] 
+evalReturn' env (ReturnNode (out:outs)) = ((evalOutput env out) : evalReturn env (ReturnNode outs))
+
+evalOutput :: Environment -> Outputs -> [[String]]
+evalOutput env out = concat (getHeader result ) : (resultval)
+    where 
+        result = evalOutputshelp env out 
+        resultval = getEntryVal result 
+
+evalOutputshelp :: Environment -> Outputs -> [[FieldEntry]]
+evalOutputshelp env out = result 
+    where 
+        output = evalOutputs''' env out 
+        result = multiZipL output 
+
+evalOutputs' :: Instance -> Output -> FieldEntry
+evalOutputs' inst (Output varName fieldName asName) = val
+    where
+        val
+            | varPresent inst varName = getVarField inst varName fieldName
+            | otherwise = (fieldName,"null",TypeNull)
+
+
+evalOutputs'' :: Environment -> Output -> [FieldEntry]
+evalOutputs'' env out = map (\i -> evalOutputs' i out) env   
+
+
+evalOutputs''' :: Environment -> Outputs -> [[FieldEntry]]
+evalOutputs''' env  [] = []
+evalOutputs''' env (out:os) = ((evalOutputs'' env out) : evalOutputs''' env os )
+
+
+
+{--------------------------------------------------------------------------------------------------
+------------------------------------------PRINT----------------------------------------------------
+---------------------------------------------------------------------------------------------------}
+
+
+-- evalPrint :: [[[String]]] -> IO()
+-- evalPrint nodes = printTable result 
+--     where 
+--         result = evalPrint'' nodes 
+
+evalPrint'' :: [[[String]]] -> [[String]]
+evalPrint'' [] = [] 
+evalPrint'' (node:nodes) = evalPrint' node : evalPrint'' nodes
+
+evalPrint' :: [[String]] -> [String] 
+evalPrint' node = concat node 
+
+
+--printTable :: [[String]] -> [String]
+printTable [] = [] 
+printTable (str:strs) = rows 
+    where
+        rows = printRows (str:strs)
+
+
+printRows :: [[String]] -> [String]
+printRows [] = [] 
+printRows (row:rows) = printLine row : printRows rows  
+
+
+-- multiple string in header edge case needs to be fixed 
+printLineStr :: [String] -> [String] -> Int -> String -> String
+printLineStr line [] _ acc = acc 
+printLineStr line (x:xs) nu acc
+    | elemIndexInt x line 0 == nu = printLineStr line xs nu ( "\"" ++ x ++ "\"" ++ acc) 
+    | otherwise = printLineStr line xs nu (acc) 
+
+printLine :: [String] -> String
+printLine = intercalate ", " 
+
+
+elemIndexInt :: String -> [String] -> Int  -> Int
+elemIndexInt _ [] nu = -1
+elemIndexInt x (str:strs) nu
+    | isInfixOf x str == True = nu -- : elemIndexInt x strs (nu+1)
+    | otherwise = elemIndexInt x strs (nu+1)
+    
+elemIndexInt' :: String -> [String] -> Int  -> [Int]
+elemIndexInt' _ [] nu = []
+elemIndexInt' x (str:strs) nu
+    | isInfixOf x str == True = [nu] ++ [elemIndexInt x strs (nu+1)]
+    | otherwise = elemIndexInt' x strs (nu+1)
+
 -- evalOutputs :: [Variable] -> Outputs -> [[String]] 
 -- evalOutputs vars out =  (concat (getHeader (result)) : (resultval))
 --     where
 --         result = evalOutputs'' vars out 
 --         resultval = getEntryVal result 
-    
+
 
 
 -- evalOutputs'' :: [Variable] -> Outputs -> [[FieldEntry]] 
@@ -305,6 +420,96 @@ evalPatterns' env var1 line graph = addVariable [] var1 line
 
 -- evalOutputHelper :: [Variable] -> Output -> [[FieldEntry]]
 -- evalOutputHelper vars (Output str1 str2 str3) =  (extractVarVal (getVar vars str1))
+
+{--------------------------------------------------------------------------------------------------
+------------------------------------------APPEND----------------------------------------------------
+---------------------------------------------------------------------------------------------------}
+
+evalAppend :: InputData -> Environment -> Return -> [[String]]
+evalAppend input env re =  ((evalPrint' nodes) : evalPrint'' returnn) ++ ((evalPrint' relation) : evalPrint'' returnr)
+    where 
+        nodes = turnInputtoStringN input 
+        relation = turnInputtoStringR input 
+        returnnodes = evalReturn env re 
+        returnn = isNodeN returnnodes
+        returnr = isNodeR returnnodes
+
+
+
+isNodeN :: [[[String]]] -> [[[String]]]
+isNodeN [] = [] 
+isNodeN (((id:r):rest):ns) 
+    |  id == ":ID" = ((id:r):rest) : isNodeN ns 
+    | otherwise = isNodeN ns 
+
+
+isNodeR :: [[[String]]] -> [[[String]]]
+isNodeR [] = [] 
+isNodeR (((id:r):rest):ns) 
+    |  id == ":START_ID" = ((id:r):rest) : isNodeR ns 
+    | otherwise = isNodeR ns 
+
+
+
+turnInputtoStringN :: InputData -> [[String]]
+turnInputtoStringN (nodes, relation) = (headern ++ nVal) -- ++ (headerr ++ rVal)
+    where 
+        headern = getHeader nodes 
+        headerr = getHeader relation 
+        nVal = getEntryVal nodes 
+        rVal = getEntryVal relation 
+
+
+turnInputtoStringR :: InputData -> [[String]]
+turnInputtoStringR (nodes, relation) = (headerr ++ rVal)
+    where 
+        headern = getHeader nodes 
+        headerr = getHeader relation 
+        nVal = getEntryVal nodes 
+        rVal = getEntryVal relation 
+
+
+
+{--------------------------------------------------------------------------------------------------
+------------------------------------------NEWRELATIONSHIP----------------------------------------------------
+---------------------------------------------------------------------------------------------------}
+
+
+evalNewRelation:: Environment -> Outputs -> [[[String]]]
+evalNewRelation env (out:outs) = undefined
+
+--evalNewRelation' :: Environment -> Output -> [[String]]
+evalNewRelation' env (NewRelation varName1 fieldName1 varName2 fieldName2 typeName) = newhead : vals
+    where 
+        val1 = map (\s -> getVar s varName1) env
+        val2 = map (\s -> getVar s varName2) env  
+        fieldval = (getFields val1 fieldName1) 
+        fieldval2 = getFields val2 fieldName2 
+        typelist = replicate (length fieldval) (":TYPE",typeName,TypeString)
+        relation = multiZipL [fieldval, fieldval2, typelist]
+        headerrelation = getHeader relation 
+        newhead = checkID (concat headerrelation) 0 
+        vals = getEntryVal relation
+
+    
+
+
+checkID :: [String] -> Int -> [String]
+checkID [] _ = []
+checkID (x:xs) nu 
+    | x == ":ID" && nu == 0 = ":START_ID" : checkID xs (nu+1)
+    | x == ":ID" && nu == 1 = ":END_ID" : checkID xs (nu+1)
+    | otherwise =  x : checkID xs nu 
+
+
+{--------------------------------------------------------------------------------------------------
+------------------------------------------UPDATE----------------------------------------------------
+---------------------------------------------------------------------------------------------------}
+
+-- evalUpdate :: Environment -> Update -> [[String]]
+-- evalUpdate env (UAdd varName fieldname valueToAdd storeVarName storeFieldName) = undefined 
+
+
 
 
 
@@ -377,7 +582,7 @@ evalWhereStarts (f1,"null",t1) (f2,"null",t2)         = False
 evalWhereStarts (f1,v1,TypeString) (f2,v2,TypeString) = startsWith v1 v2
 evalWhereStarts (f1,v1,t1) (f2,v2,t2)                 = False
 
-evalWhereEnds :: FieldEntry -> FieldEntry -> Bool 
+evalWhereEnds :: FieldEntry -> FieldEntry -> Bool
 evalWhereEnds (f1,"null",t1) (f2,"null",t2)         = False
 evalWhereEnds (f1,v1,TypeString) (f2,v2,TypeString) = startsWith (reverse v1) (reverse v2)
 evalWhereEnds (f1,v1,t1) (f2,v2,t2)                 = False
