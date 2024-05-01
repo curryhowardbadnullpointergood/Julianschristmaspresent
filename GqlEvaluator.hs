@@ -59,7 +59,7 @@ getField :: [FieldEntry] -> String  -> FieldEntry
 getField []                                         field = (field,"null",TypeNull)
 getField ((fieldName,fieldValue,fieldType):entries) field
     | fieldName == field = (fieldName,fieldValue,fieldType)
-    | otherwise         = getField entries field
+    | otherwise          = getField entries field
 
 getVarField :: Instance -> String -> String -> FieldEntry
 getVarField inst varName fieldName = getField (getVar inst varName) fieldName
@@ -77,12 +77,12 @@ complementEnv env1 env2 = complementLists env1 env2
 ---------------------------------------------------------------------------------------------------
 -- Evaluating Query
 ---------------------------------------------------------------------------------------------------
--- evalQuery :: InputData -> Query -> String 
--- evalQuery inputData (Query _ (Match m) (Where w) (Return r)) = env3
---     where 
---         env1 = evalMatch m inputData 
---         env2 = evalWhere env1 w
---         env3 = evalReturn env2 r
+evalQuery :: InputData -> Query -> String 
+evalQuery inputData (Query _ (Match m) (Where w) (Return r)) = env3
+    where 
+        env1 = evalMatch m inputData 
+        env2 = evalWhere env1 w
+        env3 = evalReturn env2 r
 ---------------------------------------------------------------------------------------------------
 -- Evaluating ReadFile
 ---------------------------------------------------------------------------------------------------
@@ -490,6 +490,11 @@ evalNewRelation' env (NewRelation varName1 fieldName1 varName2 fieldName2 typeNa
         vals = getEntryVal relation
 
     
+
+x [] _ _ = []
+x (field@(fName,fValue,fType):fields) name val
+    | fName == name = (fName,(show $ (read fValue) + val),fType) : x fields name val 
+    | otherwise = field : x fields name val 
 
 
 checkID :: [String] -> Int -> [String]
