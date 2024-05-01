@@ -85,13 +85,13 @@ Patterns
     | Pattern               {[$1]}
 
 Pattern
-    : name "-" "->" name        {PatternRelatedTo $1 $4}
-    | name "-" name "->" name   {PatternRelatedToVar $1 $3 $5}
-    | name "<-" "-" name        {PatternRelatedBy $1 $4}
-    | name "<-" name "-" name   {PatternRelatedByVar $1 $3 $5}
-    | name "-" "-" name         {PatternRelated $1 $4}
-    | name "-" name "-" name    {PatternRelatedVar $1 $3 $5}
-    | name                      {PatternFinal $1} 
+    -- : name "-" "->" name        {PatternRelatedTo $1 $4}
+    : name "-" name "->" name   {PatternRelatedTo $1 $3 $5}
+    -- | name "<-" "-" name        {PatternRelatedBy $1 $4}
+    | name "<-" name "-" name   {PatternRelatedBy $1 $3 $5}
+    -- | name "-" "-" name         {PatternRelated $1 $4}
+    -- | name "-" name "-" name    {PatternRelatedVar $1 $3 $5}
+    | name                      {Pattern $1} 
 
 
 
@@ -196,13 +196,15 @@ type Patterns
     = [Pattern]
 
 data Pattern 
-    = PatternFinal String
-    | PatternRelated String String
-    | PatternRelatedVar String String String
-    | PatternRelatedTo String String
-    | PatternRelatedToVar String String String
-    | PatternRelatedBy String String
-    | PatternRelatedByVar String String String
+    = Pattern String
+    | PatternRelatedTo String String String
+    | PatternRelatedBy String String String
+    -- | PatternRelated String String
+    -- | PatternRelatedVar String String String
+    -- | PatternRelatedTo String String
+    -- | PatternRelatedToVar String String String
+    -- | PatternRelatedBy String String
+    -- | PatternRelatedByVar String String String
     deriving (Eq, Show)
 
 
@@ -254,11 +256,18 @@ data Return
     | ReturnRelation [Outputs]
     deriving (Eq, Show)
 
+data Update
+    -- Varname fieldname valueToAdd StoreVarName StoreFieldName
+    = UAdd String String Int String String 
+    -- Varname fieldname VarName fieldName StoreVarName StoreFieldName
+    | UAddDot String String String String String String
+
 type Outputs
     = [Output]
 
 data Output
     = Output String String String
+    | NewRelation String String String String String
     -- = StrOutput String String String 
     -- | IntOutput String String String 
     -- | BoolOutput String String String 
