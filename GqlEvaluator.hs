@@ -349,11 +349,25 @@ evalReturn1 env ret = (sameHeader result)
 
 
 evalReturn :: Environment -> Return -> [[String]]
-evalReturn env ret = evalPrint'' (sameHeader result)
+evalReturn env ret = output
     where 
-        result = (evalReturn' env ret)
+        result = sameHeader (evalReturn' env ret)
+        headers = gethe result 
+        nodewithouth = withouth result
+        output = expectedHeader headers nodewithouth
+
+expectedHeader:: [[String]] -> [[[String]]] -> [[String]]
+expectedHeader [] [] = [] 
+expectedHeader (h:hs) (n:ns) = (h ++ evalPrint' n) : expectedHeader hs ns  
 
 
+gethe :: [[[String]]] -> [[String]]
+gethe [] = [] 
+gethe ((h:rest):rs) = h : gethe rs 
+
+withouth :: [[[String]]] -> [[[String]]]
+withouth [] = [] 
+withouth ((h:rest):rs) = rest : withouth rs
 
 evalReturn' :: Environment -> Return -> [[[String]]]
 evalReturn' env (Return []) = [] 
