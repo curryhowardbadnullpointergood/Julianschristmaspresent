@@ -51,6 +51,13 @@ getVar ((name, value):vars) varName
     | name == varName = value
     | otherwise       = getVar vars varName
 
+getVars :: Environment -> String -> [VariableValue]
+getVars [] _ = []
+getVars (e:es) name = filter(not . null) (getVar e name : getVars es name )
+
+getValues :: FieldEntry -> String 
+getValues (s,ss,sss) = ss 
+
 getFields :: [[FieldEntry]] -> String -> [FieldEntry]
 getFields [] _ = [] 
 getFields (x:xs) str = getField x str : getFields xs str
@@ -78,12 +85,11 @@ complementEnv env1 env2 = complementLists env1 env2
 -- Evaluating Query
 ---------------------------------------------------------------------------------------------------
 evalQuery :: InputData -> Query -> String 
-evalQuery inputData (Query _ (Match m) (Where w) print) = output
+evalQuery inputData (Query _ match wher print) = output
     where 
-        env1 = evalMatch m inputData 
-        env2 = evalWhere env1 w
-        env3 = evalReturn env2 r
-        output = evalPrint env print inputData
+        env1 = evalMatch match inputData 
+        env2 = evalWhere env1 wher
+        output = evalPrint env2 print inputData
 ---------------------------------------------------------------------------------------------------
 -- Evaluating ReadFile
 ---------------------------------------------------------------------------------------------------
@@ -313,7 +319,7 @@ sameHeader'' header (x:xs) = (sameHeader' header x ) : sameHeader'' header xs
 -------------------------------------------------------------------
 -- Evaluating Print 
 -------------------------------------------------------------------
-evalPrint :: Environment -> Print -> InputData -> String
+-- evalPrint :: Environment -> Print -> InputData -> [[String]]
 evalPrint env (Print1 update delete return) (nodes,relations) = evalReturn (evalDelete (evalUpdate env update) delete) return
 evalPrint env (Print2 update delete append) (nodes,relations) = evalAppend (evalDelete (evalUpdate env update) delete) append
 evalPrint env (Print3 update return)        (nodes,relations) = evalReturn (evalUpdate env update) return
@@ -698,77 +704,3 @@ updateFieldsD (inst:insts) varName fieldName valD fe acc = updateFieldsD insts v
         currentinst = filter (not. null) (ins inst varName fieldName valD fe) 
         newfeildentry = drop (length (fel inst varName fieldName valD fe)) fe 
 
-
--------------------------------------------------------------------
--- Evaluating Where 
--------------------------------------------------------------------
-
-evalWhere :: Environment -> Where -> Environment
-evalWhere env (Where whereExp) = evalWhereExp env whereExp
-
-evalWhereExp :: Environment -> WhereExp -> Environment
-evalWhereExp env (WNot whereExp)           = complementEnv (evalWhereExp env whereExp) env
-evalWhereExp env (WAnd whereFunc whereExp) = evalWhereExp  (filter (\x -> evalWhereFunc x whereFunc) env) whereExp
-evalWhereExp env (WOr whereFunc whereExp)  = unionEnv      (filter (\x -> evalWhereFunc x whereFunc) env) (evalWhereExp env whereExp)
-evalWhereExp env (WFinal whereFunc)        =               (filter (\x -> evalWhereFunc x whereFunc) env)
-
-evalWhereFunc :: Instance -> WhereFunc -> Bool
-evalWhereFunc inst (WEqualDot              (WDot v1 f1) (WDot v2 f2)) = evalWhereEqual          (getVarField inst v1 f1) (getVarField inst v2 f2)
-evalWhereFunc inst (WNotEqualDot           (WDot v1 f1) (WDot v2 f2)) = evalWhereNotEqual       (getVarField inst v1 f1) (getVarField inst v2 f2)
-evalWhereFunc inst (WLessThanDot           (WDot v1 f1) (WDot v2 f2)) = evalWhereLess           (getVarField inst v1 f1) (getVarField inst v2 f2)
-evalWhereFunc inst (WGreaterThanDot        (WDot v1 f1) (WDot v2 f2)) = evalWhereGreater        (getVarField inst v1 f1) (getVarField inst v2 f2)
-evalWhereFunc inst (WLessOrEqualThanDot    (WDot v1 f1) (WDot v2 f2)) = evalWhereLessOrEqual    (getVarField inst v1 f1) (getVarField inst v2 f2)
-evalWhereFunc inst (WGreaterOrEqualThanDot (WDot v1 f1) (WDot v2 f2)) = evalWhereGreaterOrEqual (getVarField inst v1 f1) (getVarField inst v2 f2)
-evalWhereFunc inst (WStartsWithDot         (WDot v1 f1) (WDot v2 f2)) = evalWhereStarts         (getVarField inst v1 f1) (getVarField inst v2 f2)
-evalWhereFunc inst (WEndsWithDot           (WDot v1 f1) (WDot v2 f2)) = evalWhereEnds           (getVarField inst v1 f1) (getVarField inst v2 f2)
-
-evalWhereFunc inst (WEqual                 (WDot v1 f1) wlit)         = evalWhereEqual          (getVarField inst v1 f1) (wLitToFieldEntry wlit)
-evalWhereFunc inst (WNotEqual              (WDot v1 f1) wlit)         = evalWhereNotEqual       (getVarField inst v1 f1) (wLitToFieldEntry wlit)
-evalWhereFunc inst (WLessThan              (WDot v1 f1) wlit)         = evalWhereLess           (getVarField inst v1 f1) (wLitToFieldEntry wlit)
-evalWhereFunc inst (WGreaterThan           (WDot v1 f1) wlit)         = evalWhereGreater        (getVarField inst v1 f1) (wLitToFieldEntry wlit)
-evalWhereFunc inst (WLessOrEqualThan       (WDot v1 f1) wlit)         = evalWhereLessOrEqual    (getVarField inst v1 f1) (wLitToFieldEntry wlit)
-evalWhereFunc inst (WGreaterOrEqualThan    (WDot v1 f1) wlit)         = evalWhereGreaterOrEqual (getVarField inst v1 f1) (wLitToFieldEntry wlit)
-evalWhereFunc inst (WStartsWith            (WDot v1 f1) wlit)         = evalWhereStarts         (getVarField inst v1 f1) (wLitToFieldEntry wlit)
-evalWhereFunc inst (WEndsWith              (WDot v1 f1) wlit)         = evalWhereEnds           (getVarField inst v1 f1) (wLitToFieldEntry wlit)
-
-wLitToFieldEntry :: WhereLit -> FieldEntry
-wLitToFieldEntry (WStr s)  = ("", s,      TypeString)
-wLitToFieldEntry (WInt i)  = ("", show i, TypeInt)
-wLitToFieldEntry (WBool b) = ("", show b, TypeBool)
-wLitToFieldEntry (WNull)   = ("", "null", TypeNull)
-
-evalWhereEqual    :: FieldEntry -> FieldEntry -> Bool
-evalWhereEqual (_,v1,_) (_,v2,_) = v1 == v2
-
-evalWhereNotEqual :: FieldEntry -> FieldEntry -> Bool
-evalWhereNotEqual f1 f2 = not $ evalWhereEqual f1 f2
-
-evalWhereLess :: FieldEntry -> FieldEntry -> Bool
-evalWhereLess (f1,"null",t1) (f2,"null",t2)   = False
-evalWhereLess (f1,v1,TypeInt) (f2,v2,TypeInt) = (read v1 :: Int) < (read v2)
-evalWhereLess (f1,v1,t1) (f2,v2,t2)           = False
-
-evalWhereGreater :: FieldEntry -> FieldEntry -> Bool
-evalWhereGreater (f1,"null",t1) (f2,"null",t2)   = False
-evalWhereGreater (f1,v1,TypeInt) (f2,v2,TypeInt) = (read v1 :: Int) > (read v2)
-evalWhereGreater (f1,v1,t1) (f2,v2,t2)           = False
-
-evalWhereLessOrEqual :: FieldEntry -> FieldEntry -> Bool
-evalWhereLessOrEqual (f1,"null",t1) (f2,"null",t2)   = False
-evalWhereLessOrEqual (f1,v1,TypeInt) (f2,v2,TypeInt) = (read v1 :: Int) <= (read v2)
-evalWhereLessOrEqual (f1,v1,t1) (f2,v2,t2)           = False
-
-evalWhereGreaterOrEqual :: FieldEntry -> FieldEntry -> Bool
-evalWhereGreaterOrEqual (f1,"null",t1) (f2,"null",t2)   = False
-evalWhereGreaterOrEqual (f1,v1,TypeInt) (f2,v2,TypeInt) = (read v1 :: Int) >= (read v2)
-evalWhereGreaterOrEqual (f1,v1,t1) (f2,v2,t2)           = False
-
-evalWhereStarts :: FieldEntry -> FieldEntry -> Bool
-evalWhereStarts (f1,"null",t1) (f2,"null",t2)         = False
-evalWhereStarts (f1,v1,TypeString) (f2,v2,TypeString) = startsWith v1 v2
-evalWhereStarts (f1,v1,t1) (f2,v2,t2)                 = False
-
-evalWhereEnds :: FieldEntry -> FieldEntry -> Bool
-evalWhereEnds (f1,"null",t1) (f2,"null",t2)         = False
-evalWhereEnds (f1,v1,TypeString) (f2,v2,TypeString) = startsWith (reverse v1) (reverse v2)
-evalWhereEnds (f1,v1,t1) (f2,v2,t2)                 = False
