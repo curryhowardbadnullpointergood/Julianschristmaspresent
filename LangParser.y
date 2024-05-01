@@ -9,43 +9,34 @@ import InputParser (Literal(..))
 %error {parseError}
 
 
-%token
-"."         {LTok _ LTokenFullStop}
-","         {LTok _ LTokenComma}
--- ":"         {LTok _ LTokenColon}
-"|"         {LTok _ LTokenBar}
+%token    
+-- General Stuff
 "="         {LTok _ LTokenAssignment}
+"."         {LTok _ LTokenFullStop}
+    
+-- Read Stuff
+read        {LTok _ LTokenRead}
+    
+-- Match Stuff
+match       {LTok _ LTokenMatch}
 "-"         {LTok _ LTokenRelated}
 "->"        {LTok _ LTokenRelatedRight}
 "<-"        {LTok _ LTokenRelatedLeft}
-"--"        {LTok _ LTokenNewRelation}
-intField    {LTok _ LTokenIntField}
-strField    {LTok _ LTokenStrField}
-boolField   {LTok _ LTokenBoolField}
-labelField  {LTok _ LTokenLabelField}
-idField     {LTok _ LTokenIdField}
-startField  {LTok _ LTokenStartField}
-endField    {LTok _ LTokenEndField}
-typeField   {LTok _ LTokenTypeField}
+    
+-- Where Stuff
+where       {LTok _ LTokenWhere}
 
 or          {LTok _ LTokenOr}
 and         {LTok _ LTokenAnd}
 not         {LTok _ LTokenNot}
-read        {LTok _ LTokenRead}
-match       {LTok _ LTokenMatch}
-where       {LTok _ LTokenWhere}
-getNode     {LTok _ LTokenGetNode}
-getRelation {LTok _ LTokenGetRelation}
-return      {LTok _ LTokenReturn}
-append      {LTok _ LTokenAppend}
 
-as          {LTok _ LTokenAs}
+is          {LTok _ LTokenIs}
+
 starts      {LTok _ LTokenStartWith}
 ends        {LTok _ LTokenEndWith}
+
 "("         {LTok _ LTokenLParen}
 ")"         {LTok _ LTokenRParen}
--- "["         {LTok _ LTokenLBrack}
--- "]"         {LTok _ LTokenRBrack}
 
 "<="        {LTok _ LTokenLessThanEqual}
 ">="        {LTok _ LTokenGreaterThanEqual}
@@ -53,6 +44,28 @@ ends        {LTok _ LTokenEndWith}
 ">"         {LTok _ LTokenGreaterThan}
 "=="        {LTok _ LTokenEquals}
 "/="        {LTok _ LTokenNotEquals}
+    
+-- Outputting Stuff
+return      {LTok _ LTokenReturn}
+append      {LTok _ LTokenAppend}
+delete      {LTok _ LTokenDelete}
+update      {LTok _ LTokenUpdate}
+
+","         {LTok _ LTokenComma}
+"|"         {LTok _ LTokenBar}
+as          {LTok _ LTokenAs}
+
+add         {LTok _ LTokenAdd}
+minus       {LTok _ LTokenMinus}
+
+"--"        {LTok _ LTokenNewRelation}
+
+    -- Values 
+labelField  {LTok _ LTokenLabelField}
+idField     {LTok _ LTokenIdField}
+startField  {LTok _ LTokenStartField}
+endField    {LTok _ LTokenEndField}
+typeField   {LTok _ LTokenTypeField}
 
 null        {LTok _ LTokenNull}
 true        {LTok _ LTokenTrue}
@@ -60,6 +73,8 @@ false       {LTok _ LTokenFalse}
 string      {LTok _ (LTokenString $$)}
 int         {LTok _ (LTokenInt $$)}
 name        {LTok _ (LTokenName $$)}
+
+
 
 
 %left "."
@@ -71,12 +86,15 @@ name        {LTok _ (LTokenName $$)}
                         
 %%
 Query
-    : Read Match Where Return{Query $1 $2 $3 $4}
-
+    : Read Match Where Print {Query $1 $2 $3 $4}
+---------------------------------------------------------------------------------------------------
+-- Read
+---------------------------------------------------------------------------------------------------
 Read
     : read "=" string {ReadFile $3}
-    
-
+---------------------------------------------------------------------------------------------------
+-- Match
+---------------------------------------------------------------------------------------------------
 Match
     : match "=" Patterns {Match $3}
 
@@ -85,17 +103,12 @@ Patterns
     | Pattern               {[$1]}
 
 Pattern
-    -- : name "-" "->" name        {PatternRelatedTo $1 $4}
-    : name "-" name "->" name   {PatternRelatedTo $1 $3 $5}
-    -- | name "<-" "-" name        {PatternRelatedBy $1 $4}
-    | name "<-" name "-" name   {PatternRelatedBy $1 $3 $5}
-    -- | name "-" "-" name         {PatternRelated $1 $4}
-    -- | name "-" name "-" name    {PatternRelatedVar $1 $3 $5}
-    | name                      {Pattern $1} 
-
-
-
-
+    : name "-"  name "->" name      {PatternRelatedTo $1 $3 $5}
+    | name "<-" name "-"  name      {PatternRelatedBy $1 $3 $5}
+    | name                          {Pattern $1} 
+---------------------------------------------------------------------------------------------------
+-- Where
+---------------------------------------------------------------------------------------------------
 Where
     : where "=" WhereExp1   {Where $3}
 
@@ -141,50 +154,92 @@ WhereLit
     | true                      {WBool True}
     | false                     {WBool False}
     | null                      {WNull}
-
+---------------------------------------------------------------------------------------------------
+-- Print
+---------------------------------------------------------------------------------------------------
 Print
     : Update Delete Return      {Print1 $1 $2 $3}
     | Update Delete Append      {Print2 $1 $2 $3}
-    | Update Return             {Print3 $1 $2 $3}
-    | Update Append             {Print4 $1 $2 $3}
+    | Update Return             {Print3 $1 $2}
+    | Update Append             {Print4 $1 $2}
     | Delete Return             {Print5 $1 $2}
     | Delete Append             {Print6 $1 $2}
     | Return                    {Print7 $1}
     | Append                    {Print8 $1}
 
-
+---------------------------------------------------------------------------------------------------
+-- Return + Append
+---------------------------------------------------------------------------------------------------
 Return
-    : return PrintExps        {Return $1}
+    : return "=" Print1             {Return $3}
 
 Append
-    : append PrintExps        {Append $1}
+    : append "=" Print1             {Append $3}
 
+Print1
+    : PrintExps "|" Print1          {$1 : $3}
+    | PrintExps                     {[$1]}
+
+PrintExps
+    : PrintExp "," PrintExps        {$1 : $3}
+    | PrintExp                      {[$1]}
+
+PrintExp
+    : name "." name as string       {Output $1 $3          $5}  
+    | name labelField               {Output $1 ":LABEL"    ":LABEL"}
+    | name typeField                {Output $1 ":TYPE"     ":TYPE"} 
+    | name startField               {Output $1 ":START_ID" ":START_ID"} 
+    | name endField                 {Output $1 ":END_ID"   ":END_ID" } 
+    | name idField                  {Output $1 ":ID"        ":ID"}
+    | PDot "--" string "--" PDot    {NewRelation (fst $1) (snd $1) $3 (fst $5) (snd $5)} 
+
+PDot
+    : name labelField   {($1,":LABEL")}
+    | name typeField    {($1,":TYPE")}
+    | name startField   {($1,":START_ID")}
+    | name endField     {($1,":END_ID")}
+    | name idField      {($1,":ID")}
+
+---------------------------------------------------------------------------------------------------
+-- Update
+---------------------------------------------------------------------------------------------------
 Update
-    : update UpdateExps      {Update $1}
+    : update "=" Update1         {Update $3}
 
+Update1 
+    : UpdateExp "|" Update1         {$1 : $3}
+    | UpdateExp                     {[$1]}
+
+UpdateExp
+    : name "." name add   int           "=" name "." name     {UAdd      $1 $3 $5 $7 $9}
+    | name "." name add   name "." name "=" name "." name     {UAddDot   $1 $3 $5 $7 $9 $11}
+
+
+    | name "." name minus int           "=" name "." name     {UMinus    $1 $3 $5 $7 $9}
+    | name "." name minus name "." name "=" name "." name     {UMinusDot $1 $3 $5 $7 $9 $11}
+---------------------------------------------------------------------------------------------------
+-- Delete
+---------------------------------------------------------------------------------------------------
 Delete
-    : delete DeleteExps      {Delete $1}
+    : delete "=" Delete1            {Delete $3}
 
-Return
-    : getNode "=" Return1 getRelation "=" Return1   {ReturnNodeRelation $3 $6}
-    | getNode "=" Return1                           {ReturnNode $3}
-    | getRelation "=" Return1                       {ReturnRelation $3}
+Delete1
+    : DeleteExp "|" Delete1         {$1 : $3}
+    | DeleteExp                     {[$1]}
 
-PrintExps
-    : PrintExps "|" PrintExpss   {$1 : $3}
-    | PrintExps               {[$1]}
+DeleteExp
+    : name "." name   int           {Del $1 $3  (show $4)}
+    | name "." name   string        {Del $1 $3  $4}
+    | name "." name   true          {Del $1 $3  "True"}
+    | name "." name   false         {Del $1 $3  "False"}
+    | name "." name   null          {Del $1 $3  "null"}
+    
+    | name idField    string        {Del $1 ":ID"       $3}
+    | name typeField  string        {Del $1 ":TYPE"     $3}
+    | name startField string        {Del $1 ":START_ID" $3}
+    | name endField   string        {Del $1 ":END_ID"   $3}
+    | name labelField string        {Del $1 ":LABEL"    $3}
 
-PrintExps
-    : PrintExp "," PrintExps    {$1 : $3}
-    | PrintExp                {[$1]}
-
-PrintExps
-    : name "." name as string  {PrintExp $1 $3          $5}  
-    | name labelField          {PrintExp $1 ":LABEL"    ":LABEL"}
-    | name typeField           {PrintExp $1 ":TYPE"     ":TYPE"} 
-    | name startField          {PrintExp $1 ":START_ID" ":START_ID"} 
-    | name endField            {PrintExp $1 ":END_ID"   ":END_ID" } 
-    | name idField             {PrintExp $1 ":ID"        ":ID"}
 {
 
 parseError :: [LangToken] -> a
@@ -267,12 +322,15 @@ data Print
     | Print6 Delete Append
     | Print7 Return
     | Print8 Append
+    deriving (Eq, Show)
 
 data Return 
     = Return [PrintExps]
+    deriving (Eq, Show)
 
 data Append
     = Append [PrintExps]
+    deriving (Eq, Show)
 
 type PrintExps
     = [PrintExp]
@@ -284,17 +342,21 @@ data PrintExp
 
 data Update
     = Update [UpdateExp]
+    deriving (Eq, Show)
 
 data UpdateExp
     = UAdd String String Int String String 
     | UAddDot String String String String String String
+    | UMinus String String Int String String 
+    | UMinusDot String String String String String String
+    deriving (Eq, Show)
 
 data Delete
     = Delete [DeleteExp]
+    deriving (Eq, Show)
 
 data DeleteExp
-    = UAdd String String Int String String 
-    | UAddDot String String String String String String
-
+    = Del String String String
+    deriving (Eq, Show)
 
 }
