@@ -358,7 +358,7 @@ evalReturn env ret = output
 
 expectedHeader:: [[String]] -> [[[String]]] -> [[String]]
 expectedHeader [] [] = [] 
-expectedHeader (h:hs) (n:ns) = (h ++ evalPrint' n) : expectedHeader hs ns  
+expectedHeader (h:hs) (n:ns) = (h :  n) ++ expectedHeader hs ns  
 
 
 gethe :: [[[String]]] -> [[String]]
