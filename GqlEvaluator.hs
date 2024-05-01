@@ -320,6 +320,7 @@ sameHeader'' header (x:xs) = (sameHeader' header x ) : sameHeader'' header xs
 -- Evaluating Print 
 -------------------------------------------------------------------
 -- evalPrint :: Environment -> Print -> InputData -> [[String]]
+-- a
 evalPrint env (Print1 update delete return) (nodes,relations) = evalReturn (evalDelete (evalUpdate env update) delete) return
 evalPrint env (Print2 update delete append) (nodes,relations) = evalAppend (evalDelete (evalUpdate env update) delete) append
 evalPrint env (Print3 update return)        (nodes,relations) = evalReturn (evalUpdate env update) return
