@@ -316,22 +316,22 @@ evalReturn env ret = sameHeader result
 
 
 evalReturn' :: Environment -> Return -> [[[String]]]
-evalReturn' env (ReturnNode []) = [] 
-evalReturn' env (ReturnNode (out:outs)) = ((evalOutput env out) : evalReturn env (ReturnNode outs))
+evalReturn' env (Return []) = [] 
+evalReturn' env (Return (out:outs)) = ((evalOutput env out) : evalReturn env (Return outs))
 
-evalOutput :: Environment -> Outputs -> [[String]]
+evalOutput :: Environment -> PrintExps -> [[String]]
 evalOutput env out = concat (getHeader result ) : (resultval)
     where 
         result = evalOutputshelp env out 
         resultval = getEntryVal result 
 
-evalOutputshelp :: Environment -> Outputs -> [[FieldEntry]]
+evalOutputshelp :: Environment -> PrintExps -> [[FieldEntry]]
 evalOutputshelp env out = result 
     where 
         output = evalOutputs''' env out 
         result = multiZipL output 
 
-evalOutputs' :: Instance -> Output -> FieldEntry
+evalOutputs' :: Instance -> PrintExp -> FieldEntry
 evalOutputs' inst (Output varName fieldName asName) = val
     where
         val
@@ -339,11 +339,11 @@ evalOutputs' inst (Output varName fieldName asName) = val
             | otherwise = (fieldName,"null",TypeNull)
 
 
-evalOutputs'' :: Environment -> Output -> [FieldEntry]
+evalOutputs'' :: Environment -> PrintExp -> [FieldEntry]
 evalOutputs'' env out = map (\i -> evalOutputs' i out) env   
 
 
-evalOutputs''' :: Environment -> Outputs -> [[FieldEntry]]
+evalOutputs''' :: Environment -> [PrintExp] -> [[FieldEntry]]
 evalOutputs''' env  [] = []
 evalOutputs''' env (out:os) = ((evalOutputs'' env out) : evalOutputs''' env os )
 
@@ -483,7 +483,7 @@ turnInputtoStringR (nodes, relation) = (headerr ++ rVal)
 ---------------------------------------------------------------------------------------------------}
 
 
-evalNewRelation:: Environment -> Outputs -> [[[String]]]
+evalNewRelation:: Environment -> [PrintExp] -> [[[String]]]
 evalNewRelation env (out:outs) = undefined
 
 --evalNewRelation' :: Environment -> Output -> [[String]]
@@ -514,18 +514,25 @@ checkID (x:xs) nu
 ------------------------------------------UPDATE----------------------------------------------------
 ---------------------------------------------------------------------------------------------------}
 
-data Update = UAdd String String Int String String 
-    | UAddDot String String String String String String
+
+evalUpdate :: Environment -> Update -> Environment
+evalUpdate env (Update uplist) = evalUpdate'' env uplist 
+
+evalUpdate'' :: Environment -> [UpdateExp] -> Environment
+evalUpdate'' env [] = env 
+evalUpdate'' env (u:us) = evalUpdate'' newenv us 
+    where
+        newenv =  evalUpdate' env u 
 
 --evalUpdate :: Environment -> Update -> [[String]]
-evalUpdate :: [Instance] -> Update -> Environment
-evalUpdate env (UAdd varName fieldName valueToAdd storeVarName storeFieldName) = upf
+evalUpdate' :: [Instance] -> UpdateExp -> Environment
+evalUpdate' env (UAdd varName fieldName valueToAdd storeVarName storeFieldName) = upf
     where 
         valVarName = getVars env varName 
         valVarField = (getFields valVarName fieldName) 
         updatedvalField = updateValFieldInt valVarField valueToAdd 
         upf = updateFields env storeVarName storeFieldName updatedvalField []
-evalUpdate env (UAddDot varName fieldName varName2 fieldName2 storeVarName storeFieldName) = reverseList updatedF
+evalUpdate' env (UAddDot varName fieldName varName2 fieldName2 storeVarName storeFieldName) = reverseList updatedF
     where 
         valVarName = (getVars env varName)
         valVarField = (getFields valVarName fieldName)
@@ -618,20 +625,18 @@ extractValue Nothing  = error "Cannot extract value from Nothing"
 ------------------------------------------DELETE----------------------------------------------------
 ---------------------------------------------------------------------------------------------------}
 
-data Delete = Delete [DelExp]
-data DelExp = Del String String String
 
 
 evalDelete :: Environment -> Delete -> Environment
 evalDelete env (Delete dlist) = evalDelete'' env dlist 
 
-evalDelete'' :: Environment -> [DelExp] -> Environment
+evalDelete'' :: Environment -> [DeleteExp] -> Environment
 evalDelete'' env [] = env  
 evalDelete'' env (d:ds) = evalDelete'' newenv ds 
     where 
         newenv = (evalDelete' env d)
 
-evalDelete' :: Environment -> DelExp -> Environment
+evalDelete' :: Environment -> DeleteExp -> Environment
 evalDelete' env (Del varName fieldName deleteType) = reverseList updatedNodes
     where 
         varvalName = getVars env varName 
