@@ -13,47 +13,34 @@ tokens :-
     "//" .*                 ; -- single line comment
     "/*" [a[^a]\n]* "*/"    ; -- multi line comment
 
-    "."                     {\p s -> LTok p LTokenFullStop}
-    ","                     {\p s -> LTok p LTokenComma}
-    ":"                     {\p s -> LTok p LTokenColon}
-    "|"                     {\p s -> LTok p LTokenBar}
+
+    -- General Stuff
     "="                     {\p s -> LTok p LTokenAssignment}
+
+
+    -- Read Stuff
+    "READ"                  {\p s -> LTok p LTokenRead}
+
+    -- Match Stuff
+    "MATCH"                 {\p s -> LTok p LTokenMatch}
     "-"                     {\p s -> LTok p LTokenRelated}
     "->"                    {\p s -> LTok p LTokenRelatedRight}
     "<-"                    {\p s -> LTok p LTokenRelatedLeft}                   
     "--"                    {\p s -> LTok p LTokenNewRelation}
-    ":integer"              {\p s -> LTok p LTokenIntField}
-    ":string"               {\p s -> LTok p LTokenStrField}
-    ":boolean"              {\p s -> LTok p LTokenBoolField}
-    ":LABEL"                {\p s -> LTok p LTokenLabelField}
-    ":ID"                   {\p s -> LTok p LTokenIdField}
-    ":STARTID"              {\p s -> LTok p LTokenStartField}
-    ":ENDID"                {\p s -> LTok p LTokenEndField}
-    ":TYPE"                 {\p s -> LTok p LTokenTypeField}
+
+    -- Where Stuff
+    "WHERE"                 {\p s -> LTok p LTokenWhere}
 
     "OR"                    {\p s -> LTok p LTokenOr}                 
     "AND"                   {\p s -> LTok p LTokenAnd}
     "NOT"                   {\p s -> LTok p LTokenNot}
 
-    "READ"                  {\p s -> LTok p LTokenRead}
+    "IS"                    {\p s -> LTok p LTokenIs}
 
-    "MATCH"                 {\p s -> LTok p LTokenMatch}
-    "WHERE"                 {\p s -> LTok p LTokenWhere}
-
-    "RETURN_NODE"           {\p s -> LTok p LTokenGetNode}
-    "RETURN_RELATION"       {\p s -> LTok p LTokenGetRelation}
-    "RETURN"                {\p s -> LTok p LTokenReturn}
-    "APPEND"                {\p s -> LTok p LTokenAppend}
-    "AS"                    {\p s -> LTok p LTokenAs}
-    
     "STARTS WITH"           {\p s -> LTok p LTokenStartWith}
     "ENDS WITH"             {\p s -> LTok p LTokenEndWith}
     "("                     {\p s -> LTok p LTokenLParen}
     ")"                     {\p s -> LTok p LTokenRParen}
-    "["                     {\p s -> LTok p LTokenLBrack}
-    "]"                     {\p s -> LTok p LTokenRBrack}
-
-
 
     "<="                    {\p s -> LTok p LTokenLessThanEqual}
     ">="                    {\p s -> LTok p LTokenGreaterThanEqual}
@@ -61,6 +48,27 @@ tokens :-
     ">"                     {\p s -> LTok p LTokenGreaterThan}
     "=="                    {\p s -> LTok p LTokenEquals}
     "!="                    {\p s -> LTok p LTokenNotEquals}
+
+    -- Outputting Stuff
+    "RETURN"                {\p s -> LTok p LTokenReturn}
+    "APPEND"                {\p s -> LTok p LTokenAppend}
+    "DELETE"                {\p s -> LTok p LTokenDelete}
+    "UPDATE"                {\p s -> LTok p LTokenUpdate}
+
+    "."                     {\p s -> LTok p LTokenFullStop}
+    ","                     {\p s -> LTok p LTokenComma}
+    "|"                     {\p s -> LTok p LTokenBar}
+    "AS"                    {\p s -> LTok p LTokenAs}
+
+    "+"                     {\p s -> LTok p LTokenAdd}
+    "-"                     {\p s -> LTok p LTokenMinus}
+
+    -- Values 
+    ":LABEL"                        {\p s -> LTok p LTokenLabelField}
+    ":ID"                           {\p s -> LTok p LTokenIdField}
+    ":STARTID"                      {\p s -> LTok p LTokenStartField}
+    ":ENDID"                        {\p s -> LTok p LTokenEndField}
+    ":TYPE"                         {\p s -> LTok p LTokenTypeField}
 
     "NULL"                          {\p s -> LTok p LTokenNull}
     "TRUE"                          {\p s -> LTok p LTokenTrue}
@@ -76,46 +84,34 @@ tokens :-
 data LangToken 
     = LTok AlexPosn LangTokenClass
     deriving (Eq, Show)
-
 data LangTokenClass 
-    = LTokenFullStop
-    | LTokenComma
-    | LTokenColon
-    | LTokenSemiColon
-    | LTokenBar
-    | LTokenAssignment
-    
+    -- General Stuff
+    = LTokenAssignment
+    | LTokenFullStop
+
+    -- Read Stuff
+    | LTokenRead
+
+    -- Match Stuff
+    | LTokenMatch
     | LTokenRelated
     | LTokenRelatedRight
     | LTokenRelatedLeft
 
-    | LTokenIntField
-    | LTokenStrField
-    | LTokenBoolField
-    | LTokenLabelField
-    | LTokenIdField
-    | LTokenStartField
-    | LTokenEndField
-    | LTokenTypeField
+    -- Where Stuff
+    | LTokenWhere
 
     | LTokenOr
     | LTokenAnd
     | LTokenNot
 
-    | LTokenRead
-    | LTokenMatch
-    | LTokenWhere
-    | LTokenReturn
-    | LTokenGetNode
-    | LTokenGetRelation
-    | LTokenAs
-    | LTokenAppend
-    | LTokenNewRelation
+    | LTokenIs
+
+    | LTokenStartWith
+    | LTokenEndWith
 
     | LTokenLParen
     | LTokenRParen
-    | LTokenLBrack
-    | LTokenRBrack
 
     | LTokenLessThanEqual
     | LTokenGreaterThanEqual
@@ -123,8 +119,28 @@ data LangTokenClass
     | LTokenGreaterThan
     | LTokenEquals
     | LTokenNotEquals
-    | LTokenStartWith
-    | LTokenEndWith
+
+    -- Outputting Stuff
+    | LTokenReturn
+    | LTokenAppend
+    | LTokenDelete
+    | LTokenUpdate
+
+    | LTokenComma
+    | LTokenBar
+    | LTokenAs
+
+    | LTokenAdd
+    | LTokenMinus
+
+    | LTokenNewRelation
+
+    -- Values 
+    | LTokenLabelField
+    | LTokenIdField
+    | LTokenStartField
+    | LTokenEndField
+    | LTokenTypeField
 
     | LTokenNull
     | LTokenTrue

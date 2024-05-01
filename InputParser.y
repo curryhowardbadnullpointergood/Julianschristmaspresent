@@ -85,7 +85,7 @@ RelationshipEntries     : RelationshipEntries IRelationshipEntry             {$2
                         | IRelationshipEntry                                 {[$1]}
 
 
-IRelationshipEntry       : string "," Literals "," string "," string        {IRelationshipEntry $1 $3 $5 $7}
+IRelationshipEntry      : string "," Literals "," string "," string        {IRelationshipEntry $1 $3 $5 $7}
                         | string "," string "," string                      {IRelationshipEntry $1 [] $3 $5}
 
 
