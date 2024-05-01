@@ -5,6 +5,7 @@ import InputParser
 
 import Data.List (nub, elemIndex, transpose,groupBy, sort, isInfixOf, intercalate)
 import Distribution.Fields.Field (fieldName, Field)
+import Text.Read (readMaybe)
 
 type VariableValue  = [FieldEntry]
 type Variable       = (String, VariableValue)
@@ -84,7 +85,7 @@ complementEnv env1 env2 = complementLists env1 env2
 ---------------------------------------------------------------------------------------------------
 -- Evaluating Query
 ---------------------------------------------------------------------------------------------------
-evalQuery :: InputData -> Query -> String 
+evalQuery :: InputData -> Query -> [[String]] 
 evalQuery inputData (Query _ match wher print) = output
     where 
         env1 = evalMatch match inputData 
@@ -321,16 +322,17 @@ sameHeader'' header (x:xs) = (sameHeader' header x ) : sameHeader'' header xs
 -------------------------------------------------------------------
 -- evalPrint :: Environment -> Print -> InputData -> [[String]]
 -- a
+evalPrint :: Environment -> Print -> InputData -> [[String]]
 evalPrint env (Print1 update delete return) (nodes,relations) = evalReturn (evalDelete (evalUpdate env update) delete) return
-evalPrint env (Print2 update delete append) (nodes,relations) = evalAppend (evalDelete (evalUpdate env update) delete) append
+evalPrint env (Print2 update delete append) (nodes,relations) = evalAppend (nodes,relations) (evalDelete (evalUpdate env update) delete) append
 evalPrint env (Print3 update return)        (nodes,relations) = evalReturn (evalUpdate env update) return
-evalPrint env (Print4 update append)        (nodes,relations) = evalAppend (evalUpdate env update) append
+evalPrint env (Print4 update append)        (nodes,relations) = evalAppend (nodes,relations) (evalUpdate env update) append
 evalPrint env (Print5 delete return)        (nodes,relations) = evalReturn (evalDelete env delete) return
-evalPrint env (Print6 delete append)        (nodes,relations) = evalAppend (evalDelete env delete) append
-evalPrint env (Print7 return)               (nodes,relations) = evalReturn env
-evalPrint env (Print8 append)               (nodes,relations) = evalAppend env
+evalPrint env (Print6 delete append)        (nodes,relations) = evalAppend (nodes,relations) (evalDelete env delete) append
+evalPrint env (Print7 return)               (nodes,relations) = evalReturn env return
+evalPrint env (Print8 append)               (nodes,relations) = evalAppend (nodes,relations) env append
 
-
+-- evalAppend :: InputData -> Environment -> Return -> [[String]]
 {--------------------------------------------------------------------------------------------------
 ------------------------------------------RETURN---------------------------------------------------
 ---------------------------------------------------------------------------------------------------}
@@ -340,9 +342,14 @@ evalPrint env (Print8 append)               (nodes,relations) = evalAppend env
 -- evalOutputChecker outlist = undefined
 
 
+evalReturn1 :: Environment -> Return -> [[[String]]]
+evalReturn1 env ret = (sameHeader result)
+    where 
+        result = (evalReturn' env ret)
 
-evalReturn :: Environment -> Return -> [[[String]]]
-evalReturn env ret = sameHeader result
+
+evalReturn :: Environment -> Return -> [[String]]
+evalReturn env ret = evalPrint'' (sameHeader result)
     where 
         result = (evalReturn' env ret)
 
@@ -350,7 +357,7 @@ evalReturn env ret = sameHeader result
 
 evalReturn' :: Environment -> Return -> [[[String]]]
 evalReturn' env (Return []) = [] 
-evalReturn' env (Return (out:outs)) = ((evalOutput env out) : evalReturn env (Return outs))
+evalReturn' env (Return (out:outs)) = ((evalOutput env out) : evalReturn1 env (Return outs))
 
 evalOutput :: Environment -> PrintExps -> [[String]]
 evalOutput env out = concat (getHeader result ) : (resultval)
@@ -465,12 +472,12 @@ elemIndexInt' x (str:strs) nu
 ------------------------------------------APPEND----------------------------------------------------
 ---------------------------------------------------------------------------------------------------}
 
-evalAppend :: InputData -> Environment -> Return -> [[String]]
-evalAppend input env re =  ((evalPrint' nodes) : evalPrint'' returnn) ++ ((evalPrint' relation) : evalPrint'' returnr)
+evalAppend :: InputData -> Environment -> Append -> [[String]]
+evalAppend input env (Append x) =  ((evalPrint' nodes) : evalPrint'' returnn) ++ ((evalPrint' relation) : evalPrint'' returnr)
     where 
         nodes = turnInputtoStringN input 
         relation = turnInputtoStringR input 
-        returnnodes = evalReturn env re 
+        returnnodes = evalReturn1 env (Return x) 
         returnn = isNodeN returnnodes
         returnr = isNodeR returnnodes
 
