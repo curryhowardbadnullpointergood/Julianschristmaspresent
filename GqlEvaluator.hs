@@ -5,6 +5,9 @@ import InputParser
 
 import Data.List (nub, elemIndex, transpose,groupBy, sort, isInfixOf, intercalate)
 import Distribution.Fields.Field (fieldName, Field)
+import Data.Char (ord, chr)
+import Text.Read (readMaybe)
+import Data.IntMap (update, delete)
 
 type VariableValue  = [FieldEntry]
 type Variable       = (String, VariableValue)
@@ -47,8 +50,12 @@ varPresent ((varName, _):vars) name
     | varName == name   = True
     | otherwise         = varPresent vars name
 
+getVars :: Environment -> String -> [VariableValue]
+getVars [] _ = []
+getVars (e:es) name = filter(not . null) (getVar e name : getVars es name )
+
 getVar :: Instance -> String -> VariableValue
-getVar [] name = error ("No binding found for: " ++ name)
+getVar [] name = [] 
 getVar ((name, value):vars) varName
     | name == varName = value
     | otherwise       = getVar vars varName
@@ -340,7 +347,8 @@ evalOutputs''' :: Environment -> Outputs -> [[FieldEntry]]
 evalOutputs''' env  [] = []
 evalOutputs''' env (out:os) = ((evalOutputs'' env out) : evalOutputs''' env os )
 
-
+getValues :: FieldEntry -> String 
+getValues (s,ss,sss) = ss 
 
 {--------------------------------------------------------------------------------------------------
 ------------------------------------------PRINT----------------------------------------------------
@@ -506,11 +514,144 @@ checkID (x:xs) nu
 ------------------------------------------UPDATE----------------------------------------------------
 ---------------------------------------------------------------------------------------------------}
 
--- evalUpdate :: Environment -> Update -> [[String]]
--- evalUpdate env (UAdd varName fieldname valueToAdd storeVarName storeFieldName) = undefined 
+data Update = UAdd String String Int String String 
+    | UAddDot String String String String String String
+
+--evalUpdate :: Environment -> Update -> [[String]]
+evalUpdate :: [Instance] -> Update -> Environment
+evalUpdate env (UAdd varName fieldName valueToAdd storeVarName storeFieldName) = upf
+    where 
+        valVarName = getVars env varName 
+        valVarField = (getFields valVarName fieldName) 
+        updatedvalField = updateValFieldInt valVarField valueToAdd 
+        upf = updateFields env storeVarName storeFieldName updatedvalField []
+evalUpdate env (UAddDot varName fieldName varName2 fieldName2 storeVarName storeFieldName) = reverseList updatedF
+    where 
+        valVarName = (getVars env varName)
+        valVarField = (getFields valVarName fieldName)
+        val2VarName = (getVars env varName2) 
+        valVarField2 = (getFields val2VarName fieldName2)
+        updatedintval = updateAddHelp valVarField valVarField2 storeFieldName
+        updatedF = updateFields env storeVarName storeFieldName updatedintval [] 
 
 
 
+
+
+updateAddHelp :: [FieldEntry] -> [FieldEntry] -> String-> [FieldEntry]
+updateAddHelp [] _ _ = [] 
+updateAddHelp _ [] _ = [] 
+updateAddHelp ((varName, val, types):rest ) ((varName2, val2, tpes2):rest2) fieldNameNew 
+    | extractValue (stringToInt val)  == -1 && extractValue (stringToInt val2)== -1 = (fieldNameNew,"null",TypeInt) : updateAddHelp rest rest2 fieldNameNew
+    | extractValue (stringToInt val) == -1 = (fieldNameNew,val2,TypeInt) : updateAddHelp rest rest2 fieldNameNew 
+    | extractValue (stringToInt val2) == -1 = (fieldNameNew,val,TypeInt) : updateAddHelp rest rest2 fieldNameNew 
+    | otherwise = (fieldNameNew,(intToString (extractValue  (stringToInt val) + extractValue (stringToInt val2))),TypeInt) : updateAddHelp rest rest2 fieldNameNew
+
+
+
+
+
+updateFields :: Environment -> String -> String -> [FieldEntry] -> Environment -> Environment
+updateFields [] _ _ _ acc = acc
+updateFields (inst:insts) varName fieldName fe acc = updateFields insts varName fieldName newfeildentry (currentinst :acc )
+    where 
+        ins :: Instance -> String -> String -> [FieldEntry] -> Instance 
+        ins [] _ _ _ = [] 
+        ins inst _ _ [] = inst 
+        ins ((s,fl):vs) varName fieldName  (fe:fes)
+            | s == varName = (s, updateAtIndex (elemIndexI (getField fl fieldName) fl 0 ) fe fl ) : ins vs varName fieldName fes 
+            | otherwise = (s,fl) : ins vs varName fieldName (fe:fes)
+              
+        fel :: Instance -> String -> String -> [FieldEntry] -> [Int]
+        fel [] _ _ _ = [] 
+        fel _ _ _ [] = [] 
+        fel ((s,fl):vs) varName fieldName  (fe:fes)
+            | s == varName = 1 : fel vs varName fieldName fes  
+            | otherwise = fel vs varName fieldName (fe:fes)
+              
+
+        currentinst = ins inst varName fieldName fe 
+        newfeildentry = drop (length (fel inst varName fieldName fe)) fe 
+
+
+elemIndexI :: (String,String,DataType) -> [FieldEntry] -> Int  -> Int
+elemIndexI _ [] nu = -1
+elemIndexI x (str:strs) nu
+    | x == str = nu -- : elemIndexInt x strs (nu+1)
+    | otherwise = elemIndexI x strs (nu+1)
+
+
+updateAtIndex :: Int -> a -> [a] -> [a]
+updateAtIndex (-1) _ a = a  
+updateAtIndex _ _ [] = []
+updateAtIndex i newVal (x:xs)
+    | i == 0    = newVal : xs    -- Replace element at index 0
+    | otherwise = x : updateAtIndex (i - 1) newVal xs
+
+
+updateValFieldInt:: [FieldEntry] -> Int -> [FieldEntry]
+updateValFieldInt [] _ = []
+updateValFieldInt ((s,v,t):fs) numVal = (s,strint,t) : updateValFieldInt fs numVal
+    where 
+        intt = extractValue (stringToInt(v))
+        int2 = intt + numVal 
+        strint 
+            | intt == -1 = "null"
+            | otherwise = intToString int2 
+
+
+stringToInt :: String -> Maybe Int
+stringToInt str 
+    | str == "null" = Just (-1) 
+    | otherwise = readMaybe str 
+
+
+intToString :: Int -> String
+intToString = show 
+
+extractValue :: Maybe a -> a
+extractValue (Just x) = x
+extractValue Nothing  = error "Cannot extract value from Nothing"
+
+
+{--------------------------------------------------------------------------------------------------
+------------------------------------------DELETE----------------------------------------------------
+---------------------------------------------------------------------------------------------------}
+
+data Delete = Delete [DelExp]
+data DelExp = Del String String String
+
+
+evalDelete env (Del varName fieldName deleteType) = reverseList updatedNodes
+    where 
+        varvalName = getVars env varName 
+        varFieldVal = getFields varvalName fieldName
+        updatedNodes = filter (not . null ) (updateFieldsD env varName fieldName deleteType varFieldVal [])
+
+
+
+updateFieldsD :: Environment -> String -> String -> String -> [FieldEntry] -> Environment -> Environment
+updateFieldsD [] _ _ _ _ acc = acc
+updateFieldsD (inst:insts) varName fieldName valD fe acc = updateFieldsD insts varName fieldName valD fe (currentinst :acc )
+    where 
+        ins :: Instance -> String -> String -> String -> [FieldEntry] -> Instance 
+        ins [] _ _ _ _ = [] 
+        ins inst _ _ _ [] = inst 
+        ins ((s,fl):vs) varName fieldName  valD (fe:fes)
+            | s == varName && getValues (getField fl fieldName) == valD = ins vs varName fieldName valD (fe:fes) 
+            | otherwise = (s,fl) : ins vs varName fieldName valD (fe:fes)
+              
+        fel :: Instance -> String -> String-> String -> [FieldEntry] -> [Int]
+        fel [] _ _ _ _ = [] 
+        fel _ _ _ _ [] = [] 
+        fel ((s,fl):vs) varName fieldName valD (fe:fes)
+            | s == varName && getValues (getField fl fieldName) == valD = 1 : fel vs varName fieldName valD (fe:fes)
+            | s == varName = 1 : fel vs varName fieldName valD fes  
+            | otherwise = fel vs varName fieldName valD (fe:fes)
+              
+
+        currentinst = filter (not. null) (ins inst varName fieldName valD fe) 
+        newfeildentry = drop (length (fel inst varName fieldName valD fe)) fe 
 
 
 -------------------------------------------------------------------
