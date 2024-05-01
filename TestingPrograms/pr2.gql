@@ -1,4 +1,4 @@
-READ = “tasks.n4j”
+READ = "tasks.n4j"
 
 MATCH = a-r1->b | c-r2->d 
 
@@ -8,4 +8,4 @@ WHERE
     AND r2.available == TRUE
 
 // Append a Relation to the relations section of the original file 
-APPEND_RELATION = b--"PossibleAllocated"--d
+APPEND = b:ID--"PossibleAllocated"--d:ID
