@@ -276,5 +276,4 @@ data Output
     -- -- | EndOutput String
     -- | LabelOutput String
     deriving (Eq, Show)
-
 }
