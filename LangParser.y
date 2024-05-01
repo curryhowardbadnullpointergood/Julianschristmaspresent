@@ -85,13 +85,13 @@ Patterns
     | Pattern               {[$1]}
 
 Pattern
-    : name "-" "->" name        {PatternRelatedTo $1 $4}
-    | name "-" name "->" name   {PatternRelatedToVar $1 $3 $5}
-    | name "<-" "-" name        {PatternRelatedBy $1 $4}
-    | name "<-" name "-" name   {PatternRelatedByVar $1 $3 $5}
-    | name "-" "-" name         {PatternRelated $1 $4}
-    | name "-" name "-" name    {PatternRelatedVar $1 $3 $5}
-    | name                      {PatternFinal $1} 
+    -- : name "-" "->" name        {PatternRelatedTo $1 $4}
+    : name "-" name "->" name   {PatternRelatedTo $1 $3 $5}
+    -- | name "<-" "-" name        {PatternRelatedBy $1 $4}
+    | name "<-" name "-" name   {PatternRelatedBy $1 $3 $5}
+    -- | name "-" "-" name         {PatternRelated $1 $4}
+    -- | name "-" name "-" name    {PatternRelatedVar $1 $3 $5}
+    | name                      {Pattern $1} 
 
 
 
@@ -127,12 +127,12 @@ WhereFunc
     | WhereDot ends   WhereDot    {WEndsWithDot $1 $3}
 
 WhereDot 
-    : name idField              {WDot $1 ":ID"}
-    | name typeField            {WDot $1 ":TYPE"}
-    | name startField           {WDot $1 ":START_ID"}
-    | name endField             {WDot $1 ":END_ID"}
-    | name labelField           {WDot $1 ":LABEL"}
-    | name "." name             {WDot $1 $3}
+    : name idField          {WDot $1 ":ID"}
+    | name typeField        {WDot $1 ":TYPE"}
+    | name startField       {WDot $1 ":START_ID"}
+    | name endField         {WDot $1 ":END_ID"}
+    | name labelField       {WDot $1 ":LABEL"}
+    | name "." name         {WDot $1 $3}
 
 
 WhereLit
@@ -142,36 +142,49 @@ WhereLit
     | false                     {WBool False}
     | null                      {WNull}
 
+Print
+    : Update Delete Return      {Print1 $1 $2 $3}
+    | Update Delete Append      {Print2 $1 $2 $3}
+    | Update Return             {Print3 $1 $2 $3}
+    | Update Append             {Print4 $1 $2 $3}
+    | Delete Return             {Print5 $1 $2}
+    | Delete Append             {Print6 $1 $2}
+    | Return                    {Print7 $1}
+    | Append                    {Print8 $1}
+
+
+Return
+    : return PrintExps        {Return $1}
+
+Append
+    : append PrintExps        {Append $1}
+
+Update
+    : update UpdateExps      {Update $1}
+
+Delete
+    : delete DeleteExps      {Delete $1}
 
 Return
     : getNode "=" Return1 getRelation "=" Return1   {ReturnNodeRelation $3 $6}
     | getNode "=" Return1                           {ReturnNode $3}
     | getRelation "=" Return1                       {ReturnRelation $3}
 
-Return1
-    : Outputs "|" Return1   {$1 : $3}
-    | Outputs               {[$1]}
+PrintExps
+    : PrintExps "|" PrintExpss   {$1 : $3}
+    | PrintExps               {[$1]}
 
-Outputs
-    : Output "," Outputs    {$1 : $3}
-    | Output                {[$1]}
+PrintExps
+    : PrintExp "," PrintExps    {$1 : $3}
+    | PrintExp                {[$1]}
 
-Output
-    : name "." name as string  {Output $1 $3 $5}  
-    | name labelField          {Output $1 ":LABEL"    ":LABEL"}
-    | name typeField           {Output $1 ":TYPE"     ":TYPE"} 
-    | name startField          {Output $1 ":START_ID" ":START_ID"} 
-    | name endField            {Output $1 ":END_ID"   ":END_ID" } 
-    | name idField             {Output $1 ":ID"        ":ID"}
--- Output
---     : name "." name intField as string  {Output $1 $3 $6}  
---     | name "." name strField as string  {Output $1 $3 $6}  
---     | name "." name boolField as string {Output $1 $3 $6}
---     | name labelField                   {Output ":LABEL" $1} 
---     | name type                         {Output ":TYPE" $1} 
---     | name startField                   {Output ":START_ID" $1} 
---     | name endField                     {Output ":END_ID" $1} 
-
+PrintExps
+    : name "." name as string  {PrintExp $1 $3          $5}  
+    | name labelField          {PrintExp $1 ":LABEL"    ":LABEL"}
+    | name typeField           {PrintExp $1 ":TYPE"     ":TYPE"} 
+    | name startField          {PrintExp $1 ":START_ID" ":START_ID"} 
+    | name endField            {PrintExp $1 ":END_ID"   ":END_ID" } 
+    | name idField             {PrintExp $1 ":ID"        ":ID"}
 {
 
 parseError :: [LangToken] -> a
@@ -181,7 +194,7 @@ parseError ts = error $ "Parse error at line " ++ (show ln) ++ " column " ++ (sh
           AlexPn ch ln col = p
 
 data Query 
-    = Query ReadFile Match Where Return
+    = Query ReadFile Match Where Print
     deriving (Eq, Show)
 
 data ReadFile
@@ -196,13 +209,9 @@ type Patterns
     = [Pattern]
 
 data Pattern 
-    = PatternFinal String
-    | PatternRelated String String
-    | PatternRelatedVar String String String
-    | PatternRelatedTo String String
-    | PatternRelatedToVar String String String
-    | PatternRelatedBy String String
-    | PatternRelatedByVar String String String
+    = Pattern String
+    | PatternRelatedTo String String String
+    | PatternRelatedBy String String String
     deriving (Eq, Show)
 
 
@@ -248,17 +257,44 @@ data WhereLit
     | WNull
     deriving (Show, Eq)
 
-data Return
-    = ReturnNode [Outputs]
-    | ReturnNodeRelation [Outputs] [Outputs]
-    | ReturnRelation [Outputs]
-    deriving (Eq, Show)
 
-type Outputs
-    = [Output]
+data Print
+    = Print1 Update Delete Return
+    | Print2 Update Delete Append
+    | Print3 Update Return
+    | Print4 Update Append
+    | Print5 Delete Return
+    | Print6 Delete Append
+    | Print7 Return
+    | Print8 Append
 
-data Output
+data Return 
+    = Return [PrintExps]
+
+data Append
+    = Append [PrintExps]
+
+type PrintExps
+    = [PrintExp]
+
+data PrintExp
     = Output String String String
     | NewRelation String String String String String
     deriving (Eq, Show)
+
+data Update
+    = Update [UpdateExp]
+
+data UpdateExp
+    = UAdd String String Int String String 
+    | UAddDot String String String String String String
+
+data Delete
+    = Delete [DeleteExp]
+
+data DeleteExp
+    = UAdd String String Int String String 
+    | UAddDot String String String String String String
+
+
 }
