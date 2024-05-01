@@ -16,6 +16,13 @@ type Environment    = [Instance]
 
 type InputData      = ([Node],[Relation])
 
+-- evalQuery :: InputData -> Query -> String 
+-- evalQuery inputData (Query _ match) = evalMatch [] inputData match 
+
+
+-- evalMatch :: [Variable] -> InputData -> Match -> [Variable]
+-- evalMatch vars file (Match patterns w r) = undefined 
+
 ---------------------------------------------------------------------------------------------------
 -- Helper Functions
 ---------------------------------------------------------------------------------------------------
@@ -33,15 +40,10 @@ startsWith :: Eq a => [a] -> [a] -> Bool
 startsWith [] _  = False
 startsWith _  [] = True
 startsWith (x:xs) (y:ys) = x == y && startsWith xs ys
-
-removeEmptyLists :: Eq a => [[a]] -> [[a]]
-removeEmptyLists [] = []
-removeEmptyLists (a:as)
-    | a == []   = removeEmptyLists as
-    | otherwise = a : removeEmptyLists as
 ---------------------------------------------------------------------------------------------------
 -- Variable Management Functions
 ---------------------------------------------------------------------------------------------------
+
 varPresent :: Instance -> String -> Bool
 varPresent [] _ = False
 varPresent ((varName, _):vars) name
@@ -66,7 +68,7 @@ getField :: [FieldEntry] -> String  -> FieldEntry
 getField []                                         field = (field,"null",TypeNull)
 getField ((fieldName,fieldValue,fieldType):entries) field
     | fieldName == field = (fieldName,fieldValue,fieldType)
-    | otherwise          = getField entries field
+    | otherwise         = getField entries field
 
 getVarField :: Instance -> String -> String -> FieldEntry
 getVarField inst varName fieldName = getField (getVar inst varName) fieldName
@@ -80,16 +82,8 @@ unionEnv :: Environment -> Environment -> Environment
 unionEnv env1 env2 = nub $ unionLists env1 env2
 
 complementEnv :: Environment -> Environment -> Environment
-complementEnv env1 env2 = complementLists env1 env2 
----------------------------------------------------------------------------------------------------
--- Evaluating Query
----------------------------------------------------------------------------------------------------
-evalQuery :: InputData -> Query -> String 
-evalQuery inputData (Query _ (Match m) (Where w) (Return r)) = env3
-    where 
-        env1 = evalMatch m inputData 
-        env2 = evalWhere env1 w
-        env3 = evalReturn env2 r
+complementEnv env1 env2 = complementLists env1 env2
+
 ---------------------------------------------------------------------------------------------------
 -- Evaluating ReadFile
 ---------------------------------------------------------------------------------------------------
@@ -98,55 +92,63 @@ evalReadFile (ReadFile fileName) = fileName
 ---------------------------------------------------------------------------------------------------
 -- Evaluating Match
 ---------------------------------------------------------------------------------------------------
-evalMatch :: Match -> InputData -> Environment
-evalMatch (Match patterns) inputData = evalPatterns [] patterns inputData
+-- evalMatch :: Match -> InputData -> Environment
+-- evalMatch (Match patterns) (nodes, relations) = evalPatterns patterns (nodes++relations)
 ---------------------------------------------------------------------------------------------------
 -- Evaluating Patterns 
 ---------------------------------------------------------------------------------------------------
-evalPatterns :: Environment -> Patterns -> InputData -> Environment
-evalPatterns env [] _ = env
-evalPatterns []  (pattern:patterns) inputData = evalPatterns env1 patterns inputData
-    where
-        env1 = evalPattern [] pattern inputData
-evalPatterns env (pattern:patterns) inputData = evalPatterns env1 patterns inputData   
-    where
-        env1 = removeEmptyLists $ concat $ map (\x -> evalPattern x pattern inputData) env
+-- evalPatterns :: Pattern -> [[FieldEntry]] -> Environment
+-- evalPatterns (PatternFinal str1) graph = [[env]]
+--     where
+--         env = [map (\x -> evalPatterns' [] str1 x graph) graph]
 
-evalPattern :: Instance -> Pattern -> InputData -> Environment
-evalPattern inst (Pattern str1) (nodes,relations) = env1 ++ env2
-    where 
-        env1 = map (\x -> evalPatternSimple inst str1 x) nodes
-        env2 = map (\x -> evalPatternSimple inst str1 x) relations 
-evalPattern inst (PatternRelatedTo str1 str2 str3) (nodes,relations) = env3 
-    where
-        env1 =                                        map (\x -> evalPatternSimple inst   str2 x) relations
-        env2 = removeEmptyLists $ concat $ map (\y -> map (\x -> evalPatternStart  y str1 str2 x) nodes) env1
-        env3 = removeEmptyLists $ concat $ map (\y -> map (\x -> evalPatternEnd    y str3 str2 x) nodes) env2
-evalPattern inst (PatternRelatedBy str1 str2 str3) (nodes,relations) = env3 
-    where
-        env1 =                                        map (\x -> evalPatternSimple inst str2 x) relations
-        env2 = removeEmptyLists $ concat $ map (\y -> map (\x -> evalPatternStart  y str3 str2 x) nodes) env1
-        env3 = removeEmptyLists $ concat $ map (\y -> map (\x -> evalPatternEnd    y str1 str2 x) nodes) env2
+-- evalPatterns' env var1 line graph = addVariable [] var1 line
 
 
-evalPatternSimple :: Instance -> String -> VariableValue -> Instance
-evalPatternSimple inst var1 line = addVariable inst var1 line
 
-evalPatternStart :: Instance -> String -> String -> VariableValue -> Instance
-evalPatternStart inst var1 var2 line
-    | start == id = addVariable inst var1 line
-    | otherwise = []
-    where
-        (_, id,    _) = getField line ":ID"
-        (_, start, _) = getVarField inst var2 ":START_ID" 
 
-evalPatternEnd :: Instance -> String -> String -> VariableValue -> Instance
-evalPatternEnd inst var1 var2 line
-    | end == id = addVariable inst var1 line
-    | otherwise = []
-    where
-        (_, id,    _) = getField line ":ID"
-        (_, end, _) = getVarField inst var2 ":END_ID" 
+-- evalPatterns :: [Variable] -> Patterns -> InputData -> [Variable]
+-- evalPatterns vars [] _ = vars
+-- evalPatterns vars (p:ps) inputdata = evalPatterns vars' ps inputdata
+--     where
+--         vars' = evalPatterns' vars p inputdata
+
+
+
+
+-- -- Function that evaluates individual patterns 
+-- evalPatterns' :: [Variable] -> Pattern -> InputData -> [Variable]
+-- evalPatterns' vars (PatternFinal str1) (nodes,relation) = addVariable vars str1 (TypeNodes nodes)
+-- evalPatterns' vars (PatternRelatedTo str1 str2) (nodes,relation) = output
+--     where
+--         startIDRelations = getNodesValFromString relation ":START_ID"
+--         endIDRelations = getNodesValFromString relation ":END_ID"
+--         -- ! list reversed 
+--         vars'   = addVariable vars      str1 (TypeNodes (reverseList (getNodesbyString startIDRelations nodes ":ID" [])))
+--         vars''  = addVariable vars'     str2 (TypeNodes (reverseList (getNodesbyString endIDRelations nodes ":ID" [])))
+--         output  = reverseList vars''
+-- evalPatterns' vars (PatternRelatedToVar str1 str2 str3) (nodes,relation)= output
+--     where
+--         startIDRelations = getNodesValFromString relation ":ID"
+--         endIDRelations = getNodesValFromString relation ":END_ID"
+--         -- ! list reversed 
+--         vars'   = addVariable vars      str1 (TypeNodes (reverseList (getNodesbyString startIDRelations nodes ":ID" [])))
+--         vars''  = addVariable vars'     str3 (TypeNodes (reverseList (getNodesbyString endIDRelations nodes ":ID" [])))
+--         vars''' = addVariable vars''    str2 (TypeRelations (reverseList (getNodesbyString startIDRelations relation ":START_ID" [] )))
+--         output  = reverseList vars'''
+-- evalPatterns' vars (PatternRelatedBy str1 str2) (nodes,relation)=
+--     reverseList (evalPatterns' vars (PatternRelatedTo str2 str1) (nodes,relation))
+-- evalPatterns' vars (PatternRelatedByVar str1 str2 str3) (nodes,relation) =
+--     rearrange (evalPatterns' vars (PatternRelatedToVar str3 str2 str1) (nodes,relation))
+-- evalPatterns' vars (PatternRelated str1 str2) (nodes,relation) = output
+--     where
+--         startIDRelations = getNodesValFromString relation ":START_ID"
+--         endIDRelations = getNodesValFromString relation ":END_ID"
+--         vals    = ( startIDRelations ++ endIDRelations)
+--         -- ! list reversed 
+--         vars'   = addVariable vars  str1 (TypeNodes (reverseList ((getNodesbyString (vals) nodes ":ID" []))))
+--         vars''  = addVariable vars' str2 (TypeNodes (reverseList ((getNodesbyString (vals) nodes ":ID" []))))
+--         output  = reverseList vars''
 
 -- rearrange :: [a] -> [a]
 -- rearrange (x:s:y) = (s:x:y)
@@ -499,11 +501,6 @@ evalNewRelation' env (NewRelation varName1 fieldName1 varName2 fieldName2 typeNa
 
     
 
-x [] _ _ = []
-x (field@(fName,fValue,fType):fields) name val
-    | fName == name = (fName,(show $ (read fValue) + val),fType) : x fields name val 
-    | otherwise = field : x fields name val 
-
 
 checkID :: [String] -> Int -> [String]
 checkID [] _ = []
@@ -625,7 +622,17 @@ data Delete = Delete [DelExp]
 data DelExp = Del String String String
 
 
-evalDelete env (Del varName fieldName deleteType) = reverseList updatedNodes
+evalDelete :: Environment -> Delete -> Environment
+evalDelete env (Delete dlist) = evalDelete'' env dlist 
+
+evalDelete'' :: Environment -> [DelExp] -> Environment
+evalDelete'' env [] = env  
+evalDelete'' env (d:ds) = evalDelete'' newenv ds 
+    where 
+        newenv = (evalDelete' env d)
+
+evalDelete' :: Environment -> DelExp -> Environment
+evalDelete' env (Del varName fieldName deleteType) = reverseList updatedNodes
     where 
         varvalName = getVars env varName 
         varFieldVal = getFields varvalName fieldName
@@ -695,40 +702,38 @@ wLitToFieldEntry (WInt i)  = ("", show i, TypeInt)
 wLitToFieldEntry (WBool b) = ("", show b, TypeBool)
 wLitToFieldEntry (WNull)   = ("", "null", TypeNull)
 
-evalWhereEqual :: FieldEntry -> FieldEntry -> Bool
-evalWhereEqual (_,"null",_) (_,"null",_) = False
-evalWhereEqual (_,v1,_) (_,v2,_)         = v1 == v2
+evalWhereEqual    :: FieldEntry -> FieldEntry -> Bool
+evalWhereEqual (_,v1,_) (_,v2,_) = v1 == v2
 
 evalWhereNotEqual :: FieldEntry -> FieldEntry -> Bool
-evalWhereNotEqual (_,"null",_) (_,"null",_) = False
-evalWhereNotEqual f1 f2                     = not $ evalWhereEqual f1 f2
+evalWhereNotEqual f1 f2 = not $ evalWhereEqual f1 f2
 
 evalWhereLess :: FieldEntry -> FieldEntry -> Bool
-evalWhereLess (_,"null",_) (_,"null",_)       = False
+evalWhereLess (f1,"null",t1) (f2,"null",t2)   = False
 evalWhereLess (f1,v1,TypeInt) (f2,v2,TypeInt) = (read v1 :: Int) < (read v2)
 evalWhereLess (f1,v1,t1) (f2,v2,t2)           = False
 
 evalWhereGreater :: FieldEntry -> FieldEntry -> Bool
-evalWhereGreater (_,"null",_) (_,"null",_)       = False
+evalWhereGreater (f1,"null",t1) (f2,"null",t2)   = False
 evalWhereGreater (f1,v1,TypeInt) (f2,v2,TypeInt) = (read v1 :: Int) > (read v2)
 evalWhereGreater (f1,v1,t1) (f2,v2,t2)           = False
 
 evalWhereLessOrEqual :: FieldEntry -> FieldEntry -> Bool
-evalWhereLessOrEqual (_,"null",_) (_,"null",_)       = False
+evalWhereLessOrEqual (f1,"null",t1) (f2,"null",t2)   = False
 evalWhereLessOrEqual (f1,v1,TypeInt) (f2,v2,TypeInt) = (read v1 :: Int) <= (read v2)
 evalWhereLessOrEqual (f1,v1,t1) (f2,v2,t2)           = False
 
 evalWhereGreaterOrEqual :: FieldEntry -> FieldEntry -> Bool
-evalWhereGreaterOrEqual (_,"null",_) (_,"null",_)       = False
+evalWhereGreaterOrEqual (f1,"null",t1) (f2,"null",t2)   = False
 evalWhereGreaterOrEqual (f1,v1,TypeInt) (f2,v2,TypeInt) = (read v1 :: Int) >= (read v2)
 evalWhereGreaterOrEqual (f1,v1,t1) (f2,v2,t2)           = False
 
 evalWhereStarts :: FieldEntry -> FieldEntry -> Bool
-evalWhereStarts (_,"null",_) (_,"null",_)             = False
+evalWhereStarts (f1,"null",t1) (f2,"null",t2)         = False
 evalWhereStarts (f1,v1,TypeString) (f2,v2,TypeString) = startsWith v1 v2
 evalWhereStarts (f1,v1,t1) (f2,v2,t2)                 = False
 
-evalWhereEnds :: FieldEntry -> FieldEntry -> Bool 
-evalWhereEnds (_,"null",_) (_,"null",_)             = False
+evalWhereEnds :: FieldEntry -> FieldEntry -> Bool
+evalWhereEnds (f1,"null",t1) (f2,"null",t2)         = False
 evalWhereEnds (f1,v1,TypeString) (f2,v2,TypeString) = startsWith (reverse v1) (reverse v2)
 evalWhereEnds (f1,v1,t1) (f2,v2,t2)                 = False
