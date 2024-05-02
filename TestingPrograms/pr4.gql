@@ -21,4 +21,4 @@ RETURN
     | person2:ID, person2.firstName AS "firstName", person2.familyName AS "familyName", person2.age AS "age"
     | person5:ID--"IsFriend"--person6:ID
 
-// This question is unfinished, however this program displays what were were going for regarding the "design of syntax", that we will be showcasing in the qualitative 50% half of this coursework / the report.
+// This question is unfinished, however this program displays what were were going for regarding the design of syntax, that we will be showcasing in the qualitative 50% half of this coursework / the report.

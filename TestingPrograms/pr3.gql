@@ -27,7 +27,7 @@ WHERE
 
 RETURN = n:ID, n.points AS "points"
 
-// This question is unfinished, however this program displays what were were going for regarding the "design of syntax", that we will be showcasing in the qualitative 50% half of this coursework / the report.
+// This question is unfinished, however this program displays what were were going for regarding the design of syntax, that we will be showcasing in the qualitative 50% half of this coursework / the report.
 
 
 
