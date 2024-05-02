@@ -1,0 +1,14 @@
+READ = "tasks.n4j"
+
+MATCH = a-r1->b | c-r2->d
+
+WHERE 
+    =   r1.priority  >= 8 
+    AND c:LABEL      == "Staff" 
+    AND r2.available == TRUE
+
+// Append a Relation to the relations section of the original file 
+
+APPEND = c:ID--"PossibleAllocated"--b:ID
+
+// This currently works.

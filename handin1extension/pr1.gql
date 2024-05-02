@@ -1,0 +1,11 @@
+READ = "access.n4j"
+
+MATCH = people
+
+WHERE 
+    =  people.age   <= 25 
+    OR people:LABEL == "Visitor"
+
+RETURN = people:ID, people.age AS "age", people:LABEL 
+
+// This currently works.
