@@ -154,13 +154,21 @@ evalPatternEnd inst var1 var2 line
 evalWhere :: Environment -> Where -> Environment
 evalWhere env (Where whereExp) = evalWhereExp env whereExp
 
+-- evalWhereExp :: Environment -> WhereExp -> Environment
+-- evalWhereExp env (WNot whereExp)           = complementEnv (evalWhereExp env whereExp) env
+-- evalWhereExp env (WAnd whereFunc whereExp) = evalWhereExp  (filter (\x -> evalWhereFunc x whereFunc) env) whereExp
+-- evalWhereExp env (WOr whereFunc whereExp)  = unionEnv      (filter (\x -> evalWhereFunc x whereFunc) env) (evalWhereExp env whereExp)
+-- evalWhereExp env (whereFunc)        =                      (filter (\x -> evalWhereFunc x whereFunc) env)
+
 evalWhereExp :: Environment -> WhereExp -> Environment
 evalWhereExp env (WNot whereExp)           = complementEnv (evalWhereExp env whereExp) env
-evalWhereExp env (WAnd whereFunc whereExp) = evalWhereExp  (filter (\x -> evalWhereFunc x whereFunc) env) whereExp
-evalWhereExp env (WOr whereFunc whereExp)  = unionEnv      (filter (\x -> evalWhereFunc x whereFunc) env) (evalWhereExp env whereExp)
-evalWhereExp env (WFinal whereFunc)        =               (filter (\x -> evalWhereFunc x whereFunc) env)
+evalWhereExp env (WAnd whereFunc whereExp) = evalWhereExp  (evalWhereExp env whereFunc) whereExp
+evalWhereExp env (WOr whereFunc whereExp)  = unionEnv      (evalWhereExp env whereFunc) (evalWhereExp env whereExp)
+evalWhereExp env (whereFunc)               = (filter (\x -> evalWhereFunc x whereFunc) env)
 
-evalWhereFunc :: Instance -> WhereFunc -> Bool
+
+evalWhereFunc :: Instance -> WhereExp -> Bool
+-- evalWhereFunc inst 
 evalWhereFunc inst (WEqualDot              (WDot v1 f1) (WDot v2 f2)) = evalWhereEqual          (getVarField inst v1 f1) (getVarField inst v2 f2)
 evalWhereFunc inst (WNotEqualDot           (WDot v1 f1) (WDot v2 f2)) = evalWhereNotEqual       (getVarField inst v1 f1) (getVarField inst v2 f2)
 evalWhereFunc inst (WLessThanDot           (WDot v1 f1) (WDot v2 f2)) = evalWhereLess           (getVarField inst v1 f1) (getVarField inst v2 f2)

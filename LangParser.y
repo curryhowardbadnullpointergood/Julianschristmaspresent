@@ -77,8 +77,8 @@ name        {LTok _ (LTokenName $$)}
 
 
 
-%left "."
-%left "starts" "<" ">" "<=" ">=" "==" "/=" 
+-- %left "."
+-- %left "starts" "<" ">" "<=" ">=" "==" "/=" 
 %left and or 
 %nonassoc "(" ")"
 %nonassoc not 
@@ -114,14 +114,11 @@ Where
 
 
 WhereExp1
-    : WhereFunc and WhereExp1   {WAnd $1 $3}
-    | WhereFunc or WhereExp1    {WOr $1 $3}
+    : WhereExp1 and WhereExp1   {WAnd $1 $3}
+    | WhereExp1 or  WhereExp1   {WOr $1 $3}
     | not WhereExp1             {WNot $2}
     | "(" WhereExp1 ")"         {$2}
-    | WhereFunc                 {WFinal $1}
-
-WhereFunc
-    : WhereDot "=="   WhereLit    {WEqual $1 $3}
+    | WhereDot "=="   WhereLit    {WEqual $1 $3}
     | WhereDot "/="   WhereLit    {WNotEqual $1 $3}
     | WhereDot "<"    WhereLit    {WLessThan $1 $3}
     | WhereDot ">"    WhereLit    {WGreaterThan $1 $3}
@@ -275,14 +272,11 @@ data Where
     deriving (Show, Eq)
 
 data WhereExp
-    = WAnd WhereFunc WhereExp 
-    | WOr WhereFunc WhereExp 
+    = WAnd WhereExp WhereExp 
+    | WOr WhereExp WhereExp 
     | WNot WhereExp
-    | WFinal WhereFunc
-    deriving (Show, Eq)
-
-data WhereFunc
-    = WEqual WhereDot WhereLit
+    | WFinal WhereExp
+    | WEqual WhereDot WhereLit
     | WNotEqual WhereDot WhereLit
     | WLessThan WhereDot WhereLit
     | WGreaterThan WhereDot WhereLit
@@ -300,6 +294,8 @@ data WhereFunc
     | WStartsWithDot WhereDot WhereDot
     | WEndsWithDot WhereDot WhereDot
     deriving (Show, Eq)
+
+
 
 data WhereDot
     = WDot String String

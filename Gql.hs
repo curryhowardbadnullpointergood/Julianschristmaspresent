@@ -6,6 +6,7 @@ import GqlEvaluator
 import System.Environment ( getArgs )
 import Control.Exception
 import System.IO
+import Data.List (nub)
 
 
 main :: IO ()
@@ -34,7 +35,7 @@ getInputFile (Query read match wher prin) = do
     let inputFileLexed  = InputLexer.alexScanTokens inputFileText
     let inputFileParse  = inputParser inputFileLexed
     print $  ( evalQuery inputFileParse (Query read match wher prin)) 
-    putStrLn $ printOutput ( evalQuery inputFileParse (Query read match wher prin)) 
+    putStrLn $ printOutput $ nub ( evalQuery inputFileParse (Query read match wher prin)) 
 
 printOutput :: [[String]] -> String
 printOutput [] = ""

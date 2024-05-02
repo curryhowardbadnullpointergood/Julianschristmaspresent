@@ -6,7 +6,7 @@ import System.Environment ( getArgs )
 
 
 
-main :: IO ()
+main :: IO () 
 main = do
     (fileName : _ ) <- getArgs
     sourceText <- readFile fileName
