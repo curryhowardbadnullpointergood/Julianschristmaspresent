@@ -33,10 +33,17 @@ getInputFile (Query read match wher prin) = do
     inputFileText       <- readFile inputFileName
     let inputFileLexed  = InputLexer.alexScanTokens inputFileText
     let inputFileParse  = inputParser inputFileLexed
-    print ( evalQuery inputFileParse (Query read match wher prin)) 
+    print $  ( evalQuery inputFileParse (Query read match wher prin)) 
+    putStrLn $ printOutput ( evalQuery inputFileParse (Query read match wher prin)) 
 
+printOutput :: [[String]] -> String
+printOutput [] = ""
+printOutput (strs:[]) = printOutput' strs
+printOutput (strs:strss) = printOutput' strs ++ "\n" ++ printOutput strss
 
-
+printOutput' [] = ""
+printOutput' (str:[]) = str 
+printOutput' (str:str2:strs) = str ++ "," ++ printOutput' (str2:strs)
 
 noParse :: ErrorCall -> IO ()
 noParse e = do let err =  show e
