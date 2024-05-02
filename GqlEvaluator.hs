@@ -232,7 +232,10 @@ evalWhereEnds (f1,v1,TypeString) (f2,v2,TypeString) = startsWith (reverse v1) (r
 evalWhereEnds (f1,v1,t1) (f2,v2,t2)                 = False
 
 
--- ASHES DISGUSTING HELPER FUNCTIONS 
+
+
+
+
 getFieldVals :: [[FieldEntry]] -> String -> [String]
 getFieldVals [] _ = [] 
 getFieldVals (f:fs) str = getFieldVal f str : getFieldVals fs str 

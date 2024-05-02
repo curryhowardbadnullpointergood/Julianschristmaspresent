@@ -20,5 +20,6 @@ main = do
     let w = Where (WAnd (WEqual (WDot "n'Beatn" ":TYPE") (WStr "Beat")) (WOr (WAnd (WEqualDot (WDot "n''" ":ID") (WDot "n''Drewn'" ":START_ID")) (WAnd (WEqualDot (WDot "n'" ":ID") (WDot "n''Drewn'" ":END_ID")) (WEqual (WDot "n''Drewn'" ":TYPE") (WStr "DrewWith")))) (WAnd (WAnd (WEqualDot (WDot "n'" ":ID") (WDot "n'Drewn''" ":START_ID")) (WAnd (WEqualDot (WDot "n''" ":ID") (WDot "n'Drewn''" ":END_ID")) (WAnd (WEqual (WDot "n'Drewn''" ":TYPE") (WStr "DrewWith")) (WAnd (WEqualDot (WDot "n''" ":ID") (WDot "n''Beatn" ":START_ID")) (WAnd (WEqualDot (WDot "n" ":ID") (WDot "n''Beatn" ":END_ID")) (WEqual (WDot "n''Beatn" ":TYPE") (WStr "Beat"))))))) (WEqualDot (WDot "n" "points") (WDot "n''" "points")))))
     let env = evalMatch m inputdata
     let w1 = Where $ WEqual (WDot "n'Beatn" ":TYPE") (WStr "Beat")
+    let w2 = Where $ 
     -- let w2 = WAnd w1
     print $ evalWhere env w1 
