@@ -34,7 +34,7 @@ getInputFile (Query read match wher prin) = do
     inputFileText       <- readFile inputFileName
     let inputFileLexed  = InputLexer.alexScanTokens inputFileText
     let inputFileParse  = inputParser inputFileLexed
-    print $  ( evalQuery inputFileParse (Query read match wher prin)) 
+    -- print $  ( evalQuery inputFileParse (Query read match wher prin)) 
     putStrLn $ printOutput $ nub ( evalQuery inputFileParse (Query read match wher prin)) 
 
 printOutput :: [[String]] -> String

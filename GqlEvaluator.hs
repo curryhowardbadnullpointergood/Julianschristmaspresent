@@ -224,7 +224,7 @@ evalWhereGreaterOrEqual (f1,v1,t1) (f2,v2,t2)           = False
 evalWhereStarts :: FieldEntry -> FieldEntry -> Bool
 evalWhereStarts (_,"null",_) (_,"null",_)             = False
 evalWhereStarts (f1,v1,TypeString) (f2,v2,TypeString) = startsWith v1 v2
-evalWhereStarts (f1,v1,t1) (f2,v2,t2)                 = False
+-- evalWhereStarts (f1,v1,t1) (f2,v2,t2)                 = False
 
 evalWhereEnds :: FieldEntry -> FieldEntry -> Bool 
 evalWhereEnds (_,"null",_) (_,"null",_)             = False

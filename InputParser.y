@@ -91,7 +91,7 @@ IRelationshipEntry      : string "," Literals "," string "," string        {IRel
 
 {
 parseError :: [InputToken] -> a
-parseError [] = error "uknown error"
+parseError [] = error "unknown error"
 parseError ts = error $ "Parse error at line " ++ (show ln) ++ " column " ++ (show col) ++ " previous character " ++ (show ch) ++ " tokens " ++ (show ts)
     where Tok p cl = head ts
           AlexPn ch ln col = p

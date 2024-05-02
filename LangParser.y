@@ -79,7 +79,7 @@ name        {LTok _ (LTokenName $$)}
 
 -- %left "."
 -- %left "starts" "<" ">" "<=" ">=" "==" "/=" 
-%left and or 
+%right and or 
 %nonassoc "(" ")"
 %nonassoc not 
 
@@ -112,13 +112,20 @@ Pattern
 Where
     : where "=" WhereExp1   {Where $3}
 
-
 WhereExp1
+    : "(" WhereExp2 ")" {$2}
+    | WhereExp2         {$1}
+
+WhereExp2
+    -- : not WhereExp2                 {WNot $2}
     : WhereExp1 and WhereExp1       {WAnd $1 $3}
-    | WhereExp1 or  WhereExp1       {WOr $1 $3}
-    | not WhereExp1                 {WNot $2}
-    | "(" WhereExp1 ")"             {$2}
-    | WhereDot "=="   WhereLit      {WEqual $1 $3}
+    | WhereExp3                     {$1}
+WhereExp3   
+    : WhereExp1 or WhereExp1        {WOr $1 $3}
+    | WhereFunc                     {$1}
+
+WhereFunc
+    : WhereDot "=="   WhereLit      {WEqual $1 $3}
     | WhereDot "/="   WhereLit      {WNotEqual $1 $3}
     | WhereDot "<"    WhereLit      {WLessThan $1 $3}
     | WhereDot ">"    WhereLit      {WGreaterThan $1 $3}

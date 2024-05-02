@@ -47,7 +47,7 @@ tokens :-
     "<"                     {\p s -> LTok p LTokenLessThan}
     ">"                     {\p s -> LTok p LTokenGreaterThan}
     "=="                    {\p s -> LTok p LTokenEquals}
-    "!="                    {\p s -> LTok p LTokenNotEquals}
+    "/="                    {\p s -> LTok p LTokenNotEquals}
 
     -- Outputting Stuff
     "RETURN"                {\p s -> LTok p LTokenReturn}
@@ -66,8 +66,8 @@ tokens :-
     -- Values 
     ":LABEL"                        {\p s -> LTok p LTokenLabelField}
     ":ID"                           {\p s -> LTok p LTokenIdField}
-    ":STARTID"                      {\p s -> LTok p LTokenStartField}
-    ":ENDID"                        {\p s -> LTok p LTokenEndField}
+    ":START_ID"                      {\p s -> LTok p LTokenStartField}
+    ":END_ID"                        {\p s -> LTok p LTokenEndField}
     ":TYPE"                         {\p s -> LTok p LTokenTypeField}
 
     "NULL"                          {\p s -> LTok p LTokenNull}

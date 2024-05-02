@@ -5,13 +5,28 @@ READ = "table.n4j"
     same as the end node of the previous relation
     e.g n1:ID == n1':ID
 */
-MATCH = n''-r->n' | n'1-r1->n | s'-b->s'' | s''1 -b1->s 
-
+//MATCH = n''-r->n' | n'1-r1->n | s'-b->s'' | s''1 -b1->s 
+//MATCH = n'' | n''Drewn' | n'Drewn'' | n''Beatn 
+MATCH = n'-n'Beatn->n | n'' | n''Drewn' | n'Drewn'' | n''Beatn 
+//WHERE
+//   =    (n':ID == n'1:ID AND r:TYPE == "DrewWith" AND r1:TYPE == "Beat")
+//   OR   (s'':ID == s''1:ID AND b:TYPE == "DrewWith" AND b1:TYPE == "Beat")
+//   AND n.points == n''.points
+//   AND s.points == s''.points
 
 WHERE
-   =    (n':ID == n'1:ID AND r:TYPE == "DrewWith" AND r1:TYPE == "Beat" AND n.points == n''.points)
-   OR   (s'':ID == s''1:ID AND b:TYPE == "DrewWith" AND b1:TYPE == "Beat" AND s.points == s''.points)
-RETURN = s:ID, s.points AS "points"
+    =       n'Beatn:TYPE  == "Beat"
+    AND     (n'':ID  == n''Drewn':START_ID AND n':ID == n''Drewn':END_ID AND n''Drewn':TYPE  == "DrewWith")
+    OR      (n':ID  == n'Drewn'':START_ID 
+    AND     n'':ID  == n'Drewn'':END_ID 
+    AND     n'Drewn'':TYPE == "DrewWith" 
+    AND     n'':ID  == n''Beatn:START_ID 
+    AND     n:ID == n''Beatn:END_ID 
+    AND     n''Beatn:TYPE == "Beat")
+    
+    AND n.points == n''.points
+
+RETURN = n:ID, n.points AS "points"
 
 
 
