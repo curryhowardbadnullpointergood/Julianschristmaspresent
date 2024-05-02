@@ -47,7 +47,7 @@ varPresent ((varName, _):vars) name
     | otherwise         = varPresent vars name
 
 getVar :: Instance -> String -> VariableValue
-getVar [] name = error ("No binding found for: " ++ name)
+getVar [] name = [] 
 getVar ((name, value):vars) varName
     | name == varName = value
     | otherwise       = getVar vars varName
@@ -371,13 +371,48 @@ withouth ((h:rest):rs) = rest : withouth rs
 
 evalReturn' :: Environment -> Return -> [[[String]]]
 evalReturn' env (Return []) = [] 
-evalReturn' env (Return (out:outs)) = ((evalOutput env out) : evalReturn1 env (Return outs))
+evalReturn' env (Return (out:outs)) = resultN ++ resultNR
+    where 
+        outN = printN out 
+        outNR = printNR out 
+        resultN = ((evalOutput env outN) : evalReturn1 env (Return outs))
+        resultNR = evalNewRelation env outNR 
+
+
+-- evalNewRelation' env (NewRelation varName1 fieldName1 varName2 fieldName2 typeName)
+
 
 evalOutput :: Environment -> PrintExps -> [[String]]
 evalOutput env out = concat (getHeader result ) : (resultval)
     where 
-        result = evalOutputshelp env out 
+        outN = printN out 
+        outNR = printNR out 
+        result = evalOutputshelp env outN
         resultval = getEntryVal result 
+   
+
+
+
+printNR:: PrintExps -> [PrintExp]
+printNR [] = [] 
+printNR (p:ps) 
+    | isNR p = printNR ps 
+    | otherwise = p : printNR ps 
+    where 
+        isNR :: PrintExp -> Bool 
+        isNR (Output _ _ _) = True 
+        isNR _ = False 
+
+
+printN:: PrintExps -> [PrintExp]
+printN [] = [] 
+printN (p:ps) 
+    | isNR p = p : printN ps 
+    | otherwise = printN ps 
+    where 
+        isNR :: PrintExp -> Bool 
+        isNR (Output _ _ _) = True 
+        isNR _ = False 
 
 evalOutputshelp :: Environment -> PrintExps -> [[FieldEntry]]
 evalOutputshelp env out = result 
@@ -392,9 +427,11 @@ evalOutputs' inst (Output varName fieldName asName) = val
             | varPresent inst varName = getVarField inst varName fieldName
             | otherwise = (fieldName,"null",TypeNull)
 
+-- evalNewRelation' env (NewRelation varName1 fieldName1 varName2 fieldName2 typeName)
 
 evalOutputs'' :: Environment -> PrintExp -> [FieldEntry]
-evalOutputs'' env out = map (\i -> evalOutputs' i out) env   
+evalOutputs'' env (Output varName fieldName asName) = map (\i -> evalOutputs' i (Output varName fieldName asName)) env   
+-- evalOutputs'' env (NewRelation varName1 fieldName1 varName2 fieldName2 typeName) = evalNewRelation' env (NewRelation varName1 fieldName1 varName2 fieldName2 typeName)
 
 
 evalOutputs''' :: Environment -> [PrintExp] -> [[FieldEntry]]
@@ -487,7 +524,7 @@ elemIndexInt' x (str:strs) nu
 ---------------------------------------------------------------------------------------------------}
 
 evalAppend :: InputData -> Environment -> Append -> [[String]]
-evalAppend input env (Append x) =  nodes ++ nodeout ++ relation ++ relationout 
+evalAppend input env (Append x) =  relationout 
     -- ((evalPrint' nodes) : evalPrint'' returnn) ++ ((evalPrint' relation) : evalPrint'' returnr)
     where 
         nodes = turnInputtoStringN input 
@@ -571,13 +608,15 @@ turnInputtoStringR (nodes, relation) = (headerr ++ rVal)
 
 
 evalNewRelation:: Environment -> [PrintExp] -> [[[String]]]
-evalNewRelation env (out:outs) = undefined
+evalNewRelation _ [] = [] 
+evalNewRelation env (out:outs) = evalNewRelation' env out : evalNewRelation env outs 
 
 --evalNewRelation' :: Environment -> Output -> [[String]]
+evalNewRelation' :: [Instance] -> PrintExp -> [[String]]
 evalNewRelation' env (NewRelation varName1 fieldName1 varName2 fieldName2 typeName) = newhead : vals
     where 
-        val1 = map (\s -> getVar s varName1) env
-        val2 = map (\s -> getVar s varName2) env  
+        val1 = getVars env varName1 
+        val2 = getVars env varName2  
         fieldval = (getFields val1 fieldName1) 
         fieldval2 = getFields val2 fieldName2 
         typelist = replicate (length fieldval) (":TYPE",typeName,TypeString)
@@ -586,7 +625,22 @@ evalNewRelation' env (NewRelation varName1 fieldName1 varName2 fieldName2 typeNa
         newhead = checkID (concat headerrelation) 0 
         vals = getEntryVal relation
 
-    
+
+
+--evalNewRelationt' :: [Instance] -> PrintExp -> [[String]]
+evalNewRelationt' env (NewRelation varName1 fieldName1 varName2 fieldName2 typeName) = val2 
+    --newhead : vals
+    where 
+        val1 = getVars env varName1 
+        val2 = getVars env varName2  
+        fieldval = (getFields val1 fieldName1) 
+        fieldval2 = getFields val2 fieldName2 
+        typelist = replicate (length fieldval) (":TYPE",typeName,TypeString)
+        relation = multiZipL [fieldval, fieldval2, typelist]
+        headerrelation = getHeader relation 
+        newhead = checkID (concat headerrelation) 0 
+        vals = getEntryVal relation
+ 
 
 x [] _ _ = []
 x (field@(fName,fValue,fType):fields) name val
