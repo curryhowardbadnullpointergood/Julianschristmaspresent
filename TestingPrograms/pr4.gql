@@ -1,7 +1,5 @@
 READ = "network.n4j"
 
-
-
 MATCH 
     = person1-x->person2 
     | person3-y->person4 
@@ -9,13 +7,18 @@ MATCH
 
 WHERE 
     = person1.firstName STARTS WITH "A" OR person1.firstName STARTS WITH "B" OR person1.firstName STARTS WITH "C"
-    //AND person1.age   <      person2.age
-    //AND person2:ID    ==     person3:ID
-    //AND person4:LABEL /=     "Cafe"
-    //AND ((person5:ID  == person1:ID AND person6:ID == person2:ID)
-    //OR  (person5:ID   == person2:ID AND person6:ID == person1:ID))
+
+    /*
+        AND person1.age   <      person2.age
+        AND person2:ID    ==     person3:ID
+        AND person4:LABEL /=     "Cafe"
+        AND ((person5:ID  == person1:ID AND person6:ID == person2:ID)
+        OR  (person5:ID   == person2:ID AND person6:ID == person1:ID))
+    */
 
 RETURN 
     = person1:ID, person1.firstName AS "firstName", person1.familyName AS "familyName", person1.age AS "age"
     | person2:ID, person2.firstName AS "firstName", person2.familyName AS "familyName", person2.age AS "age"
     | person5:ID--"IsFriend"--person6:ID
+
+// This question is unfinished, however this program displays what were were going for regarding the "design of syntax", that we will be showcasing in the qualitative 50% half of this coursework / the report.

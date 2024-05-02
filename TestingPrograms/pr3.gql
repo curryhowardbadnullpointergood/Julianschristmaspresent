@@ -1,11 +1,11 @@
 READ = "table.n4j"
+
 /*
     In this question chaining between multiple relations 
     is done by checking the start node of a relation is the
     same as the end node of the previous relation
     e.g n1:ID == n1':ID
 */
-
 
 MATCH = n | n'| n'' | n''Drewn' | n'Drewn'' | n''Beatn 
 
@@ -26,6 +26,8 @@ WHERE
     AND n.points == n''.points
 
 RETURN = n:ID, n.points AS "points"
+
+// This question is unfinished, however this program displays what were were going for regarding the "design of syntax", that we will be showcasing in the qualitative 50% half of this coursework / the report.
 
 
 

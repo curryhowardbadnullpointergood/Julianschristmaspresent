@@ -7,3 +7,5 @@ WHERE
     OR people:LABEL == "Visitor"
 
 RETURN = people:ID, people.age AS "age", people:LABEL 
+
+// This currently works.

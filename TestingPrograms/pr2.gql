@@ -8,4 +8,7 @@ WHERE
     AND r2.available == TRUE
 
 // Append a Relation to the relations section of the original file 
+
 APPEND = c:ID--"PossibleAllocated"--b:ID
+
+// This currently works.
