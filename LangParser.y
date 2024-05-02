@@ -114,27 +114,27 @@ Where
 
 
 WhereExp1
-    : WhereExp1 and WhereExp1   {WAnd $1 $3}
-    | WhereExp1 or  WhereExp1   {WOr $1 $3}
-    | not WhereExp1             {WNot $2}
-    | "(" WhereExp1 ")"         {$2}
-    | WhereDot "=="   WhereLit    {WEqual $1 $3}
-    | WhereDot "/="   WhereLit    {WNotEqual $1 $3}
-    | WhereDot "<"    WhereLit    {WLessThan $1 $3}
-    | WhereDot ">"    WhereLit    {WGreaterThan $1 $3}
-    | WhereDot "<="   WhereLit    {WLessOrEqualThan $1 $3}
-    | WhereDot ">="   WhereLit    {WGreaterOrEqualThan $1 $3}
-    | WhereDot starts WhereLit    {WStartsWith $1 $3}
-    | WhereDot ends   WhereLit    {WEndsWith $1 $3}
+    : WhereExp1 and WhereExp1       {WAnd $1 $3}
+    | WhereExp1 or  WhereExp1       {WOr $1 $3}
+    | not WhereExp1                 {WNot $2}
+    | "(" WhereExp1 ")"             {$2}
+    | WhereDot "=="   WhereLit      {WEqual $1 $3}
+    | WhereDot "/="   WhereLit      {WNotEqual $1 $3}
+    | WhereDot "<"    WhereLit      {WLessThan $1 $3}
+    | WhereDot ">"    WhereLit      {WGreaterThan $1 $3}
+    | WhereDot "<="   WhereLit      {WLessOrEqualThan $1 $3}
+    | WhereDot ">="   WhereLit      {WGreaterOrEqualThan $1 $3}
+    | WhereDot starts WhereLit      {WStartsWith $1 $3}
+    | WhereDot ends   WhereLit      {WEndsWith $1 $3}
 
-    | WhereDot "=="   WhereDot    {WEqualDot $1 $3}
-    | WhereDot "/="   WhereDot    {WNotEqualDot $1 $3}
-    | WhereDot "<"    WhereDot    {WLessThanDot $1 $3}
-    | WhereDot ">"    WhereDot    {WGreaterThanDot $1 $3}
-    | WhereDot "<="   WhereDot    {WLessOrEqualThanDot $1 $3}
-    | WhereDot ">="   WhereDot    {WGreaterOrEqualThanDot $1 $3}
-    | WhereDot starts WhereDot    {WStartsWithDot $1 $3}
-    | WhereDot ends   WhereDot    {WEndsWithDot $1 $3}
+    | WhereDot "=="   WhereDot      {WEqualDot $1 $3}
+    | WhereDot "/="   WhereDot      {WNotEqualDot $1 $3}
+    | WhereDot "<"    WhereDot      {WLessThanDot $1 $3}
+    | WhereDot ">"    WhereDot      {WGreaterThanDot $1 $3}
+    | WhereDot "<="   WhereDot      {WLessOrEqualThanDot $1 $3}
+    | WhereDot ">="   WhereDot      {WGreaterOrEqualThanDot $1 $3}
+    | WhereDot starts WhereDot      {WStartsWithDot $1 $3}
+    | WhereDot ends   WhereDot      {WEndsWithDot $1 $3}
 
 WhereDot 
     : name idField          {WDot $1 ":ID"}
