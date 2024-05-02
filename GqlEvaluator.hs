@@ -524,7 +524,7 @@ elemIndexInt' x (str:strs) nu
 ---------------------------------------------------------------------------------------------------}
 
 evalAppend :: InputData -> Environment -> Append -> [[String]]
-evalAppend input env (Append x) =  relationout 
+evalAppend input env (Append x) =  nodes ++ nodeout ++ relation ++ relationout
     -- ((evalPrint' nodes) : evalPrint'' returnn) ++ ((evalPrint' relation) : evalPrint'' returnr)
     where 
         nodes = turnInputtoStringN input 
@@ -540,6 +540,25 @@ evalAppend input env (Append x) =  relationout
         relationout = expectedHeader relationheader relationNoH
          
         
+--
+evalAppend1 input env (Append x) =  returnr 
+    -- ((evalPrint' nodes) : evalPrint'' returnn) ++ ((evalPrint' relation) : evalPrint'' returnr)
+    where 
+        nodes = turnInputtoStringN input 
+        relation = turnInputtoStringR input 
+        returnnodes = evalReturn1 env (Return x) 
+        returnn = isNodeN returnnodes
+        nodeheader = gethe returnn 
+        nodeNoH = withouth returnn 
+        nodeout = expectedHeader nodeheader nodeNoH
+        returnr = isNodeR returnnodes
+        relationheader = gethe returnr
+        relationNoH = withouth returnr 
+        relationout = expectedHeader relationheader relationNoH
+         
+   
+
+
 
 
 
@@ -577,7 +596,7 @@ isNodeR' (x:xs)
 isNodeR'' :: [String] -> Bool 
 isNodeR'' [] = False
 isNodeR'' (id:r) 
-    | id == ":ID" = True 
+    | id == ":START_ID" = True 
     | otherwise = False 
 
 
