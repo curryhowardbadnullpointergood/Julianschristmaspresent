@@ -499,9 +499,21 @@ evalAppend input env (Append x) =  ((evalPrint' nodes) : evalPrint'' returnn) ++
 
 isNodeN :: [[[String]]] -> [[[String]]]
 isNodeN [] = [] 
-isNodeN (((id:r):rest):ns) 
-    |  id == ":ID" = ((id:r):rest) : isNodeN ns 
-    | otherwise = isNodeN ns 
+isNodeN (n:ns) 
+    | isNodeN' n == [] = isNodeN ns 
+    | otherwise = n : isNodeN ns 
+
+
+isNodeN' :: [[String]] -> [[String]]
+isNodeN' (x:xs) 
+    | isNodeN'' x = (x:xs)
+    | otherwise = [] 
+
+isNodeN'' :: [String] -> Bool 
+isNodeN'' (id:r) 
+    | id == ":ID" = True 
+    | otherwise = False 
+
 
 
 isNodeR :: [[[String]]] -> [[[String]]]
