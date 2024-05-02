@@ -516,12 +516,24 @@ isNodeN'' (id:r)
     | otherwise = False 
 
 
-
 isNodeR :: [[[String]]] -> [[[String]]]
 isNodeR [] = [] 
-isNodeR (((id:r):rest):ns) 
-    |  id == ":START_ID" = ((id:r):rest) : isNodeR ns 
-    | otherwise = isNodeR ns 
+isNodeR (n:ns) 
+    | isNodeR' n == [] = isNodeR ns 
+    | otherwise = n : isNodeR ns 
+
+
+isNodeR' :: [[String]] -> [[String]]
+isNodeR' (x:xs) 
+    | isNodeR'' x = (x:xs)
+    | otherwise = [] 
+
+isNodeR'' :: [String] -> Bool 
+isNodeR'' [] = False
+isNodeR'' (id:r) 
+    | id == ":ID" = True 
+    | otherwise = False 
+
 
 
 
