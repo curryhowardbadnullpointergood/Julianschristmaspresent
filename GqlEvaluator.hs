@@ -254,6 +254,8 @@ getHeader' ((str,val,t):fs)
     | str == ":ID" = (str) : getHeader' fs 
     | str == ":LABEL" = (str) : getHeader' fs 
     | str == ":TYPE" = (str) : getHeader' fs 
+    | str == ":START_ID" = (str) : getHeader' fs 
+    | str == ":END_ID" = (str) : getHeader' fs 
     | otherwise = (str ++ showDataType t) : getHeader' fs 
 
 getHeader'' :: [[String]] -> [[String]] -> [String]
@@ -283,6 +285,14 @@ getEntryVal (x:xs) = getValF x : getEntryVal xs
 
 getValF:: [FieldEntry] -> [String]
 getValF [] = [] 
+getValF ((s,v,TypeString):xs) 
+    | s == ":ID" = v : getValF xs
+    | s == ":START_ID" = v : getValF xs
+    | s == ":END_ID" = v : getValF xs
+    | s == ":TYPE" = v : getValF xs
+    | s == ":LABEL" = v : getValF xs
+    | v == "null" = v : getValF xs
+    | otherwise = ("\"" ++ v ++ "\"") : getValF xs 
 getValF ((s,v,t):xs) = v : getValF xs
 
 removeHeader :: [[[String]]] -> [[[String]]]
@@ -524,7 +534,7 @@ elemIndexInt' x (str:strs) nu
 ---------------------------------------------------------------------------------------------------}
 
 evalAppend :: InputData -> Environment -> Append -> [[String]]
-evalAppend input env (Append x) =  nodes ++ nodeout ++ relation ++ relationout
+evalAppend input env (Append x) =  nodes ++ ( nub nodeout) ++ relation ++ (nub relationout)
     -- ((evalPrint' nodes) : evalPrint'' returnn) ++ ((evalPrint' relation) : evalPrint'' returnr)
     where 
         nodes = turnInputtoStringN input 
@@ -539,9 +549,10 @@ evalAppend input env (Append x) =  nodes ++ nodeout ++ relation ++ relationout
         relationNoH = withouth returnr 
         relationout = expectedHeader relationheader relationNoH
          
-        
---
-evalAppend1 input env (Append x) =  returnr 
+
+
+evalAppend1 input env (Append x) =  nodes
+   -- ++ ( nub nodeout) ++ relation ++ (nub relationout)
     -- ((evalPrint' nodes) : evalPrint'' returnn) ++ ((evalPrint' relation) : evalPrint'' returnr)
     where 
         nodes = turnInputtoStringN input 
@@ -555,8 +566,7 @@ evalAppend1 input env (Append x) =  returnr
         relationheader = gethe returnr
         relationNoH = withouth returnr 
         relationout = expectedHeader relationheader relationNoH
-         
-   
+
 
 
 
@@ -603,23 +613,102 @@ isNodeR'' (id:r)
 
 
 turnInputtoStringN :: InputData -> [[String]]
-turnInputtoStringN (nodes, relation) = (headern ++ nVal) -- ++ (headerr ++ rVal)
+turnInputtoStringN (nodes, relation) = resul-- ++ (headerr ++ rVal)
     where 
-        headern = getHeader nodes 
-        headerr = getHeader relation 
+        headern = getHeader1 nodes 
+        headerr = getHeader1 relation 
         nVal = getEntryVal nodes 
         rVal = getEntryVal relation 
+        resul = combinenh headern nVal 
 
+
+
+combinenh :: [[String]] -> [[String]] -> [[String]]
+combinenh [] [] = [] 
+combinenh (f:fs) (x:xs) = newnode ++ combinenh newheadlist newnodelist
+    where 
+        ii = countInt f (f:fs) 
+        newheadlist = drop ii (f:fs)
+        newnode = f : (take ii (x:xs)) 
+        newnodelist = drop ii (x:xs)
+
+
+countInt value list = length $ filter (== value) list
+
+-- indexStr :: [String] -> Int 
+-- indexStr (s:ss) 
+--     | isInfixOf ":string" s 
 
 turnInputtoStringR :: InputData -> [[String]]
-turnInputtoStringR (nodes, relation) = (headerr ++ rVal)
+turnInputtoStringR (nodes, relation) = resul 
     where 
-        headern = getHeader nodes 
-        headerr = getHeader relation 
+        headern = getHeader1 nodes 
+        headerr = getHeader1  relation 
         nVal = getEntryVal nodes 
         rVal = getEntryVal relation 
+        resul = combinenh headerr rVal 
+
+getHeader1:: [[FieldEntry]] -> [[String]]
+getHeader1 [] = [] 
+getHeader1 (n:ns) = result 
+    where 
+        result =  (((getHeader1' n) : (getHeader1 ns)))
+
+showDataType1:: DataType -> String 
+showDataType1 (TypeString) = ":string"
+showDataType1 (TypeInt) = ":integer"
+showDataType1 (TypeBool) = ":boolean"
+showDataType1 (TypeNull) = ":null"
+
+getHeader1' :: [FieldEntry] -> [String]
+getHeader1' [] = [] 
+getHeader1' ((str,val,t):fs) 
+    | str == ":ID" = (str) : getHeader1' fs 
+    | str == ":LABEL" = (str) : getHeader1' fs 
+    | str == ":TYPE" = (str) : getHeader1' fs 
+    | str == ":START_ID" = (str) : getHeader1' fs 
+    | str == ":END_ID" = (str) : getHeader1' fs 
+    | otherwise = (str ++ showDataType1 t) : getHeader1' fs 
+
+{-
 
 
+getHeader:: [[FieldEntry]] -> [[String]]
+getHeader [] = [] 
+getHeader (n:ns) = [getHeader'' result  result]
+    where 
+        result =  (nub ((getHeader' n) : (getHeader ns)))
+
+getHeader' :: [FieldEntry] -> [String]
+getHeader' [] = [] 
+getHeader' ((str,val,t):fs) 
+    | str == ":ID" = (str) : getHeader' fs 
+    | str == ":LABEL" = (str) : getHeader' fs 
+    | str == ":TYPE" = (str) : getHeader' fs 
+    | otherwise = (str ++ showDataType t) : getHeader' fs 
+
+getHeader'' :: [[String]] -> [[String]] -> [String]
+getHeader'' [] (str1:xs) = str1  -- process the plus out of it 
+getHeader'' (str:strlist) str1
+    | allTrue (getHeader''' str) = str 
+    | otherwise = getHeader'' strlist str1
+
+getHeader''' :: [String] -> [Bool] 
+getHeader''' [] = [] 
+getHeader''' (x:xs) 
+    | isInfixOf ":null" x = False : getHeader''' xs 
+    | otherwise = True : getHeader''' xs 
+
+allTrue :: [Bool] -> Bool
+allTrue = and
+
+showDataType:: DataType -> String 
+showDataType (TypeString) = ":string"
+showDataType (TypeInt) = ":integer"
+showDataType (TypeBool) = ":boolean"
+showDataType (TypeNull) = ":null"
+
+-}
 
 {--------------------------------------------------------------------------------------------------
 ------------------------------------------NEWRELATIONSHIP----------------------------------------------------
