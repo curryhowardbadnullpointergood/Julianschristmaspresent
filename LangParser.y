@@ -191,7 +191,7 @@ PrintExp
     | name startField               {Output $1 ":START_ID" ":START_ID"} 
     | name endField                 {Output $1 ":END_ID"   ":END_ID" } 
     | name idField                  {Output $1 ":ID"        ":ID"}
-    | PDot "--" string "--" PDot    {NewRelation (fst $1) (snd $1) $3 (fst $5) (snd $5)} 
+    | PDot "--" string "--" PDot    {NewRelation (fst $1) (snd $1) (fst $5) (snd $5) $3} 
 
 PDot
     : name labelField   {($1,":LABEL")}
