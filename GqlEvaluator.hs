@@ -510,6 +510,7 @@ isNodeN' (x:xs)
     | otherwise = [] 
 
 isNodeN'' :: [String] -> Bool 
+isNodeN'' [] = False
 isNodeN'' (id:r) 
     | id == ":ID" = True 
     | otherwise = False 
