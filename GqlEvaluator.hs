@@ -487,13 +487,22 @@ elemIndexInt' x (str:strs) nu
 ---------------------------------------------------------------------------------------------------}
 
 evalAppend :: InputData -> Environment -> Append -> [[String]]
-evalAppend input env (Append x) =  ((evalPrint' nodes) : evalPrint'' returnn) ++ ((evalPrint' relation) : evalPrint'' returnr)
+evalAppend input env (Append x) =  nodes ++ nodeout ++ relation ++ relationout 
+    -- ((evalPrint' nodes) : evalPrint'' returnn) ++ ((evalPrint' relation) : evalPrint'' returnr)
     where 
         nodes = turnInputtoStringN input 
         relation = turnInputtoStringR input 
         returnnodes = evalReturn1 env (Return x) 
         returnn = isNodeN returnnodes
+        nodeheader = gethe returnn 
+        nodeNoH = withouth returnn 
+        nodeout = expectedHeader nodeheader nodeNoH
         returnr = isNodeR returnnodes
+        relationheader = gethe returnr
+        relationNoH = withouth returnr 
+        relationout = expectedHeader relationheader relationNoH
+         
+        
 
 
 
