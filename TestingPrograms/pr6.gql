@@ -1,11 +1,12 @@
-READ = "space.n4j"
+READ = "gems.n4j"
 
-MATCH = faction -r-> planet | planet' --> resource
+// MAX is an unimplemented feature 
 
-WHERE = 
-    =   r:TYPE == "HasOutpost"
-    AND faction:LABEL == "Faction"
-    AND planet:LABEL == "Planet"
+MATCH = customer | gem
+WHERE
+    =   (customer.gem /= "" AND gem.name /= "") 
+    AND (customer.wealth >= gem.value) 
+    AND (customer:LABEL == gem:LABEL)
+    AND (MAX gem.value)
 
-    AND planet':TYPE == "Planet"
-    AND resource:TYPE == "Resource"
+RETURN = customer:ID--Purchases--gem:ID
